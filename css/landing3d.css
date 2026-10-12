@@ -1,0 +1,25 @@
+/* Functional additions to the supplied design. */
+html{scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
+.menu-toggle{display:none;font:inherit;color:var(--ink);border:1px solid var(--line);background:var(--bg);border-radius:12px;width:44px;height:44px;cursor:pointer}
+.ring-ctrl button:disabled{opacity:.35;cursor:default}
+.ring-ctrl{position:relative;z-index:2}
+.ring-stage{z-index:1}
+.card:not(.active){pointer-events:none}
+.card{overflow:auto;scrollbar-width:thin}
+.card ul{padding-top:12px;flex-shrink:0}
+@media(max-width:1100px){.nav-links{gap:16px;font-size:14px}.nav .wrap{gap:14px}}
+@media(max-width:900px){
+ .menu-toggle{display:block;margin-inline-start:auto}
+ .nav .wrap{gap:12px}
+ .nav-links{display:none;position:absolute;top:calc(76px + env(safe-area-inset-top,0px));inset-inline:16px;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--bg);box-shadow:0 15px 35px #0003;max-height:calc(100svh - 100px);overflow:auto}
+ .nav-links.is-open{display:flex;flex-direction:column;gap:0}
+ .nav-links a{display:block;padding:12px 16px;border-radius:10px;color:var(--ink)}
+ .nav-links a:hover{background:var(--panel)}
+ .nav .btn{padding:10px 12px;font-size:12px}
+ .hero{min-height:760px}
+ .hero .wrap{padding-bottom:120px}
+ .hero-fallback{transform:translateX(-50%);width:min(50vw,270px);top:14%}
+ .ring-stage{scroll-margin-top:100px}
+}
+@media(max-width:380px){.wrap{width:calc(100% - 32px)}.hero-ctas{gap:10px}.hero-ctas .btn{padding:12px 18px;font-size:14px}.nav-logo img{height:38px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}

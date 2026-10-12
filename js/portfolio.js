@@ -1,0 +1,108 @@
+import {getLanguage,translate as t} from './landingI18n.js';
+import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js';
+let portfolioProjects=[];
+
+const grid=document.getElementById('portfolio-grid');
+const preview=document.getElementById('portfolio-preview');
+const filters=document.getElementById('portfolio-filters');
+const search=document.getElementById('portfolio-search');
+const count=document.getElementById('portfolio-count');
+const dialog=document.getElementById('project-dialog');
+const categories={all:'كل المشاريع',identity:'هوية بصرية',digital:'تجارب رقمية',motion:'موشن وفيديو'};
+let category='all',activeProject=null,returnFocus=null,loaded=false,loadError=false;
+const localized=value=>typeof value==='string'?value:value?.[getLanguage()]||value?.en||value?.ar||'';
+function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
+function projectUrl(project){const url=new URL('projects.html',location.href);url.searchParams.set('lang',getLanguage());url.searchParams.set('project',project.id);return url.pathname+url.search;}
+function media(src,alt,className){const image=element('img',className);image.src=src;image.alt=alt;image.loading='lazy';image.width=1200;image.height=900;return image;}
+function card(project,teaser=false){
+ const article=element('article','portfolio-card');const link=element('a','portfolio-card-link');link.href=projectUrl(project);
+ const art=element('div','portfolio-art');art.append(media(project.cover,`${project.name} — ${localized(project.title)}`));
+ if(project.concept)art.append(element('span','portfolio-concept',t('تصور إبداعي')));
+ if(project.video)art.append(element('span','portfolio-play',`▶ ${t('فيلم قصير')}`));
+ const body=element('div','portfolio-card-body');const meta=element('div','portfolio-meta');meta.append(element('span','',t(categories[project.category])),element('span','',project.year));
+ body.append(meta,element('h3','',project.name),element('p','',localized(project.title)),element('span','portfolio-card-action',`${t('افتح المشروع')} ${getLanguage()==='en'?'↗':'↖'}`));
+ link.append(art,body);article.append(link);
+ if(!teaser)link.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();returnFocus=link;openProject(project);});
+ return article;
+}
+function updateGrid(){
+ if(!grid)return;
+ if(!loaded){renderLoadState();return;}
+ const query=search.value.trim().toLocaleLowerCase();
+ const found=portfolioProjects.filter(project=>(category==='all'||project.category===category)&&[project.name,...Object.values(project.title),...Object.values(project.summary),...Object.values(project.services).flat()].join(' ').toLocaleLowerCase().includes(query));
+ grid.replaceChildren(...found.map(project=>card(project)));
+ count.textContent=getLanguage()==='en'?`${found.length} ${found.length===1?'project':'projects'}`:`${found.length} مشاريع`;
+ if(!found.length){const empty=element('div','portfolio-empty');empty.append(element('h2','',t(portfolioProjects.length?'لا توجد نتائج مطابقة':'لم ننشر مشاريع بعد')),element('p','',t(portfolioProjects.length?'جرّب كلمة أخرى أو اعرض كل المشاريع.':'عد قريباً للاطلاع على أعمالنا الجديدة.')));if(portfolioProjects.length){const reset=element('button','button button-outline',t('مسح البحث والتصفية'));reset.type='button';reset.addEventListener('click',()=>{category='all';search.value='';updateFilters();updateGrid();search.focus();});empty.append(reset);}grid.append(empty);}
+}
+function updateFilters(){
+ if(!filters)return;filters.replaceChildren();
+ for(const [id,label] of Object.entries(categories)){const button=element('button','portfolio-filter',t(label));button.type='button';button.dataset.category=id;button.setAttribute('aria-pressed',String(category===id));button.addEventListener('click',()=>{category=id;for(const item of filters.children)item.setAttribute('aria-pressed',String(item===button));updateGrid();});filters.append(button);}
+}
+function fillProject(project){
+ const body=dialog.querySelector('.project-dialog-body');for(const video of body.querySelectorAll('video'))video.pause();body.replaceChildren();
+ dialog.querySelector('.project-dialog-close').setAttribute('aria-label',t('إغلاق المشروع'));
+ body.append(element('span','section-kicker',`${t(categories[project.category])} / ${project.year}`));
+ const heading=element('h2','',project.name);heading.id='project-title';body.append(heading,element('p','project-subtitle',localized(project.title)));
+ if(project.concept)body.append(element('p','project-disclaimer',t('كل الأعمال المعروضة هنا مشاريع تصورية للعرض، وليست أعمال عملاء حقيقية.')));
+ body.append(media(project.cover,`${project.name} — ${localized(project.title)}`,'project-hero-image'));
+ const intro=element('div','project-intro');const about=element('div');about.append(element('h3','',t('عن المشروع')),element('p','',localized(project.description)));
+ const scope=element('div');scope.append(element('h3','',t('نطاق العمل')));const list=element('ul');for(const service of localized(project.services))list.append(element('li','',service));scope.append(list);intro.append(about,scope);body.append(intro);
+ if(project.video){
+  const section=element('section','project-film');section.append(element('h3','',t('معاينة الفيديو')));
+  const video=element('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.poster=project.video.poster||project.cover;video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);
+  const source=element('source');source.src=project.video.src;source.type=project.video.type;video.append(source);section.append(video);
+  const download=element('a','small-link',t('تنزيل الفيديو'));download.href=project.video.src;download.download=project.video.src.split('/').at(-1);section.append(download);body.append(section);
+ }
+ const gallery=element('section','project-gallery');gallery.append(element('h3','',t('معرض الصور')));
+ for(const [index,src] of project.images.entries()){
+  const figure=element('figure');const link=element('a');link.href=src;link.target='_blank';link.rel='noopener';link.setAttribute('aria-label',`${t('فتح الصورة بالحجم الكامل')} — ${project.name} ${index+1}`);link.append(media(src,`${project.name} — ${t('صور المشروع')} ${index+1}`));figure.append(link,element('figcaption','',`${project.name} / ${String(index+1).padStart(2,'0')}`));gallery.append(figure);
+ }
+ body.append(gallery);
+}
+function openProject(project,{updateUrl=true}={}){
+ activeProject=project;fillProject(project);
+ if(!dialog.open){dialog.showModal();document.body.classList.add('project-open');}
+ dialog.scrollTop=0;dialog.querySelector('.project-dialog-close').focus();
+ if(updateUrl){const url=new URL(location.href);url.searchParams.set('project',project.id);history.replaceState(null,'',url.pathname+url.search);}
+}
+function refresh(){
+ if(!loaded){updateFilters();renderLoadState();return;}
+ const concepts=portfolioProjects.filter(project=>project.concept).length;
+ for(const notice of document.querySelectorAll('[data-concept-notice]')){
+  notice.hidden=concepts===0;
+  notice.textContent=t(concepts===portfolioProjects.length?'كل الأعمال المعروضة هنا مشاريع تصورية للعرض، وليست أعمال عملاء حقيقية.':'المشاريع الموسومة بتصور إبداعي أمثلة للعرض، وليست أعمال عملاء حقيقية.');
+ }
+ if(preview)preview.replaceChildren(...portfolioProjects.slice(0,3).map(project=>card(project,true)));
+ updateFilters();updateGrid();if(activeProject&&dialog?.open)fillProject(activeProject);
+}
+if(dialog){
+ dialog.querySelector('.project-dialog-close').addEventListener('click',()=>dialog.close());
+ dialog.addEventListener('click',event=>{if(event.target===dialog){const bounds=dialog.getBoundingClientRect();if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)dialog.close();}});
+ dialog.addEventListener('close',()=>{for(const video of dialog.querySelectorAll('video'))video.pause();document.body.classList.remove('project-open');activeProject=null;const url=new URL(location.href);url.searchParams.delete('project');history.replaceState(null,'',url.pathname+url.search);if(returnFocus?.isConnected)returnFocus.focus();else search.focus();});
+ const toggle=document.querySelector('.nav-toggle'),nav=document.querySelector('.site-nav');
+ function closeNavigation(){toggle.setAttribute('aria-expanded','false');nav.classList.remove('is-open');}
+ toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(open));nav.classList.toggle('is-open',open);});
+ nav.addEventListener('click',closeNavigation);document.addEventListener('click',event=>{if(!event.target.closest('.site-header'))closeNavigation();});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&toggle.getAttribute('aria-expanded')==='true'){closeNavigation();toggle.focus();}});
+ document.addEventListener('landing-language-change',closeNavigation);
+ matchMedia('(max-width: 760px)').addEventListener('change',closeNavigation);
+ document.getElementById('copyright-year').textContent=String(new Date().getFullYear());
+ search.addEventListener('input',updateGrid);
+}
+document.addEventListener('landing-language-change',refresh);
+function renderLoadState(){
+ const target=grid||preview;if(!target)return;
+ target.setAttribute('aria-busy',String(!loadError));
+ target.replaceChildren(element('p','project-disclaimer',t(loadError?'تعذر تحميل المشاريع. حاول مرة أخرى.':'جارٍ تحميل المشاريع…')));
+ if(count)count.textContent='';
+ for(const notice of document.querySelectorAll('[data-concept-notice]'))notice.hidden=true;
+ if(loadError){const retry=element('button','button',t('إعادة المحاولة'));retry.type='button';retry.addEventListener('click',loadProjects);target.append(retry);}
+}
+async function loadProjects(){
+ loaded=false;loadError=false;refresh();
+ try{let data;if(conceptMode){data=(await import('./portfolioProjects.js')).portfolioProjects;}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');portfolioProjects=data.map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
+if(dialog){const requested=new URL(location.href).searchParams.get('project');const project=portfolioProjects.find(item=>item.id===requested);if(project)openProject(project,{updateUrl:false});else if(requested){const notice=element('p','project-disclaimer',`${t('مشروع غير موجود')}. ${t('يمكنك استكشاف المشاريع الأخرى في المعرض.')}`);grid.before(notice);}}
+
+ }catch{loaded=false;loadError=true;renderLoadState();}
+}
+loadProjects();
