@@ -20,3 +20,13 @@ html[lang=en]{font-family:Arial,Helvetica,sans-serif}html[lang=en] .hero h1{font
 .language-switch[lang=ar]{font-family:Alexandria,Tahoma,sans-serif}
 @media(max-width:760px){html[lang=en] .hero-copy br{display:block}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
+.sector-section{padding:clamp(80px,12vw,150px) 0;background:linear-gradient(160deg,#08251f,#061c19)}
+.sector-section h2{max-width:850px}
+.sector-intro{max-width:660px;color:var(--muted);font-size:clamp(16px,2vw,20px);line-height:1.8;margin:18px 0 44px}
+.sector-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.sector-card{position:relative;min-height:230px;padding:28px 24px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.sector-number{display:block;color:var(--accent);font-size:12px;letter-spacing:2px;margin-bottom:36px}
+.sector-card h3{font-size:clamp(19px,2vw,24px);margin:0 0 12px}
+.sector-card p{font-size:13px;line-height:1.8;color:var(--muted);margin:0}
+@media(max-width:900px){.sector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sector-card{min-height:200px}}
+@media(max-width:520px){.sector-grid{gap:10px}.sector-card{padding:20px 16px;min-height:210px}.sector-number{margin-bottom:25px}.sector-card p{font-size:12px}}

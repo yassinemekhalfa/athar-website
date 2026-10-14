@@ -1,1 +1,1 @@
-window.ATHAR_PUBLIC_SITE={"portalOrigin":"https://app.atharmarketing.agency","portfolioMode":"concepts"};
+window.ATHAR_PUBLIC_SITE={"portalOrigin":"https://athar-workspace.onrender.com","portfolioMode":"live"};

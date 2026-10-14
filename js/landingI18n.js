@@ -39,6 +39,7 @@ function applyLanguage(next,{updateUrl=false}={}){
     node.textContent=source.replace(trimmed,translate(trimmed));
   }
   for(const {element,name,source} of attributes)element.setAttribute(name,translate(source));
+  for(const element of document.querySelectorAll('[data-ar][data-en]'))element.textContent=element.dataset[next];
   for(const link of document.querySelectorAll('a[href^="projects.html"],a[href^="landing.html"]')){
     if(link===switcher)continue;
     const url=new URL(link.getAttribute('href'),location.href);url.searchParams.set('lang',next);

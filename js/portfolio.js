@@ -11,6 +11,8 @@ const dialog=document.getElementById('project-dialog');
 const categories={all:'كل المشاريع',identity:'هوية بصرية',digital:'تجارب رقمية',motion:'موشن وفيديو'};
 let category='all',activeProject=null,returnFocus=null,loaded=false,loadError=false;
 const localized=value=>typeof value==='string'?value:value?.[getLanguage()]||value?.en||value?.ar||'';
+const sectorLabels={medical:{ar:'القطاع الطبي',en:'Medical'},realestate:{ar:'العقارات',en:'Real estate'},industry:{ar:'الصناعة',en:'Industry'},other:{ar:'قطاعات أخرى',en:'Other sectors'}};
+const sectorLabel=project=>sectorLabels[project.sector||'other'][getLanguage()];
 function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
 function projectUrl(project){const url=new URL('projects.html',location.href);url.searchParams.set('lang',getLanguage());url.searchParams.set('project',project.id);return url.pathname+url.search;}
 function media(src,alt,className){const image=element('img',className);image.src=src;image.alt=alt;image.loading='lazy';image.width=1200;image.height=900;return image;}
@@ -21,6 +23,7 @@ function card(project,teaser=false){
  if(project.video)art.append(element('span','portfolio-play',`▶ ${t('فيلم قصير')}`));
  const body=element('div','portfolio-card-body');const meta=element('div','portfolio-meta');meta.append(element('span','',t(categories[project.category])),element('span','',project.year));
  body.append(meta,element('h3','',project.name),element('p','',localized(project.title)),element('span','portfolio-card-action',`${t('افتح المشروع')} ${getLanguage()==='en'?'↗':'↖'}`));
+ meta.prepend(element('span','',sectorLabel(project)));
  link.append(art,body);article.append(link);
  if(!teaser)link.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();returnFocus=link;openProject(project);});
  return article;
@@ -40,6 +43,7 @@ function updateFilters(){
 }
 function fillProject(project){
  const body=dialog.querySelector('.project-dialog-body');for(const video of body.querySelectorAll('video'))video.pause();body.replaceChildren();
+ body.append(element('span','section-kicker',sectorLabel(project)));
  dialog.querySelector('.project-dialog-close').setAttribute('aria-label',t('إغلاق المشروع'));
  body.append(element('span','section-kicker',`${t(categories[project.category])} / ${project.year}`));
  const heading=element('h2','',project.name);heading.id='project-title';body.append(heading,element('p','project-subtitle',localized(project.title)));
@@ -49,9 +53,14 @@ function fillProject(project){
  const scope=element('div');scope.append(element('h3','',t('نطاق العمل')));const list=element('ul');for(const service of localized(project.services))list.append(element('li','',service));scope.append(list);intro.append(about,scope);body.append(intro);
  if(project.video){
   const section=element('section','project-film');section.append(element('h3','',t('معاينة الفيديو')));
-  const video=element('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.poster=project.video.poster||project.cover;video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);
-  const source=element('source');source.src=project.video.src;source.type=project.video.type;video.append(source);section.append(video);
-  const download=element('a','small-link',t('تنزيل الفيديو'));download.href=project.video.src;download.download=project.video.src.split('/').at(-1);section.append(download);body.append(section);
+  if(project.video.type==='video/google-drive'){
+   const frame=element('iframe');frame.src=project.video.src;frame.title=`${project.name} — ${t('معاينة الفيديو')}`;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';section.append(frame);
+  }else{
+   const video=element('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.poster=project.video.poster||project.cover;video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);
+   const source=element('source');source.src=project.video.src;source.type=project.video.type;video.append(source);section.append(video);
+   const download=element('a','small-link',t('تنزيل الفيديو'));download.href=project.video.src;download.download=project.video.src.split('/').at(-1);section.append(download);
+  }
+  body.append(section);
  }
  const gallery=element('section','project-gallery');gallery.append(element('h3','',t('معرض الصور')));
  for(const [index,src] of project.images.entries()){
