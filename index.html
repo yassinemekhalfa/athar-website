@@ -203,6 +203,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
     <nav class="nav-links" id="main-navigation" aria-label="القائمة الرئيسية">
       <a href="#about">من نحن</a><a href="#services">خدماتنا</a><a href="projects.html?lang=ar">مشاريعنا</a><a href="#how">كيف نعمل</a><a href="#contact">تواصل معنا</a><a href="https://athar-workspace.onrender.com/login.html">تسجيل الدخول</a>
     </nav>
+    <a id="language-switch" class="btn btn-ghost language-switch" href="landing.html?lang=en" lang="en" hreflang="en" aria-label="Switch to English"><span>English</span></a>
     <a class="btn btn-main" href="#contact">لنصنع أثرك</a>
   </div>
 </header>
@@ -291,6 +292,17 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
     </div>
   </section>
 
+  <section class="sec portfolio-section" aria-labelledby="home-projects-title">
+    <div class="wrap">
+      <p class="sec-label" data-ar="مشاريعنا" data-en="OUR PROJECTS">مشاريعنا</p>
+      <div class="portfolio-section-heading">
+        <h2 id="home-projects-title" data-ar="أعمال منشورة من فريقنا" data-en="Selected work from our team">أعمال منشورة من فريقنا</h2>
+        <a class="btn btn-ghost" href="projects.html" data-ar="اكتشف جميع المشاريع" data-en="Explore all projects">اكتشف جميع المشاريع</a>
+      </div>
+      <div id="portfolio-preview" class="portfolio-preview" aria-live="polite" aria-busy="true"></div>
+    </div>
+  </section>
+
   <section class="sec process" id="how">
     <div class="wrap">
       <div>
@@ -335,5 +347,6 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 <script src="assets/vendor/gsap-3.12.5.min.js"></script>
 <script src="assets/vendor/ScrollTrigger-3.12.5.min.js"></script>
 <script src="js/landing3d.js" defer></script>
+<script type="module" src="js/portfolio.js"></script>
 </body>
 </html>
