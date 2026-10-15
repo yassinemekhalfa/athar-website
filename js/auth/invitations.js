@@ -38,7 +38,8 @@ export async function inviteMember({email,role="team",clientId=null,folderId=nul
     failure.userMessage=true;
     throw failure;
   }
-  return {...data,link,emailSent:isSupabaseMode?Boolean(delivery?.email_sent):false,localOnly:!isSupabaseMode||!delivery?.email_sent,resent};
+  const accessLink=isSupabaseMode&&delivery?.action_link?delivery.action_link:link;
+  return {...data,link:accessLink,emailSent:isSupabaseMode?Boolean(delivery?.email_sent):false,localOnly:!isSupabaseMode||!delivery?.email_sent,passwordRequired:Boolean(delivery?.password_required),resent};
 }
 export async function startClientAccess(token,folderId=null){const {data,error}=await db.functions.invoke("start-client-access",{body:{token,folderId}});if(error)throw error;if(!data?.action_link)throw Object.assign(new Error(data?.error||"Could not start client access."),{userMessage:true});location.replace(data.action_link);}
 export async function listInvitations(){const agencyId=getState().agency?.id;if(!agencyId)return[];const {data,error}=await db.from("invitations").select("*").eq("agency_id",agencyId).order("created_at",{ascending:false});if(error)throw error;return data||[];}
