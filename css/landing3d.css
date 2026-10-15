@@ -32,12 +32,16 @@ html{scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
 @media(max-width:760px){.trusted-clients{padding:64px 0}.trusted-clients-head{margin-bottom:30px}.trusted-client{width:165px;height:92px;padding:18px}.trusted-client img{max-width:118px;max-height:50px}}
 @media(prefers-reduced-motion:reduce){.trusted-client-track{animation-duration:70s}}
 
-.hero-showreel{position:relative;z-index:3;width:min(100%,520px);justify-self:end;align-self:center;pointer-events:auto;padding:10px;border:1px solid var(--line);border-radius:24px;background:color-mix(in srgb,var(--panel) 84%,transparent);box-shadow:0 28px 80px rgba(12,7,22,.28);backdrop-filter:blur(12px)}
-.hero-showreel>div{aspect-ratio:16/9;overflow:hidden;border-radius:16px;background:#09080c}.hero-showreel iframe,.hero-showreel video{display:block;width:100%;height:100%;border:0;object-fit:cover}
+.hero-showreel{position:relative;z-index:3;width:min(100%,540px);justify-self:end;align-self:center;pointer-events:auto;padding:9px;border:1px solid color-mix(in srgb,var(--violet) 38%,var(--line));border-radius:26px;background:linear-gradient(145deg,color-mix(in srgb,var(--panel) 94%,transparent),color-mix(in srgb,var(--violet) 8%,var(--panel)));box-shadow:0 34px 90px rgba(12,7,22,.34),0 0 0 1px color-mix(in srgb,var(--panel) 60%,transparent) inset;backdrop-filter:blur(18px);isolation:isolate}
+.hero-showreel::before{content:"";position:absolute;z-index:-1;inset:12% 8% -9%;border-radius:30px;background:var(--violet);opacity:.2;filter:blur(44px)}
+.hero-showreel-chrome{height:39px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 8px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.hero-showreel-chrome span{display:flex;align-items:center;gap:8px}.hero-showreel-chrome i{width:7px;height:7px;border-radius:50%;background:#7dffbc;box-shadow:0 0 0 5px rgba(125,255,188,.1),0 0 14px rgba(125,255,188,.7);animation:showreel-pulse 2.2s ease-in-out infinite}
+.hero-showreel>div:not(.hero-showreel-chrome){position:relative;aspect-ratio:16/9;overflow:hidden;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:#09080c}.hero-showreel iframe,.hero-showreel video{display:block;width:100%;height:100%;border:0;object-fit:cover}
+@keyframes showreel-pulse{50%{opacity:.55;transform:scale(.82)}}
 html[dir=rtl] .hero-showreel{justify-self:start}
-@media(min-width:1101px){.hero:has(.hero-showreel:not([hidden])) .wrap{max-width:1400px;grid-template-columns:minmax(700px,1.25fr) minmax(420px,.9fr);gap:54px}.hero:has(.hero-showreel:not([hidden])) .hero-text{max-width:700px}.hero:has(.hero-showreel:not([hidden])) h1{font-size:clamp(46px,2.8vw,54px)}}
+@media(min-width:1101px){.hero:has(.hero-showreel:not([hidden])) .wrap{max-width:1400px;grid-template-columns:minmax(700px,1.25fr) minmax(420px,.9fr);gap:54px}.hero:has(.hero-showreel:not([hidden])) .hero-text{max-width:700px}.hero:has(.hero-showreel:not([hidden])) h1{font-size:clamp(46px,2.8vw,54px)}.hero-showreel{transform:translateY(72px)}}
 @media(max-width:1100px){.hero-showreel{width:min(70vw,560px);justify-self:center!important;margin-bottom:28px}.hero:has(.hero-showreel:not([hidden])) .wrap{align-content:center;gap:22px;padding-top:100px}.hero:has(.hero-showreel:not([hidden])) .hero-text{align-self:end}}
-@media(max-width:760px){.hero-showreel{width:100%;padding:7px;border-radius:18px}.hero-showreel>div{border-radius:12px}}
+@media(max-width:760px){.hero-showreel{width:100%;padding:6px;border-radius:20px}.hero-showreel-chrome{height:34px;padding-inline:7px;font-size:10px}.hero-showreel>div:not(.hero-showreel-chrome){border-radius:14px}}
 @media(max-width:900px){
  .menu-toggle{display:block;margin-inline-start:auto}
  .nav .wrap{gap:12px}
@@ -79,4 +83,4 @@ html[dir=rtl] .hero-showreel{justify-self:start}
  .hero-showreel{width:100%;margin:0}
 }
 @media(max-width:380px){.wrap{width:calc(100% - 32px)}.hero-ctas{gap:10px}.hero-ctas .btn{padding:12px 18px;font-size:14px}.nav-logo img{height:38px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}.hero-showreel-chrome i{animation:none}}

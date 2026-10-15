@@ -44,7 +44,14 @@ export async function signIn(email,password){const {data,error}=await db.auth.si
 export async function signUp(email,password,fullName,inviteToken=null){
   const options={data:{full_name:fullName}};
   if(isSupabaseMode&&inviteToken){const redirect=new URL('login.html',location.href);redirect.searchParams.set('invite',inviteToken);options.emailRedirectTo=redirect.toString();}
-  const {data,error}=await db.auth.signUp({email,password,options});if(error)throw error;return data;
+  const credentials={email,password,options};
+  // The local server accepts the invitation atomically while creating the account.
+  // Supabase accepts it through the database trigger, so it only needs the token in
+  // the confirmation redirect.
+  if(!isSupabaseMode&&inviteToken)credentials.invite_token=inviteToken;
+  const {data,error}=await db.auth.signUp(credentials);if(error)throw error;
+  if(data.session?.user){setState({session:data.session,user:data.user||data.session.user});await loadIdentity();}
+  return data;
 }
 export async function requestPasswordReset(email){const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:`${location.origin}${location.pathname.replace(/[^/]+$/,"")}login.html?mode=reset`});if(error)throw error;}
 export async function updatePassword(password){const {error}=await db.auth.updateUser({password});if(error)throw error;}
