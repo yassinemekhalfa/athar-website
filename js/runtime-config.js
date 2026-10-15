@@ -1,1 +1,1 @@
-globalThis.ATHAR_CONFIG={"mode":"supabase","supabaseUrl":"https://yegtfnpdewcldnqtyyte.supabase.co","supabasePublishableKey":"sb_publishable_HUKrX6LN8e5wxchtt3ozag_zXWQszIA","appUrl":"https://yassinemekhalfa.github.io/athar-website"};
+globalThis.ATHAR_CONFIG={"mode":"supabase","supabaseUrl":"https://yegtfnpdewcldnqtyyte.supabase.co","supabasePublishableKey":"sb_publishable_HUKrX6LN8e5wxchtt3ozag_zXWQszIA","appUrl":"https://atharmarketing.agency"};
