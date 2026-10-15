@@ -18,7 +18,7 @@ html{scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
 .nav .theme-switch .theme-moon{opacity:0;transform:scale(.55) rotate(-30deg)}
 :root[data-theme=dark] .nav .theme-switch .theme-sun{opacity:0;transform:scale(.55) rotate(30deg)}
 :root[data-theme=dark] .nav .theme-switch .theme-moon{opacity:1;transform:scale(1) rotate(0)}
-@media(min-width:1101px){.hero-text{max-width:650px}.hero h1,html[lang=en] .hero h1{font-size:clamp(46px,4vw,72px);line-height:1.08}.hero .wrap{grid-template-columns:minmax(560px,.95fr) 1.05fr}}
+@media(min-width:1101px){.hero-text{max-width:760px}.hero h1,html[lang=en] .hero h1{font-size:clamp(46px,3vw,58px);line-height:1.08}.hero .wrap{grid-template-columns:minmax(740px,1.6fr) 1fr}}
 @media(max-width:760px){.nav .theme-switch{width:38px;height:38px;min-width:38px;order:1}.nav .theme-switch span{font-size:18px}}
 
 .trusted-clients{padding:92px 0;border-block:1px solid var(--line);overflow:hidden;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--violet) 5%,transparent),transparent)}
