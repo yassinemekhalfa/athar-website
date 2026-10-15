@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#17151d">
+<script>try{const t=localStorage.getItem('athar.public.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
 <meta name="description" content="معرض أثر للتصورات الإبداعية: الهوية البصرية والتجارب الرقمية وصور المشاريع وفيديوهات الموشن.">
 <title>أثر | مشاريعنا</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -123,13 +124,14 @@
 <a href="projects.html" aria-current="page">مشاريعنا</a>
 <a href="landing.html#contact">تواصل معنا</a>
 </nav>
+<button id="theme-switch" class="theme-switch" type="button" data-light-label-ar="الوضع الفاتح" data-dark-label-ar="الوضع الداكن" data-light-label-en="Light mode" data-dark-label-en="Dark mode" aria-label="الوضع الفاتح"><span class="theme-sun" aria-hidden="true">☀</span><span class="theme-moon" aria-hidden="true">☾</span></button>
 <a id="language-switch" class="language-switch" href="projects.html?lang=en" lang="en" hreflang="en" aria-label="Switch to English">
 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 <use href="#i-globe"/>
 </svg>
 <span>English</span>
 </a>
-<a class="button button-small nav-signin" href="login.html" lang="en" dir="ltr">Sign in <svg class="" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+<a class="button button-small nav-signin" href="login.html"><span data-ar="تسجيل الدخول" data-en="Sign in">تسجيل الدخول</span> <svg class="" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 <use href="#i-diagonal"/>
 </svg>
 </a>

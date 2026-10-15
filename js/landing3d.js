@@ -21,9 +21,13 @@ const onScrollNav = () => nav.classList.toggle('solid', scrollY > 40);
 addEventListener('scroll', onScrollNav, {passive:true}); onScrollNav();
 
 /* ---------- HERO TEXT: split words (keeps Arabic letters joined) ---------- */
-document.querySelectorAll('#h1 .line').forEach(l=>{
-  l.innerHTML = l.textContent.trim().split(/\s+/).map(w=>'<span class="w">'+w+'</span>').join(' ');
-});
+function splitHeroTitle(){
+  document.querySelectorAll('#h1 .line').forEach(line=>{
+    line.innerHTML=line.textContent.trim().split(/\s+/).map(word=>`<span class="w">${word}</span>`).join(' ');
+  });
+}
+splitHeroTitle();
+document.addEventListener('landing-language-change',splitHeroTitle);
 if (hasGsap && !reduce){
   gsap.set('#h1 .w',{rotateX:-95,y:30,opacity:0});
   gsap.set('[data-in]',{y:24,opacity:0});
