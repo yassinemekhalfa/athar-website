@@ -17,7 +17,9 @@ function clientItem(client){
 if(track&&section){
   const {data,error}=await db.from('website_trusted_clients').select('id,name,logo_url,website_url,position').eq('published',true).order('position').order('created_at');
   if(!error&&data?.length){
-    const items=data.map(clientItem);track.replaceChildren(...items,...data.map(clientItem));
+    const repeat=Math.max(1,Math.ceil(6/data.length));
+    const sequence=Array.from({length:repeat},()=>data).flat();
+    track.replaceChildren(...sequence.map(clientItem),...sequence.map(clientItem));
     section.hidden=false;
   }
 }

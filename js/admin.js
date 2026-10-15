@@ -2,7 +2,7 @@ import {googleDrivePreview,googleDriveImage} from './drive-video.js';
 import {db,isSupabaseMode} from './dataClient.js';
 const $=id=>document.getElementById(id);
 const form=$('project-form'),status=$('status');
-let projects=[],current=null,dirty=false,busy=false,trustedClients=[];
+let projects=[],current=null,dirty=false,busy=false,trustedClients=[],presentationSettings=null,uploadedTrustedLogo='';
 const node=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
 function notify(text,error=false){status.textContent=text;status.classList.toggle('error',error);}
 async function api(url,options={}){
@@ -66,6 +66,11 @@ async function refreshTrustedClients(){
  const {membership}=await getOwnerContext();const {data,error}=await db.from('website_trusted_clients').select('*').eq('agency_id',membership.agency_id).order('position').order('created_at');
  if(error)throw error;trustedClients=data||[];renderTrustedClients();
 }
+async function uploadPublicFile(file){
+ if(file.size>25*1024*1024)throw new Error('The file must be 25 MB or smaller.');
+ if(isSupabaseMode){const {membership}=await getOwnerContext(),safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'-'),path=`${membership.agency_id}/${crypto.randomUUID()}-${safe}`;const {error}=await db.storage.from('website-media').upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});if(error)throw error;const {data}=db.storage.from('website-media').getPublicUrl(path);return{src:data.publicUrl,type:file.type||'application/octet-stream'};}
+ return api('/api/website/media',{method:'POST',headers:{'Content-Type':file.type||'application/octet-stream'},body:file});
+}
 function renderTrustedClients(){
  $('trusted-client-list').replaceChildren(...trustedClients.map(client=>{
   const row=node('article');row.className='trusted-client-admin-row';const logo=googleDriveImage(client.logo_url)||client.logo_url;
@@ -75,10 +80,18 @@ function renderTrustedClients(){
  }));
 }
 $('trusted-client-form').addEventListener('submit',async event=>{
- event.preventDefault();const {membership}=await getOwnerContext(),rawLogo=$('trusted-client-logo').value.trim(),logo=googleDriveImage(rawLogo)||rawLogo,submit=event.submitter;
+ event.preventDefault();const {membership}=await getOwnerContext(),rawLogo=$('trusted-client-logo').value.trim(),logo=uploadedTrustedLogo||googleDriveImage(rawLogo)||rawLogo,submit=event.submitter;
  submit.disabled=true;const {error}=await db.from('website_trusted_clients').insert({agency_id:membership.agency_id,name:$('trusted-client-name').value.trim(),logo_url:logo||null,website_url:$('trusted-client-website').value.trim()||null,position:Number($('trusted-client-position').value)||0,published:$('trusted-client-published').checked});submit.disabled=false;
- if(error)return notify(error.message,true);event.currentTarget.reset();$('trusted-client-position').value='0';$('trusted-client-published').checked=true;await refreshTrustedClients();notify('Trusted client added to the website bar.');
+ if(error)return notify(error.message,true);uploadedTrustedLogo='';event.currentTarget.reset();$('trusted-client-position').value='0';$('trusted-client-published').checked=true;await refreshTrustedClients();notify('Trusted client added to the website bar.');
 });
+$('trusted-client-logo-upload').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{notify('Uploading client logo…');uploadedTrustedLogo=(await uploadPublicFile(file)).src;$('trusted-client-logo').value='';notify('Logo uploaded. Add the client to publish it.');}catch(error){notify(error.message,true);}finally{event.target.value='';}});
+
+function renderPresentationVideo(){const host=$('presentation-video-preview');host.replaceChildren();const url=presentationSettings?.presentation_video_url;if(!url){host.hidden=true;return;}host.hidden=false;if(presentationSettings.presentation_video_type==='video/google-drive'){const frame=node('iframe');frame.src=url;frame.title='Presentation video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;host.append(frame);}else{const video=node('video');video.src=url;video.controls=true;video.playsInline=true;host.append(video);}}
+async function refreshPresentationVideo(){const {membership}=await getOwnerContext();const {data,error}=await db.from('website_settings').select('*').eq('agency_id',membership.agency_id).maybeSingle();if(error)throw error;presentationSettings=data||{agency_id:membership.agency_id,presentation_video_url:null,presentation_video_type:null,presentation_video_published:false};$('presentation-video-link').value=presentationSettings.presentation_video_type==='video/google-drive'?presentationSettings.presentation_video_url||'':'';$('presentation-video-published').checked=!!presentationSettings.presentation_video_published;renderPresentationVideo();}
+$('presentation-video-link').addEventListener('input',event=>{const value=event.target.value.trim(),preview=googleDrivePreview(value);event.target.setCustomValidity(value&&!preview?'Paste a valid Google Drive video link.':'');if(preview){presentationSettings.presentation_video_url=preview;presentationSettings.presentation_video_type='video/google-drive';renderPresentationVideo();}});
+$('presentation-video-upload').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{notify('Uploading presentation video…');const media=await uploadPublicFile(file);presentationSettings.presentation_video_url=media.src;presentationSettings.presentation_video_type=media.type;$('presentation-video-link').value='';renderPresentationVideo();notify('Video uploaded. Press Save video to publish the setting.');}catch(error){notify(error.message,true);}finally{event.target.value='';}});
+$('presentation-video-form').addEventListener('submit',async event=>{event.preventDefault();const {membership}=await getOwnerContext(),drive=$('presentation-video-link').value.trim();if(drive){const preview=googleDrivePreview(drive);if(!preview)return;presentationSettings.presentation_video_url=preview;presentationSettings.presentation_video_type='video/google-drive';}const values={agency_id:membership.agency_id,presentation_video_url:presentationSettings.presentation_video_url||null,presentation_video_type:presentationSettings.presentation_video_type||null,presentation_video_published:$('presentation-video-published').checked,updated_at:new Date().toISOString()};const {error}=await db.from('website_settings').upsert(values,{onConflict:'agency_id'});if(error)return notify(error.message,true);await refreshPresentationVideo();notify('Homepage presentation video saved.');});
+$('remove-presentation-video').addEventListener('click',async()=>{const {membership}=await getOwnerContext();const {error}=await db.from('website_settings').upsert({agency_id:membership.agency_id,presentation_video_url:null,presentation_video_type:null,presentation_video_published:false,updated_at:new Date().toISOString()},{onConflict:'agency_id'});if(error)return notify(error.message,true);await refreshPresentationVideo();notify('Presentation video removed.');});
 async function save(action){
  if(busy||!form.reportValidity())return;
  if(action==='publish'&&!confirm('Publish this project on your public website?'))return;
@@ -90,7 +103,7 @@ async function upload(input,kind){
  if(files.some(file=>file.size>25*1024*1024)){notify('Each file must be 25 MB or smaller.',true);input.value='';return;}
  if(kind==='gallery'&&current.images.length+files.length>30){notify('You can add up to 30 gallery images.',true);input.value='';return;}
  setBusy(true);try{for(const [index,file] of files.entries()){
-  notify(`Uploading ${index+1} of ${files.length}…`);let media;if(isSupabaseMode){const {membership}=await getOwnerContext(),safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'-'),path=`${membership.agency_id}/${crypto.randomUUID()}-${safe}`;const {error}=await db.storage.from('website-media').upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});if(error)throw error;const {data}=db.storage.from('website-media').getPublicUrl(path);media={src:data.publicUrl,type:file.type||'application/octet-stream'};}else media=await api('/api/website/media',{method:'POST',headers:{'Content-Type':file.type||'application/octet-stream'},body:file});
+  notify(`Uploading ${index+1} of ${files.length}…`);const media=await uploadPublicFile(file);
   if(kind==='video')current.video={src:media.src,type:media.type,poster:current.cover};else if(kind==='cover')current.cover=media.src;else current.images.push(media.src);dirty=true;
  }if(kind==='video')$('video-drive-url').value='';notify('Upload complete. Save your draft or publish to keep these changes in the project.');}catch(error){notify(error.message,true);}finally{renderMedia();setBusy(false);input.value='';}
 }
@@ -137,4 +150,4 @@ $('preview-project').addEventListener('click',()=>{
 $('close-preview').addEventListener('click',()=>$('preview-dialog').close());$('preview-dialog').addEventListener('close',()=>{for(const video of $('preview-dialog').querySelectorAll('video'))video.pause();});
 $('sign-out').addEventListener('click',async()=>{if(busy||!confirmLeave())return;try{await api('/api/auth/signout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});dirty=false;location.assign('login.html?next=admin');}catch(error){notify(error.message,true);}});
 window.addEventListener('beforeunload',event=>{if(dirty||busy){event.preventDefault();event.returnValue='';}});
-try{const data=await refresh();await refreshTrustedClients();$('studio').hidden=false;$('trusted-clients-admin').hidden=false;$('new-project').disabled=false;notify(`Signed in as ${data.email}. Only published content is public.`);}catch(error){if(error.status===401)location.replace('login.html?next=admin');else{$('access-denied').hidden=false;notify(error.message,true);}}
+try{const data=await refresh();await Promise.all([refreshTrustedClients(),refreshPresentationVideo()]);$('studio').hidden=false;$('trusted-clients-admin').hidden=false;$('presentation-video-admin').hidden=false;$('new-project').disabled=false;notify(`Signed in as ${data.email}. Only published content is public.`);}catch(error){if(error.status===401)location.replace('login.html?next=admin');else{$('access-denied').hidden=false;notify(error.message,true);}}

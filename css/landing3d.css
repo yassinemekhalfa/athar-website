@@ -29,9 +29,15 @@ html{scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
 .trusted-client{display:grid;place-items:center;width:210px;height:112px;padding:22px 30px;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--ink);text-decoration:none;filter:saturate(.75);transition:transform .2s ease,border-color .2s ease,filter .2s ease}
 .trusted-client:hover{transform:translateY(-4px);border-color:var(--violet-ink);filter:saturate(1)}.trusted-client img{max-width:145px;max-height:58px;width:auto;height:auto;object-fit:contain}.trusted-client strong{font-size:19px;text-align:center}
 @keyframes trusted-client-scroll{to{transform:translateX(calc(-50% - 9px))}}
-html[dir=rtl] .trusted-client-track{animation-direction:reverse}
 @media(max-width:760px){.trusted-clients{padding:64px 0}.trusted-clients-head{margin-bottom:30px}.trusted-client{width:165px;height:92px;padding:18px}.trusted-client img{max-width:118px;max-height:50px}}
-@media(prefers-reduced-motion:reduce){.trusted-client-track{animation:none;flex-wrap:wrap;width:auto;justify-content:center;padding-inline:20px}}
+@media(prefers-reduced-motion:reduce){.trusted-client-track{animation-duration:70s}}
+
+.hero-showreel{position:relative;z-index:3;width:min(100%,520px);justify-self:end;align-self:center;pointer-events:auto;padding:10px;border:1px solid var(--line);border-radius:24px;background:color-mix(in srgb,var(--panel) 84%,transparent);box-shadow:0 28px 80px rgba(12,7,22,.28);backdrop-filter:blur(12px)}
+.hero-showreel>div{aspect-ratio:16/9;overflow:hidden;border-radius:16px;background:#09080c}.hero-showreel iframe,.hero-showreel video{display:block;width:100%;height:100%;border:0;object-fit:cover}
+html[dir=rtl] .hero-showreel{justify-self:start}
+@media(min-width:1101px){.hero:has(.hero-showreel:not([hidden])) .wrap{max-width:1400px;grid-template-columns:minmax(700px,1.25fr) minmax(420px,.9fr);gap:54px}.hero:has(.hero-showreel:not([hidden])) .hero-text{max-width:700px}.hero:has(.hero-showreel:not([hidden])) h1{font-size:clamp(46px,2.8vw,54px)}}
+@media(max-width:1100px){.hero-showreel{width:min(70vw,560px);justify-self:center!important;margin-bottom:28px}.hero:has(.hero-showreel:not([hidden])) .wrap{align-content:center;gap:22px;padding-top:100px}.hero:has(.hero-showreel:not([hidden])) .hero-text{align-self:end}}
+@media(max-width:760px){.hero-showreel{width:100%;padding:7px;border-radius:18px}.hero-showreel>div{border-radius:12px}}
 @media(max-width:900px){
  .menu-toggle{display:block;margin-inline-start:auto}
  .nav .wrap{gap:12px}
