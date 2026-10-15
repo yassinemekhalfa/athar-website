@@ -16,7 +16,7 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.classL
 matchMedia('(max-width: 900px)').addEventListener('change',()=>closeMenu());
 document.getElementById('copyright-year').textContent=String(new Date().getFullYear());
 // Keep existing workspace bookmarks working when entering through the site root.
-if(/^#\/(?:resource|folder|f|home|tasks|my-tasks|inbox|invoices|clients|proposals|library-[a-z]+|settings|profile)(?:\/|$)/.test(location.hash))location.replace((window.ATHAR_PUBLIC_SITE?.portalOrigin?new URL('/workspace.html',window.ATHAR_PUBLIC_SITE.portalOrigin).href:'workspace.html')+location.hash);
+if(/^#\/(?:resource|folder|f|home|tasks|my-tasks|inbox|invoices|clients|proposals|library-[a-z]+|settings|profile)(?:\/|$)/.test(location.hash))location.replace((window.ATHAR_PUBLIC_SITE?.portalOrigin?new URL('/index.html',window.ATHAR_PUBLIC_SITE.portalOrigin).href:'index.html')+location.hash);
 const onScrollNav = () => nav.classList.toggle('solid', scrollY > 40);
 addEventListener('scroll', onScrollNav, {passive:true}); onScrollNav();
 
@@ -151,7 +151,7 @@ function initHero(){
     renderer.setSize(w,h,false); camera.aspect = w/h; camera.updateProjectionMatrix();
     const vh = 2*Math.tan(THREE.MathUtils.degToRad(20))*14, vw = vh*camera.aspect;
     if (w >= 900){ const LW = Math.min(vw*.4, 8.6); group.scale.setScalar(LW/8.5); group.position.set(-vw*.24, .2, 0); }
-    else { const LW = Math.min(vw*.8, 7.2); group.scale.setScalar(LW/8.5); group.position.set(0, vh*.24, 0); }
+    else { const LW = Math.min(vw*.68, 6.2); group.scale.setScalar(LW/8.5); group.position.set(0, vh*.34, 0); }
   }
   addEventListener('resize', resize);
 
