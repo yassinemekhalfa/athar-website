@@ -19,3 +19,8 @@ export function googleDriveImage(value){
   const id=googleDriveFileId(value);
   return id?`https://drive.google.com/thumbnail?id=${id}&sz=w2000`:null;
 }
+
+export function googleDriveDownload(value){
+  const id=googleDriveFileId(value);
+  return id?`https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`:null;
+}

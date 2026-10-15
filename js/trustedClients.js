@@ -19,7 +19,9 @@ if(track&&section){
   if(!error&&data?.length){
     const repeat=Math.max(1,Math.ceil(6/data.length));
     const sequence=Array.from({length:repeat},()=>data).flat();
-    track.replaceChildren(...sequence.map(clientItem),...sequence.map(clientItem));
+    const first=document.createElement('div'),second=document.createElement('div');first.className='trusted-client-sequence';second.className='trusted-client-sequence';second.setAttribute('aria-hidden','true');first.append(...sequence.map(clientItem));second.append(...sequence.map(clientItem));track.replaceChildren(first,second);
+    const sizeLoop=()=>{const distance=first.getBoundingClientRect().width+18;track.style.setProperty('--trusted-loop-distance',`${distance}px`);track.style.setProperty('--trusted-loop-duration',`${Math.max(18,distance/62)}s`);};
+    sizeLoop();new ResizeObserver(sizeLoop).observe(first);
     section.hidden=false;
   }
 }
