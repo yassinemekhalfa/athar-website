@@ -70,11 +70,11 @@ html[dir=rtl] .hero-showreel{justify-self:start}
 }
 @media(max-width:600px){
  .nav .wrap{height:68px;gap:8px}
- .nav-logo img{height:36px}
+ .nav-logo{display:none}
  .menu-toggle{width:38px;height:38px;border-radius:50%;padding:0}
  .nav .theme-switch{width:38px;height:38px;min-width:38px}
  .nav .language-switch{min-height:38px;padding:7px 12px;font-size:13px}
- .hero:has(.hero-showreel:not([hidden])) .wrap{align-content:start;padding-top:260px;padding-bottom:62px;gap:28px}
+ .hero:has(.hero-showreel:not([hidden])) .wrap{align-content:start;padding-top:318px;padding-bottom:62px;gap:28px}
  .hero:has(.hero-showreel:not([hidden])) h1{font-size:clamp(36px,11vw,48px);line-height:1.08}
  .hero:has(.hero-showreel:not([hidden])) .hero-kicker{font-size:13px;margin-bottom:12px}
  .hero:has(.hero-showreel:not([hidden])) .lead{font-size:15px;line-height:1.7}
@@ -83,5 +83,5 @@ html[dir=rtl] .hero-showreel{justify-self:start}
  .hero-showreel{width:100%;margin:0}
  .hero-video-controls{inset-inline-end:12px;bottom:12px;padding:5px}.hero-video-button{width:38px;height:38px}
 }
-@media(max-width:380px){.wrap{width:calc(100% - 32px)}.hero-ctas{gap:10px}.hero-ctas .btn{padding:12px 18px;font-size:14px}.nav-logo img{height:38px}}
+@media(max-width:380px){.wrap{width:calc(100% - 32px)}.hero-ctas{gap:10px}.hero-ctas .btn{padding:12px 18px;font-size:14px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
