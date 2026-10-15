@@ -31,15 +31,9 @@ export async function inviteMember({email,role="team",clientId=null,folderId=nul
   const {data,resent}=await createInvitation(payload);
   const link=invitationLink(data.token,normalizedEmail,folderId);
   let delivery;
-  try{delivery=await deliverInvitation({link,invitationId:data.id});}catch(emailError){
-    const {error:revokeError}=await db.from("invitations").update({status:"revoked"}).eq("id",data.id).eq("status","pending");
-    if(revokeError)console.error("Failed to revoke an undelivered invitation",revokeError);
-    const failure=new Error(emailError?.message||"The invitation could not be saved. Check that the local server is running.");
-    failure.userMessage=true;
-    throw failure;
-  }
+  try{delivery=await deliverInvitation({link,invitationId:data.id});}catch(emailError){delivery={action_link:link,email_sent:false,password_required:false,delivery_error:emailError?.message||"Email delivery is unavailable."};}
   const accessLink=isSupabaseMode&&delivery?.action_link?delivery.action_link:link;
-  return {...data,link:accessLink,emailSent:isSupabaseMode?Boolean(delivery?.email_sent):false,localOnly:!isSupabaseMode||!delivery?.email_sent,passwordRequired:Boolean(delivery?.password_required),resent};
+  return {...data,link:accessLink,emailSent:isSupabaseMode?Boolean(delivery?.email_sent):false,localOnly:!isSupabaseMode||!delivery?.email_sent,passwordRequired:Boolean(delivery?.password_required),deliveryError:delivery?.delivery_error||null,resent};
 }
 export async function startClientAccess(token,folderId=null){const {data,error}=await db.functions.invoke("start-client-access",{body:{token,folderId}});if(error)throw error;if(!data?.action_link)throw Object.assign(new Error(data?.error||"Could not start client access."),{userMessage:true});location.replace(data.action_link);}
 export async function listInvitations(){const agencyId=getState().agency?.id;if(!agencyId)return[];const {data,error}=await db.from("invitations").select("*").eq("agency_id",agencyId).order("created_at",{ascending:false});if(error)throw error;return data||[];}

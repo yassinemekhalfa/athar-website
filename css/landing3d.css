@@ -36,6 +36,8 @@ html{scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
 .hero-showreel::before{content:"";position:absolute;z-index:-2;inset:-12% -10% -18%;border-radius:45%;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--violet) 24%,transparent),transparent 68%);filter:blur(28px);transform:translateZ(-70px)}
 .hero-showreel::after{content:"";position:absolute;z-index:2;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 -38px 60px rgba(12,7,22,.16)}
 .hero-showreel>div{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:34px;background:#09080c;transform:translateZ(12px);-webkit-mask-image:linear-gradient(#000,#000)}.hero-showreel iframe,.hero-showreel video{display:block;width:100%;height:100%;border:0;object-fit:cover}
+.hero-video-controls{position:absolute;z-index:4;inset-inline-end:16px;bottom:16px;display:flex;gap:8px;padding:6px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(14,10,23,.64);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.24);transition:opacity .2s ease,transform .2s ease}
+.hero-video-button{display:grid;place-items:center;width:42px;height:42px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;transition:background .2s ease,transform .2s ease}.hero-video-button:hover{background:var(--violet);transform:scale(1.06)}.hero-video-button:focus-visible{outline:2px solid #fff;outline-offset:2px}.hero-video-button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.hero-video-button:first-child svg{fill:currentColor}
 html[dir=rtl] .hero-showreel{justify-self:start}
 .about .wrap.has-showreel{grid-template-areas:"copy video" "copy statue";align-items:start}.about .wrap.has-showreel>div:first-child{grid-area:copy;align-self:center}.about .wrap.has-showreel>.hero-showreel{grid-area:video;width:calc(100% + 24px);margin-top:-42px;margin-inline:-12px}.about .wrap.has-showreel>.statue-stage{grid-area:statue;width:100%;margin-top:-24px}
 @media(max-width:1100px){.hero-showreel{width:min(70vw,560px);justify-self:center!important;margin-bottom:28px}.hero:has(.hero-showreel:not([hidden])) .wrap{align-content:center;gap:22px;padding-top:100px}.hero:has(.hero-showreel:not([hidden])) .hero-text{align-self:end}}
@@ -72,13 +74,14 @@ html[dir=rtl] .hero-showreel{justify-self:start}
  .menu-toggle{width:38px;height:38px;border-radius:50%;padding:0}
  .nav .theme-switch{width:38px;height:38px;min-width:38px}
  .nav .language-switch{min-height:38px;padding:7px 12px;font-size:13px}
- .hero:has(.hero-showreel:not([hidden])) .wrap{padding-top:210px;padding-bottom:62px;gap:28px}
+ .hero:has(.hero-showreel:not([hidden])) .wrap{padding-top:222px;padding-bottom:62px;gap:28px}
  .hero:has(.hero-showreel:not([hidden])) h1{font-size:clamp(36px,11vw,48px);line-height:1.08}
  .hero:has(.hero-showreel:not([hidden])) .hero-kicker{font-size:13px;margin-bottom:12px}
  .hero:has(.hero-showreel:not([hidden])) .lead{font-size:15px;line-height:1.7}
  .hero:has(.hero-showreel:not([hidden])) .hero-ctas{display:grid;grid-template-columns:1fr}
  .hero:has(.hero-showreel:not([hidden])) .hero-ctas .btn{justify-content:center;width:100%;padding:12px 16px}
  .hero-showreel{width:100%;margin:0}
+ .hero-video-controls{inset-inline-end:12px;bottom:12px;padding:5px}.hero-video-button{width:38px;height:38px}
 }
 @media(max-width:380px){.wrap{width:calc(100% - 32px)}.hero-ctas{gap:10px}.hero-ctas .btn{padding:12px 18px;font-size:14px}.nav-logo img{height:38px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
