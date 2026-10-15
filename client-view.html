@@ -1,0 +1,383 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>Client Portal</title>
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/core.css">
+  <link rel="stylesheet" href="css/modules.css">
+  <link rel="stylesheet" href="css/portal.css">
+  <link rel="stylesheet" href="css/video-workspace.css">
+
+  <link
+    rel="stylesheet"
+    href="css/reference-home.css?v=client-final-1"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/client-reference.css?v=client-final-1"
+  >
+<link rel="stylesheet" href="css/adaptive.css">
+<link rel="stylesheet" href="css/polish.css?v=reference-shell-8">
+<link rel="stylesheet" href="css/reference-final.css?v=20261006-client-spaces-1">
+<link rel="stylesheet" href="css/workspace-ui.css?v=20261008">
+</head>
+
+<body>
+
+<div
+  id="app"
+  class="ap-app ap-app--workspace ap-app--client"
+>
+
+  <aside
+    id="global-rail"
+    class="ap-global-rail"
+    aria-label="Global navigation"
+  >
+
+    <button
+      class="ap-rail-brand"
+      data-global-view="home"
+      aria-label="Workspace Home"
+    ></button>
+
+    <nav class="ap-rail-nav ap-rail-nav--main">
+
+      <button
+        class="ap-rail-item ap-rail-item--active"
+        data-global-view="home"
+        type="button"
+      >
+        <span class="ap-rail-icon"></span>
+        <span>Home</span>
+      </button>
+
+      <button
+        class="ap-rail-item"
+        data-global-view="inbox"
+        type="button"
+      >
+        <span class="ap-rail-icon"></span>
+        <span>Inbox</span>
+      </button>
+
+      <button
+        class="ap-rail-item"
+        data-global-view="tasks"
+        type="button"
+      >
+        <span class="ap-rail-icon"></span>
+        <span>Tasks</span>
+      </button>
+
+      <button
+        class="ap-rail-item"
+        data-global-view="invoices"
+        type="button"
+      >
+        <span class="ap-rail-icon"></span>
+        <span>Invoices</span>
+      </button>
+
+    </nav>
+
+  </aside>
+
+  <div class="ap-workspace-shell">
+
+    <header
+      id="workspace-header"
+      class="ap-header"
+    >
+
+      <button
+        id="sidebar-toggle"
+        class="ap-icon-button ap-mobile-menu"
+        aria-label="Open navigation"
+        type="button"
+      >
+        ☰
+      </button>
+
+      <div
+        id="global-search"
+        class="ap-search"
+      >
+
+        <span class="ap-search__icon"></span>
+
+        <input
+          type="search"
+          placeholder="Search shared work..."
+          aria-label="Search shared work"
+          autocomplete="off"
+        >
+
+        <div
+          id="global-search-results"
+        ></div>
+
+      </div>
+
+      <div
+        id="user-menu"
+        class="ap-user-menu"
+      ></div>
+
+    </header>
+
+    <div class="ap-body">
+
+      <aside
+        id="workspace-sidebar"
+        class="ap-sidebar"
+      >
+
+        <div
+          id="agency-identity"
+          class="ap-agency-identity"
+        ></div>
+
+        <nav class="ap-workspace-nav">
+
+          <button
+            class="ap-workspace-link ap-workspace-link--active"
+            data-workspace-view="home"
+            type="button"
+          >
+            <span class="ap-workspace-icon"></span>
+
+            <span class="ap-workspace-label">
+              Home
+            </span>
+          </button>
+
+          <button
+            class="ap-workspace-link"
+            data-workspace-view="my-tasks"
+            type="button"
+          >
+            <span class="ap-workspace-icon"></span>
+
+            <span class="ap-workspace-label">
+              My Tasks
+            </span>
+          </button>
+
+          <button
+            class="ap-workspace-link ap-library-toggle"
+            aria-expanded="true"
+            aria-controls="client-library-navigation"
+            type="button"
+          >
+            <span class="ap-workspace-icon"></span>
+
+            <span class="ap-workspace-label">
+              Library
+            </span>
+
+            <span class="ap-workspace-link__chev"></span>
+          </button>
+
+          <div id="client-library-navigation" class="ap-library-nav">
+
+            <button
+              type="button"
+              data-library-view="everything"
+            >
+              <span class="ap-library-nav__icon"></span>
+              <span>Everything</span>
+            </button>
+
+            <button
+              type="button"
+              data-library-view="boards"
+            >
+              <span class="ap-library-nav__icon"></span>
+              <span>Boards</span>
+            </button>
+
+            <button
+              type="button"
+              data-library-view="conversations"
+            >
+              <span class="ap-library-nav__icon"></span>
+              <span>Conversations</span>
+            </button>
+
+            <button
+              type="button"
+              data-library-view="docs"
+            >
+              <span class="ap-library-nav__icon"></span>
+              <span>Documents</span>
+            </button>
+
+            <button
+              type="button"
+              data-library-view="embeds"
+            >
+              <span class="ap-library-nav__icon"></span>
+              <span>Embeds</span>
+            </button>
+
+            <button
+              type="button"
+              data-library-view="files"
+            >
+              <span class="ap-library-nav__icon"></span>
+              <span>Files</span>
+            </button>
+
+          </div>
+
+        </nav>
+
+        <div class="ap-sidebar-section-head">
+          <span>Folders</span>
+        </div>
+
+        <nav
+          id="folder-tree"
+          aria-label="Shared folders"
+        ></nav>
+
+      </aside>
+
+      <div
+        id="sidebar-backdrop"
+        class="ap-sidebar-backdrop"
+      ></div>
+
+      <main class="ap-main">
+
+        <section
+          id="page-header"
+          class="ap-page-header"
+          hidden
+        >
+
+          <div class="ap-page-header__title">
+
+            <button
+              id="back-to-folder"
+              class="ap-icon-button"
+              aria-label="Back"
+              type="button"
+            >
+              ←
+            </button>
+
+            <div>
+
+              <nav
+                id="breadcrumb"
+                class="ap-breadcrumb"
+              ></nav>
+
+              <h1>Projects</h1>
+
+            </div>
+
+          </div>
+
+          <div id="folder-actions"></div>
+
+        </section>
+
+        <div
+          id="module-tabs"
+          class="ap-tabs"
+          role="tablist"
+          hidden
+        >
+
+          <button
+            class="ap-tab"
+            data-module="conversation"
+            type="button"
+          >
+            Conversation
+          </button>
+
+          <button
+            class="ap-tab"
+            data-module="boards"
+            type="button"
+          >
+            Board
+          </button>
+
+          <button
+            class="ap-tab"
+            data-module="docs"
+            type="button"
+          >
+            Docs
+          </button>
+
+          <button
+            class="ap-tab"
+            data-module="files"
+            type="button"
+          >
+            Files
+          </button>
+
+          <button
+            class="ap-tab"
+            data-module="invoices"
+            type="button"
+          >
+            Invoices
+          </button>
+
+        </div>
+
+        <section
+          id="module-content"
+          class="ap-module-content"
+        ></section>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <aside
+    id="inbox-panel"
+    class="ap-inbox-panel"
+  ></aside>
+
+</div>
+
+<div
+  id="toast-container"
+  class="ap-toast-container"
+></div>
+
+<div id="modal-root"></div>
+
+<script src="js/runtime-config.js"></script>
+<script
+  type="module"
+  src="js/clientApp.js?v=navigation-9"
+></script>
+
+</body>
+</html>
+
+

@@ -1,0 +1,1107 @@
+/* ==========================================================
+   ATHAR — CLIENT PORTAL FINAL
+   ========================================================== */
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+
+  margin: 0;
+
+  overflow: hidden;
+}
+
+.ap-app--client {
+  width: 100vw !important;
+  height: 100vh !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    86px
+    minmax(0, 1fr) !important;
+
+  background: #f5f5f5 !important;
+}
+
+.ap-app--client .ap-global-rail {
+  width: 86px !important;
+  height: 100vh !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+
+  padding: 12px 0 !important;
+
+  border: 0 !important;
+  border-right: 1px solid #e6e6e6 !important;
+
+  background: #f5f5f5 !important;
+
+  overflow: hidden !important;
+}
+
+.ap-app--client .ap-rail-brand {
+  width: 55px !important;
+  height: 55px !important;
+
+  min-height: 55px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  margin: 0 0 21px !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 12px !important;
+
+  background: transparent !important;
+
+  cursor: pointer !important;
+}
+
+.ap-app--client .ap-rail-brand img {
+  width: 50px !important;
+  height: 50px !important;
+
+  display: block !important;
+
+  border-radius: 11px !important;
+
+  object-fit: cover !important;
+}
+
+.ap-client-brand-fallback {
+  width: 50px !important;
+  height: 50px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border-radius: 11px !important;
+
+  background: #fff !important;
+
+  color: #252525 !important;
+
+  font-size: 28px !important;
+  font-weight: 700 !important;
+}
+
+.ap-app--client .ap-rail-nav {
+  width: 100% !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+
+  gap: 12px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.ap-app--client .ap-rail-item {
+  width: 78px !important;
+  min-height: 68px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+
+  gap: 5px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+
+  background: transparent !important;
+
+  color: #343434 !important;
+
+  font-size: 12px !important;
+
+  cursor: pointer !important;
+}
+
+.ap-app--client .ap-rail-icon {
+  width: 48px !important;
+  height: 42px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border-radius: 21px !important;
+
+  color: #777 !important;
+
+  transition:
+    background .12s ease,
+    color .12s ease !important;
+}
+
+.ap-app--client .ap-rail-icon .v-svg-icon,
+.ap-app--client .ap-rail-icon svg {
+  width: 23px !important;
+  height: 23px !important;
+}
+
+.ap-app--client
+.ap-rail-item:hover
+.ap-rail-icon {
+  background: #e9e9e9 !important;
+
+  color: #333 !important;
+}
+
+.ap-app--client
+.ap-rail-item--active
+.ap-rail-icon {
+  background: #e1e1e1 !important;
+
+  color: #1f1f1f !important;
+}
+
+.ap-app--client .ap-workspace-shell {
+  min-width: 0 !important;
+
+  height: 100vh !important;
+
+  display: grid !important;
+
+  grid-template-rows:
+    56px
+    minmax(0, 1fr) !important;
+
+  background: #f5f5f5 !important;
+}
+
+.ap-app--client .ap-header {
+  position: relative !important;
+
+  width: 100% !important;
+  height: 56px !important;
+
+  padding: 0 !important;
+
+  background: #f5f5f5 !important;
+}
+
+.ap-app--client .ap-search {
+  position: absolute !important;
+
+  top: 7px !important;
+  left: 50% !important;
+
+  transform:
+    translateX(-50%) !important;
+
+  width: 500px !important;
+  height: 42px !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  padding: 0 !important;
+
+  border: 1px solid #aaa !important;
+  border-radius: 8px !important;
+
+  background: #fff !important;
+
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.08),
+    0 2px 6px rgba(0,0,0,.05) !important;
+
+  overflow: visible !important;
+}
+
+.ap-app--client .ap-search__icon {
+  width: 42px !important;
+  height: 40px !important;
+
+  flex: 0 0 42px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  position: static !important;
+
+  transform: none !important;
+
+  color: #919191 !important;
+
+  pointer-events: none !important;
+}
+
+.ap-app--client
+.ap-search__icon
+.v-svg-icon,
+.ap-app--client
+.ap-search__icon svg {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.ap-app--client .ap-search input {
+  flex: 1 !important;
+
+  width: auto !important;
+  height: 40px !important;
+
+  min-width: 0 !important;
+
+  padding: 0 14px 0 0 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  color: #444 !important;
+
+  font-size: 14px !important;
+}
+
+.ap-app--client
+.ap-search input::placeholder {
+  color: #999 !important;
+}
+
+.ap-app--client .ap-user-menu {
+  position: absolute !important;
+
+  top: 8px !important;
+  right: 15px !important;
+
+  z-index: 1200 !important;
+}
+
+.ap-app--client .ap-profile-trigger {
+  width: 40px !important;
+  height: 40px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  padding: 0 !important;
+
+  border: 0 !important;
+
+  background: transparent !important;
+
+  cursor: pointer !important;
+}
+
+.ap-app--client .ap-profile-avatar {
+  width: 36px !important;
+  height: 36px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border-radius: 50% !important;
+
+  background: #8f26e8 !important;
+
+  color: #fff !important;
+
+  font-size: 13px !important;
+}
+
+.ap-app--client .ap-profile-menu {
+  position: absolute !important;
+
+  top: 45px !important;
+  right: 0 !important;
+
+  width: 220px !important;
+
+  padding: 7px !important;
+
+  border: 1px solid #ddd !important;
+  border-radius: 10px !important;
+
+  background: #fff !important;
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.14) !important;
+}
+
+.ap-app--client
+.ap-profile-menu[hidden] {
+  display: none !important;
+}
+
+.ap-app--client
+.ap-profile-menu__item {
+  width: 100% !important;
+  min-height: 39px !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    24px
+    minmax(0,1fr) !important;
+
+  align-items: center !important;
+
+  gap: 8px !important;
+
+  padding: 0 10px !important;
+
+  border: 0 !important;
+  border-radius: 6px !important;
+
+  background: transparent !important;
+
+  color: #444 !important;
+
+  text-align: left !important;
+
+  cursor: pointer !important;
+}
+
+.ap-app--client
+.ap-profile-menu__item:hover {
+  background: #f2f2f2 !important;
+}
+
+.ap-app--client
+.ap-profile-menu__item
+.v-svg-icon,
+.ap-app--client
+.ap-profile-menu__item svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.ap-app--client .ap-body {
+  width: calc(100% - 12px) !important;
+  height: calc(100% - 12px) !important;
+
+  min-height: 0 !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    325px
+    minmax(0,1fr) !important;
+
+  margin: 0 12px 12px 0 !important;
+  padding: 0 !important;
+
+  border: 1px solid #dadada !important;
+  border-radius: 15px !important;
+
+  background: #fff !important;
+
+  overflow: hidden !important;
+}
+
+.ap-app--client .ap-sidebar {
+  width: auto !important;
+  min-width: 0 !important;
+  height: 100% !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  padding: 22px 14px 25px !important;
+
+  border: 0 !important;
+  border-right: 1px solid #e4e4e4 !important;
+
+  background: #fff !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.ap-app--client .ap-agency-identity {
+  width: 100% !important;
+  min-height: 48px !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  gap: 9px !important;
+
+  margin: 0 0 27px !important;
+  padding: 0 9px !important;
+}
+
+.ap-app--client .ap-workspace-logo {
+  width: 32px !important;
+  height: 32px !important;
+
+  flex: 0 0 32px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border-radius: 7px !important;
+
+  object-fit: cover !important;
+}
+
+.ap-workspace-logo--fallback {
+  background: #eeeeee !important;
+
+  color: #333 !important;
+
+  font-size: 16px !important;
+  font-weight: 650 !important;
+}
+
+.ap-app--client
+.ap-client-workspace-name {
+  min-width: 0 !important;
+
+  overflow: hidden !important;
+
+  color: #262626 !important;
+
+  font-size: 20px !important;
+  font-weight: 650 !important;
+
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.ap-app--client
+.ap-workspace-nav {
+  width: 100% !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  gap: 2px !important;
+
+  margin: 0 0 20px !important;
+}
+
+.ap-app--client
+.ap-workspace-link {
+  width: 100% !important;
+  min-height: 42px !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    24px
+    minmax(0,1fr)
+    18px !important;
+
+  align-items: center !important;
+
+  gap: 9px !important;
+
+  padding: 0 11px !important;
+
+  border: 0 !important;
+  border-radius: 7px !important;
+
+  background: transparent !important;
+
+  color: #343434 !important;
+
+  text-align: left !important;
+
+  font-size: 15px !important;
+
+  cursor: pointer !important;
+}
+
+.ap-app--client
+.ap-workspace-link:hover {
+  background: #f4f4f4 !important;
+}
+
+.ap-app--client
+.ap-workspace-link--active {
+  background: #ededed !important;
+
+  color: #222 !important;
+}
+
+.ap-app--client
+.ap-workspace-icon {
+  width: 22px !important;
+  height: 22px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  color: #737373 !important;
+}
+
+.ap-app--client
+.ap-workspace-link--active
+.ap-workspace-icon {
+  color: #333 !important;
+}
+
+.ap-app--client
+.ap-workspace-icon
+.v-svg-icon,
+.ap-app--client
+.ap-workspace-icon svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+.ap-app--client
+.ap-workspace-link__chev {
+  width: 18px !important;
+  height: 18px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  color: #8b8b8b !important;
+
+  transition:
+    transform .15s ease !important;
+}
+
+.ap-app--client
+.ap-workspace-link__chev svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.ap-app--client
+.ap-library-toggle.is-open
+.ap-workspace-link__chev {
+  transform:
+    rotate(180deg) !important;
+}
+
+.ap-app--client
+.ap-library-nav {
+  width: calc(100% - 33px) !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  gap: 1px !important;
+
+  margin:
+    2px
+    0
+    9px
+    33px !important;
+
+  padding:
+    4px
+    0
+    5px
+    9px !important;
+
+  border-left:
+    1px solid #e5e5e5 !important;
+}
+
+.ap-app--client
+.ap-library-nav[hidden] {
+  display: none !important;
+}
+
+.ap-app--client
+.ap-library-nav button {
+  width: 100% !important;
+  min-height: 34px !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    20px
+    minmax(0,1fr) !important;
+
+  align-items: center !important;
+
+  gap: 7px !important;
+
+  padding: 0 9px !important;
+
+  border: 0 !important;
+  border-radius: 6px !important;
+
+  background: transparent !important;
+
+  color: #737373 !important;
+
+  text-align: left !important;
+
+  font-size: 13px !important;
+
+  cursor: pointer !important;
+}
+
+.ap-app--client
+.ap-library-nav button:hover {
+  background: #f3f3f3 !important;
+
+  color: #343434 !important;
+}
+
+.ap-app--client
+.ap-library-nav
+.ap-library-nav__active {
+  background: #eeeeee !important;
+
+  color: #222 !important;
+
+  font-weight: 500 !important;
+}
+
+.ap-app--client
+.ap-library-nav__icon {
+  width: 19px !important;
+  height: 19px !important;
+
+  display: grid !important;
+  place-items: center !important;
+}
+
+.ap-app--client
+.ap-library-nav__icon
+.v-svg-icon,
+.ap-app--client
+.ap-library-nav__icon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.ap-app--client
+.ap-sidebar-section-head {
+  margin: 10px 0 6px !important;
+
+  padding: 0 11px !important;
+
+  color: #999 !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.ap-app--client #folder-tree {
+  width: 100% !important;
+}
+
+.ap-app--client
+.ap-sidebar-empty {
+  padding: 10px 11px !important;
+
+  color: #999 !important;
+
+  font-size: 12px !important;
+
+  line-height: 1.5 !important;
+}
+
+.ap-app--client
+.ap-folder-tree__row {
+  width: 100% !important;
+  min-height: 38px !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    12px
+    21px
+    minmax(0,1fr) !important;
+
+  align-items: center !important;
+
+  gap: 7px !important;
+
+  padding: 2px 8px !important;
+
+  border-radius: 6px !important;
+}
+
+.ap-app--client
+.ap-folder-tree__row:hover {
+  background: #f4f4f4 !important;
+}
+
+.ap-app--client
+.ap-folder-tree__row--active {
+  background: #ededed !important;
+}
+
+.ap-app--client .ap-main {
+  grid-column: 2 !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+
+  background: #fff !important;
+}
+
+.ap-app--client
+.ap-module-content {
+  width: 100% !important;
+  min-height: 100% !important;
+
+  max-width: none !important;
+
+  margin: 0 !important;
+}
+
+.ap-app--client
+.ap-library-view {
+  width: min(
+    970px,
+    calc(100% - 70px)
+  ) !important;
+
+  margin: 0 auto !important;
+
+  padding:
+    48px
+    0
+    65px !important;
+}
+
+.ap-app--client
+.ap-library-heading {
+  width: 100% !important;
+
+  display: flex !important;
+
+  justify-content:
+    space-between !important;
+
+  align-items:
+    flex-start !important;
+
+  margin-bottom:
+    25px !important;
+}
+
+.ap-app--client
+.ap-view-title__heading {
+  margin: 0 !important;
+
+  color: #292929 !important;
+
+  font-size: 24px !important;
+
+  line-height: 30px !important;
+
+  font-weight: 650 !important;
+}
+
+.ap-app--client
+.ap-view-title__subtitle {
+  margin: 4px 0 0 !important;
+
+  color: #999 !important;
+
+  font-size: 12px !important;
+}
+
+.ap-app--client
+.ap-collection-filters {
+  width: 100% !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  gap: 9px !important;
+
+  margin-bottom:
+    25px !important;
+}
+
+.ap-app--client
+.ap-collection-search {
+  width: 310px !important;
+  height: 39px !important;
+
+  padding: 0 12px !important;
+
+  border: 1px solid #ddd !important;
+
+  border-radius: 7px !important;
+
+  outline: 0 !important;
+
+  background: #fff !important;
+
+  color: #444 !important;
+}
+
+.ap-app--client
+.ap-collection-search:focus {
+  border-color: #aaa !important;
+}
+
+.ap-app--client
+.ap-filter-select {
+  height: 39px !important;
+
+  padding: 0 12px !important;
+
+  border: 1px solid #ddd !important;
+
+  border-radius: 7px !important;
+
+  background: #fff !important;
+}
+
+.ap-app--client
+.ap-library-table {
+  width: 100% !important;
+
+  border-top:
+    1px solid #ededed !important;
+}
+
+.ap-app--client
+.ap-library-table__row {
+  width: 100% !important;
+
+  min-height: 62px !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    minmax(300px,1.6fr)
+    150px
+    120px
+    42px !important;
+
+  align-items: center !important;
+
+  gap: 15px !important;
+
+  padding: 0 9px !important;
+
+  border-bottom:
+    1px solid #ededed !important;
+}
+
+.ap-app--client
+.ap-library-table__row--head {
+  min-height: 40px !important;
+
+  color: #999 !important;
+
+  font-size: 12px !important;
+}
+
+.ap-app--client
+.ap-library-name {
+  position: relative !important;
+
+  min-width: 0 !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  gap: 11px !important;
+}
+
+.ap-app--client
+.ap-library-name__icon {
+  width: 34px !important;
+  height: 34px !important;
+
+  flex: 0 0 34px !important;
+
+  display: grid !important;
+  place-items: center !important;
+}
+
+.ap-app--client
+.ap-library-name__icon
+.v-svg-icon,
+.ap-app--client
+.ap-library-name__icon svg {
+  width: 21px !important;
+  height: 21px !important;
+}
+
+.ap-app--client
+.ap-library-name strong {
+  display: block !important;
+
+  overflow: hidden !important;
+
+  color: #353535 !important;
+
+  font-size: 13px !important;
+  font-weight: 500 !important;
+
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.ap-app--client
+.ap-library-name small {
+  display: block !important;
+
+  margin-top: 3px !important;
+
+  overflow: hidden !important;
+
+  color: #aaa !important;
+
+  font-size: 11px !important;
+
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.ap-app--client
+.ap-library-muted {
+  color: #777 !important;
+
+  font-size: 12px !important;
+}
+
+.ap-app--client
+.ap-library-row-button {
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  border: 0 !important;
+
+  background: transparent !important;
+
+  cursor: pointer !important;
+}
+
+.ap-app--client
+.ap-centered-empty {
+  min-height: 390px !important;
+
+  display: flex !important;
+
+  flex-direction: column !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  text-align: center !important;
+
+  color: #999 !important;
+}
+
+.ap-app--client
+.ap-centered-empty h3 {
+  margin: 12px 0 6px !important;
+
+  color: #444 !important;
+
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+.ap-app--client
+.ap-centered-empty p {
+  margin: 0 !important;
+
+  color: #999 !important;
+
+  font-size: 12px !important;
+}
+
+.ap-app--client
+.k-home-create-section,
+.ap-app--client
+.k-home-create-grid,
+.ap-app--client
+.ap-create-grid {
+  display: none !important;
+}
+
+@media (max-width: 850px) {
+
+  .ap-app--client {
+    grid-template-columns:
+      64px
+      minmax(0,1fr) !important;
+  }
+
+  .ap-app--client
+  .ap-global-rail {
+    width: 64px !important;
+  }
+
+  .ap-app--client
+  .ap-rail-item {
+    width: 60px !important;
+
+    font-size: 0 !important;
+  }
+
+  .ap-app--client
+  .ap-search {
+    left: 10px !important;
+
+    width:
+      calc(100% - 75px) !important;
+
+    transform: none !important;
+  }
+
+  .ap-app--client
+  .ap-body {
+    grid-template-columns:
+      minmax(0,1fr) !important;
+  }
+
+  .ap-app--client
+  .ap-sidebar {
+    position: fixed !important;
+
+    top: 56px !important;
+    bottom: 0 !important;
+    left: 64px !important;
+
+    width: 310px !important;
+
+    z-index: 1500 !important;
+
+    transform:
+      translateX(-110%) !important;
+
+    transition:
+      transform .18s ease !important;
+
+    box-shadow:
+      5px 0 22px
+      rgba(0,0,0,.14) !important;
+  }
+
+  body.ap-sidebar-open
+  .ap-app--client
+  .ap-sidebar {
+    transform:
+      translateX(0) !important;
+  }
+
+  .ap-app--client
+  .ap-main {
+    grid-column: 1 !important;
+  }
+
+}

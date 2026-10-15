@@ -1,0 +1,14 @@
+.ap-auth-logo--default {
+  inline-size: min(8rem, 100%);
+  block-size: auto;
+  place-items: start;
+  background: transparent;
+  border-radius: 0;
+}
+
+.ap-auth-logo--default img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  object-fit: contain;
+}

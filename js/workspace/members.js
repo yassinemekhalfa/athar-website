@@ -1,0 +1,28 @@
+import {db} from '../dataClient.js';
+import {getState} from '../core/state.js';
+import {AppCore} from '../core/appCore.js';
+import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js';
+import {ROLES,normalizeRole,roleLabel,roleBadge,canManageRole} from '../core/permissions.js';
+const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;};
+const button=(text,fn)=>{const b=el('button','ap-btn ap-btn--secondary',text);b.type='button';b.addEventListener('click',fn);return b;};
+export async function renderMembersView(container){
+ const state=getState();AppCore.ui.renderLoading(container,'Loading members…');
+ try{const {data:members,error}=await db.from('agency_members').select('*').eq('agency_id',state.agency.id);if(error)throw error;
+  const profiles=await db.from('profiles').select('*').in('id',members.map(m=>m.profile_id));if(profiles.error)throw profiles.error;
+  const root=el('section','k-settings-inner');root.append(el('h1','','Teammates'),el('p','','Assign each teammate the access level that matches their work. Client accounts are managed separately.'));
+  const manage=canManageRole(state.role);if(manage)root.append(button('Invite member',()=>openTeamInvite(()=>renderMembersView(container))));
+  const list=el('div','ap-table-list');for(const member of members){const p=profiles.data.find(x=>x.id===member.profile_id)||{};const row=el('div','ap-table-list__row');const identity=el('div');identity.append(el('strong','',p.full_name||p.email||'Member'),el('div','',p.email||''),roleBadge(member.role));const controls=el('div','ap-member-controls');
+   const protectedRole=['owner','admin'].includes(member.role)&&state.role!=='owner';
+   if(manage&&!protectedRole&&member.profile_id!==state.user.id){const select=el('select','ap-select');select.setAttribute('aria-label',`Role for ${p.full_name||p.email}`);const choices=ROLES.filter(r=>r!=='client'&&(state.role==='owner'||!['owner','admin'].includes(r)));if(member.role==='client')choices.push('client');for(const role of choices){const o=el('option','',roleLabel(role));o.value=role;select.append(o);}select.value=normalizeRole(member.role);
+    select.addEventListener('change',async()=>{select.disabled=true;try{const {error}=await db.from('agency_members').update({role:select.value,client_id:select.value==='client'?member.client_id:null}).eq('id',member.id);if(error)throw error;AppCore.ui.toast('Role updated.','success');await renderMembersView(container);}catch(error){select.value=normalizeRole(member.role);AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{select.disabled=false;}});controls.append(select,button('Remove',async()=>{if(!await AppCore.ui.confirm({title:'Remove member?',message:'This person will lose workspace access.',confirmLabel:'Remove',danger:true}))return;const {error}=await db.from('agency_members').delete().eq('id',member.id);if(error)return AppCore.ui.toast(AppCore.ui.describeError(error),'error');await renderMembersView(container);}));
+   }row.append(identity,controls);list.append(row);
+  }root.append(list);
+  if(manage){const invitations=await listInvitations();for(const inv of invitations.filter(i=>i.status==='pending')){const row=el('div','ap-settings-item');row.append(el('span','',`${inv.email} — invitation pending`),roleBadge(inv.intended_role),button('Revoke',async()=>{try{await revokeInvitation(inv.id);await renderMembersView(container);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}}));root.append(row);}}
+  container.replaceChildren(root);
+ }catch(error){AppCore.ui.renderError(container,error,()=>renderMembersView(container));}
+}
+export function openTeamInvite(done){
+ const state=getState();if(!canManageRole(state.role))return;const form=el('form','ap-stack');const email=el('input','ap-input');email.type='email';email.required=true;email.placeholder='Email';email.setAttribute('aria-label','Invitation email');const role=el('select','ap-select');role.setAttribute('aria-label','Invitation role');for(const value of ROLES.filter(r=>r!=='client'&&(state.role==='owner'||!['owner','admin'].includes(r)))){const o=el('option','',roleLabel(value));o.value=value;role.append(o);}role.value='viewer';
+ const submit=el('button','ap-btn ap-btn--primary','Create invitation link');submit.type='submit';const result=el('div','ap-invite-result');form.append(email,role,submit,result);
+ form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;try{const inv=await inviteMember({email:email.value,role:role.value});const link=el('input','ap-input');link.readOnly=true;link.value=inv.link;link.setAttribute('aria-label','Invitation link');result.replaceChildren(el('p','','Invitation saved locally. No email was sent.'),link,button('Copy link',async()=>{try{await navigator.clipboard.writeText(inv.link);AppCore.ui.toast('Link copied.','success');}catch{link.select();}}));await done?.();}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{submit.disabled=false;}});AppCore.ui.openModal({title:'Invite member',content:form,actions:[]});
+}

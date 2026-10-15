@@ -1,5 +1,6 @@
 import {getLanguage,translate as t} from './landingI18n.js';
 import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js';
+import {db,isSupabaseMode} from './dataClient.js';
 let portfolioProjects=[];
 
 const grid=document.getElementById('portfolio-grid');
@@ -9,16 +10,22 @@ const search=document.getElementById('portfolio-search');
 const count=document.getElementById('portfolio-count');
 const dialog=document.getElementById('project-dialog');
 const categories={all:'كل المشاريع',identity:'هوية بصرية',digital:'تجارب رقمية',motion:'موشن وفيديو'};
+const sectors={all:{ar:'كل المشاريع',en:'All projects'},medical:{ar:'القطاع الطبي',en:'Medical'},realestate:{ar:'العقارات',en:'Real estate'},industry:{ar:'الصناعة',en:'Industry'},other:{ar:'قطاعات أخرى',en:'Other sectors'}};
 let category='all',activeProject=null,returnFocus=null,loaded=false,loadError=false;
 const localized=value=>typeof value==='string'?value:value?.[getLanguage()]||value?.en||value?.ar||'';
 const sectorLabels={medical:{ar:'القطاع الطبي',en:'Medical'},realestate:{ar:'العقارات',en:'Real estate'},industry:{ar:'الصناعة',en:'Industry'},other:{ar:'قطاعات أخرى',en:'Other sectors'}};
-const sectorLabel=project=>sectorLabels[project.sector||'other'][getLanguage()];
+const legacyConceptSectors={nova:'medical',form:'realestate',atelier:'realestate',orbit:'industry',north:'other',luma:'other'};
+const sectorKey=project=>project.sector||legacyConceptSectors[project.id]||'other';
+const sectorLabel=project=>sectorLabels[sectorKey(project)][getLanguage()];
 function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
 function projectUrl(project){const url=new URL('projects.html',location.href);url.searchParams.set('lang',getLanguage());url.searchParams.set('project',project.id);return url.pathname+url.search;}
+const cropFor=(project,kind)=>({ratio:'landscape',x:50,y:50,zoom:1,...(project.presentation?.[kind]||{})});
+const cropRatio=value=>value==='portrait'?'4 / 5':value==='square'?'1 / 1':'16 / 10';
+function applyCrop(host,item,crop,{useRatio=true}={}){if(useRatio)host.style.aspectRatio=cropRatio(crop.ratio);item.style.setProperty('--media-x',`${crop.x}%`);item.style.setProperty('--media-y',`${crop.y}%`);item.style.setProperty('--media-zoom',crop.zoom);}
 function media(src,alt,className){const image=element('img',className);image.src=src;image.alt=alt;image.loading='lazy';image.width=1200;image.height=900;return image;}
 function card(project,teaser=false){
  const article=element('article','portfolio-card');const link=element('a','portfolio-card-link');link.href=projectUrl(project);
- const art=element('div','portfolio-art');art.append(media(project.cover,`${project.name} — ${localized(project.title)}`));
+ const art=element('div','portfolio-art');const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.append(cover);
  if(project.concept)art.append(element('span','portfolio-concept',t('تصور إبداعي')));
  if(project.video)art.append(element('span','portfolio-play',`▶ ${t('فيلم قصير')}`));
  const body=element('div','portfolio-card-body');const meta=element('div','portfolio-meta');meta.append(element('span','',t(categories[project.category])),element('span','',project.year));
@@ -32,14 +39,14 @@ function updateGrid(){
  if(!grid)return;
  if(!loaded){renderLoadState();return;}
  const query=search.value.trim().toLocaleLowerCase();
- const found=portfolioProjects.filter(project=>(category==='all'||project.category===category)&&[project.name,...Object.values(project.title),...Object.values(project.summary),...Object.values(project.services).flat()].join(' ').toLocaleLowerCase().includes(query));
+ const found=portfolioProjects.filter(project=>(category==='all'||sectorKey(project)===category)&&[project.name,sectorLabel(project),...Object.values(project.title),...Object.values(project.summary),...Object.values(project.services).flat()].join(' ').toLocaleLowerCase().includes(query));
  grid.replaceChildren(...found.map(project=>card(project)));
  count.textContent=getLanguage()==='en'?`${found.length} ${found.length===1?'project':'projects'}`:`${found.length} مشاريع`;
  if(!found.length){const empty=element('div','portfolio-empty');empty.append(element('h2','',t(portfolioProjects.length?'لا توجد نتائج مطابقة':'لم ننشر مشاريع بعد')),element('p','',t(portfolioProjects.length?'جرّب كلمة أخرى أو اعرض كل المشاريع.':'عد قريباً للاطلاع على أعمالنا الجديدة.')));if(portfolioProjects.length){const reset=element('button','button button-outline',t('مسح البحث والتصفية'));reset.type='button';reset.addEventListener('click',()=>{category='all';search.value='';updateFilters();updateGrid();search.focus();});empty.append(reset);}grid.append(empty);}
 }
 function updateFilters(){
  if(!filters)return;filters.replaceChildren();
- for(const [id,label] of Object.entries(categories)){const button=element('button','portfolio-filter',t(label));button.type='button';button.dataset.category=id;button.setAttribute('aria-pressed',String(category===id));button.addEventListener('click',()=>{category=id;for(const item of filters.children)item.setAttribute('aria-pressed',String(item===button));updateGrid();});filters.append(button);}
+ for(const [id,label] of Object.entries(sectors)){const button=element('button','portfolio-filter',localized(label));button.type='button';button.dataset.category=id;button.setAttribute('aria-pressed',String(category===id));button.addEventListener('click',()=>{category=id;for(const item of filters.children)item.setAttribute('aria-pressed',String(item===button));updateGrid();});filters.append(button);}
 }
 function fillProject(project){
  const body=dialog.querySelector('.project-dialog-body');for(const video of body.querySelectorAll('video'))video.pause();body.replaceChildren();
@@ -48,19 +55,20 @@ function fillProject(project){
  body.append(element('span','section-kicker',`${t(categories[project.category])} / ${project.year}`));
  const heading=element('h2','',project.name);heading.id='project-title';body.append(heading,element('p','project-subtitle',localized(project.title)));
  if(project.concept)body.append(element('p','project-disclaimer',t('كل الأعمال المعروضة هنا مشاريع تصورية للعرض، وليست أعمال عملاء حقيقية.')));
- body.append(media(project.cover,`${project.name} — ${localized(project.title)}`,'project-hero-image'));
+ const hero=element('div','project-hero-media');const heroImage=media(project.cover,`${project.name} — ${localized(project.title)}`,'project-hero-image');applyCrop(hero,heroImage,cropFor(project,'cover'));hero.append(heroImage);body.append(hero);
  const intro=element('div','project-intro');const about=element('div');about.append(element('h3','',t('عن المشروع')),element('p','',localized(project.description)));
  const scope=element('div');scope.append(element('h3','',t('نطاق العمل')));const list=element('ul');for(const service of localized(project.services))list.append(element('li','',service));scope.append(list);intro.append(about,scope);body.append(intro);
  if(project.video){
   const section=element('section','project-film');section.append(element('h3','',t('معاينة الفيديو')));
+  const filmFrame=element('div','project-film-frame');applyCrop(filmFrame,filmFrame,cropFor(project,'video'));
   if(project.video.type==='video/google-drive'){
    const frame=element('iframe');frame.src=project.video.src;frame.title=`${project.name} — ${t('معاينة الفيديو')}`;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';section.append(frame);
   }else{
    const video=element('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.poster=project.video.poster||project.cover;video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);
-   const source=element('source');source.src=project.video.src;source.type=project.video.type;video.append(source);section.append(video);
+   const source=element('source');source.src=project.video.src;source.type=project.video.type;video.append(source);filmFrame.append(video);
    const download=element('a','small-link',t('تنزيل الفيديو'));download.href=project.video.src;download.download=project.video.src.split('/').at(-1);section.append(download);
   }
-  body.append(section);
+  if(project.video.type==='video/google-drive'){const frame=section.querySelector('iframe');filmFrame.append(frame);}section.insertBefore(filmFrame,section.querySelector('.small-link'));body.append(section);
  }
  const gallery=element('section','project-gallery');gallery.append(element('h3','',t('معرض الصور')));
  for(const [index,src] of project.images.entries()){
@@ -109,7 +117,7 @@ function renderLoadState(){
 }
 async function loadProjects(){
  loaded=false;loadError=false;refresh();
- try{let data;if(conceptMode){data=(await import('./portfolioProjects.js')).portfolioProjects;}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');portfolioProjects=data.map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
+ try{let data;if(conceptMode){data=(await import('./portfolioProjects.js')).portfolioProjects;}else if(isSupabaseMode){const {data:rows,error}=await db.from('website_projects').select('published').not('published','is',null).order('published_at',{ascending:false});if(error)throw error;data=(rows||[]).map(row=>row.published);}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');portfolioProjects=data.map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
 if(dialog){const requested=new URL(location.href).searchParams.get('project');const project=portfolioProjects.find(item=>item.id===requested);if(project)openProject(project,{updateUrl:false});else if(requested){const notice=element('p','project-disclaimer',`${t('مشروع غير موجود')}. ${t('يمكنك استكشاف المشاريع الأخرى في المعرض.')}`);grid.before(notice);}}
 
  }catch{loaded=false;loadError=true;renderLoadState();}
