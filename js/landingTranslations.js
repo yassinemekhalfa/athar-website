@@ -353,5 +353,8 @@ export const englishCopy = {
   "لنحدّد موعدًا ونبني معًا استراتيجية تناسب أهدافك.": "Let's schedule a conversation and build a strategy around your goals.",
   "راسلنا على واتساب": "Message us on WhatsApp",
   "أرسل بريدًا": "Send an email",
-  "بئر خادم، الجزائر": "Birkhadem, Algeria"
+  "بئر خادم، الجزائر": "Birkhadem, Algeria",
+  "ثقة نبني عليها": "Trusted partnerships",
+  "عملاء وضعوا ثقتهم في أثر": "Clients who put their trust in Athar",
+  "عملاؤنا": "Our clients"
 };

@@ -2,7 +2,7 @@ import {googleDrivePreview,googleDriveImage} from './drive-video.js';
 import {db,isSupabaseMode} from './dataClient.js';
 const $=id=>document.getElementById(id);
 const form=$('project-form'),status=$('status');
-let projects=[],current=null,dirty=false,busy=false;
+let projects=[],current=null,dirty=false,busy=false,trustedClients=[];
 const node=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
 function notify(text,error=false){status.textContent=text;status.classList.toggle('error',error);}
 async function api(url,options={}){
@@ -62,6 +62,23 @@ function readProject(){
  if(project.video)project.video={...project.video,poster:project.cover};return project;
 }
 async function refresh(){const data=await api('/api/website/admin');projects=data.projects;renderList();return data;}
+async function refreshTrustedClients(){
+ const {membership}=await getOwnerContext();const {data,error}=await db.from('website_trusted_clients').select('*').eq('agency_id',membership.agency_id).order('position').order('created_at');
+ if(error)throw error;trustedClients=data||[];renderTrustedClients();
+}
+function renderTrustedClients(){
+ $('trusted-client-list').replaceChildren(...trustedClients.map(client=>{
+  const row=node('article');row.className='trusted-client-admin-row';const logo=googleDriveImage(client.logo_url)||client.logo_url;
+  if(logo){const image=node('img');image.src=logo;image.alt='';row.append(image);}else row.append(node('span','No logo'));
+  const details=node('div');details.append(node('strong',client.name),node('small',client.published?'Visible on website':'Hidden from website'));row.append(details,node('span',`Order ${client.position}`));
+  const remove=node('button','Delete');remove.type='button';remove.className='danger';remove.addEventListener('click',async()=>{if(!confirm(`Delete ${client.name} from the trusted clients bar?`))return;remove.disabled=true;const {error}=await db.from('website_trusted_clients').delete().eq('id',client.id);if(error){remove.disabled=false;return notify(error.message,true);}await refreshTrustedClients();notify('Trusted client deleted.');});row.append(remove);return row;
+ }));
+}
+$('trusted-client-form').addEventListener('submit',async event=>{
+ event.preventDefault();const {membership}=await getOwnerContext(),rawLogo=$('trusted-client-logo').value.trim(),logo=googleDriveImage(rawLogo)||rawLogo,submit=event.submitter;
+ submit.disabled=true;const {error}=await db.from('website_trusted_clients').insert({agency_id:membership.agency_id,name:$('trusted-client-name').value.trim(),logo_url:logo||null,website_url:$('trusted-client-website').value.trim()||null,position:Number($('trusted-client-position').value)||0,published:$('trusted-client-published').checked});submit.disabled=false;
+ if(error)return notify(error.message,true);event.currentTarget.reset();$('trusted-client-position').value='0';$('trusted-client-published').checked=true;await refreshTrustedClients();notify('Trusted client added to the website bar.');
+});
 async function save(action){
  if(busy||!form.reportValidity())return;
  if(action==='publish'&&!confirm('Publish this project on your public website?'))return;
@@ -120,4 +137,4 @@ $('preview-project').addEventListener('click',()=>{
 $('close-preview').addEventListener('click',()=>$('preview-dialog').close());$('preview-dialog').addEventListener('close',()=>{for(const video of $('preview-dialog').querySelectorAll('video'))video.pause();});
 $('sign-out').addEventListener('click',async()=>{if(busy||!confirmLeave())return;try{await api('/api/auth/signout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});dirty=false;location.assign('login.html?next=admin');}catch(error){notify(error.message,true);}});
 window.addEventListener('beforeunload',event=>{if(dirty||busy){event.preventDefault();event.returnValue='';}});
-try{const data=await refresh();$('studio').hidden=false;$('new-project').disabled=false;notify(`Signed in as ${data.email}. Only published content is public.`);}catch(error){if(error.status===401)location.replace('login.html?next=admin');else{$('access-denied').hidden=false;notify(error.message,true);}}
+try{const data=await refresh();await refreshTrustedClients();$('studio').hidden=false;$('trusted-clients-admin').hidden=false;$('new-project').disabled=false;notify(`Signed in as ${data.email}. Only published content is public.`);}catch(error){if(error.status===401)location.replace('login.html?next=admin');else{$('access-denied').hidden=false;notify(error.message,true);}}

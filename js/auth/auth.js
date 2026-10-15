@@ -28,6 +28,12 @@ export async function restoreAuth(surface = null) {
 }
 export async function loadIdentity(){
   const user=getState().user; if(!user){setState({profile:null,memberships:[]});return;}
+  if(isSupabaseMode){
+    const {data,error}=await db.rpc("get_my_workspace_identity");
+    if(error)throw error;
+    setState({profile:data?.profile||null,memberships:data?.memberships||[]});
+    return;
+  }
   const [{data:profile,error:pErr},{data:memberships,error:mErr}]=await Promise.all([
     db.from("profiles").select("*").eq("id",user.id).maybeSingle(),
     db.from("agency_members").select("*, agencies(*)").eq("profile_id",user.id)
