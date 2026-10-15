@@ -74,7 +74,7 @@ html[dir=rtl] .hero-showreel{justify-self:start}
  .menu-toggle{width:38px;height:38px;border-radius:50%;padding:0}
  .nav .theme-switch{width:38px;height:38px;min-width:38px}
  .nav .language-switch{min-height:38px;padding:7px 12px;font-size:13px}
- .hero:has(.hero-showreel:not([hidden])) .wrap{padding-top:222px;padding-bottom:62px;gap:28px}
+ .hero:has(.hero-showreel:not([hidden])) .wrap{align-content:start;padding-top:260px;padding-bottom:62px;gap:28px}
  .hero:has(.hero-showreel:not([hidden])) h1{font-size:clamp(36px,11vw,48px);line-height:1.08}
  .hero:has(.hero-showreel:not([hidden])) .hero-kicker{font-size:13px;margin-bottom:12px}
  .hero:has(.hero-showreel:not([hidden])) .lead{font-size:15px;line-height:1.7}
