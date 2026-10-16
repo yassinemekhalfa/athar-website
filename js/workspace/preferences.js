@@ -22,7 +22,7 @@ export async function savePreferences(patch) {
 }
 export async function uploadBrandAsset(file,kind='logo') {
   if(!/^image\/(png|jpeg|webp|gif|svg\+xml)$/.test(file.type)||file.size>5*1024*1024) throw Object.assign(new Error('Choose an image smaller than 5 MB.'),{userMessage:true});
-  const path=`${getState().agency.id}/${kind}/${crypto.randomUUID()}.${file.name.split('.').pop().replace(/[^a-z0-9]/gi,'')}`;
+  const path=`${getState().agency.id}/${kind}/${globalThis.ATHAR_UUID()}.${file.name.split('.').pop().replace(/[^a-z0-9]/gi,'')}`;
   const {error}=await db.storage.from('agency-branding').upload(path,file);
   if(error)throw error;
   return db.storage.from('agency-branding').getPublicUrl(path).data.publicUrl;

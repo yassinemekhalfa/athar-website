@@ -1316,7 +1316,7 @@ async function openTaskMediaReview(task, attachment, canAnnotate = true) {
         nextDetails.media_pins = [
           ...(nextDetails.media_pins || []),
           {
-            id: crypto.randomUUID(),
+            id: globalThis.ATHAR_UUID(),
             attachment_id: attachment.id,
             comment_id: (taskDetailData(task).media_comments || []).find(item => item.attachments?.some(file => file.id === attachment.id))?.comment_id || null,
             body: value,
@@ -1374,7 +1374,7 @@ async function openTaskDetail(task, initialTab = "comments") {
     if (!file) return;
     try {
       if (file.size > 26214400) throw new Error("Choose a file smaller than 25 MB.");
-      const id = crypto.randomUUID();
+      const id = globalThis.ATHAR_UUID();
       const path = `${state.context.agencyId}/${state.context.folderId}/${id}/${(file.name || "file").replace(/[^a-zA-Z0-9._-]/g, "-")}`;
       const { error: metadataError } = await db.from("files").insert({ id, agency_id: state.context.agencyId, folder_id: state.context.folderId, task_id:task.id, storage_path: path, original_name: file.name || "attachment", mime_type: file.type || "application/octet-stream", size_bytes: file.size, client_visible: task.client_visible, uploaded_by: state.context.user.id });
       if (metadataError) throw metadataError;
@@ -1479,7 +1479,7 @@ async function openTaskDetail(task, initialTab = "comments") {
   const descriptionSection = el("section", "k-task-sheet-section k-task-description-section"); descriptionSection.append(el("h3", "k-task-sheet-section-title", "Description")); const description = textarea(task.description || ""); description.className = "k-task-description"; description.placeholder = "Add Description"; description.disabled = !canEdit; description.addEventListener("change", () => patchTask({ description: description.value.trim() || null })); descriptionSection.append(description); scroll.append(descriptionSection);
 
   const subtasksSection = el("section", "k-task-sheet-section k-task-subtasks"); subtasksSection.append(el("h3", "k-task-sheet-section-title", "Subtasks")); const subtasksHost = el("div", "k-task-subtasks-list");
-  const renderSubtasks = () => { subtasksHost.replaceChildren(); details.subtasks.forEach(subtask => { const row = el("label", "k-task-subtask-row"); const check = checkboxControl(subtask.done); check.disabled = !canEdit; check.addEventListener("change", async () => { await saveDetails({ ...details, subtasks: details.subtasks.map(item => item.id === subtask.id ? { ...item, done: check.checked } : item) }); renderSubtasks(); }); const text = el("span", "", subtask.title); const remove = button("×", "ghost"); remove.className = "k-task-subtask-remove"; remove.hidden = !canEdit; remove.addEventListener("click", async event => { event.preventDefault(); await saveDetails({ ...details, subtasks: details.subtasks.filter(item => item.id !== subtask.id) }); renderSubtasks(); }); row.append(check, text, remove); subtasksHost.append(row); }); if (canEdit) { const form = el("form", "k-task-subtask-add"); const subtaskInput = input(""); subtaskInput.placeholder = "Add Subtask"; const add = button("", "ghost"); add.type="submit";add.setAttribute("aria-label","Add subtask");add.append(workspaceIcon("plus")); form.append(add, subtaskInput); form.addEventListener("submit", async event => { event.preventDefault(); const value = subtaskInput.value.trim(); if (!value) return; await saveDetails({ ...details, subtasks: [...details.subtasks, { id: crypto.randomUUID(), title: value, done: false }] }); subtaskInput.value = ""; renderSubtasks(); }); subtasksHost.append(form); } };
+  const renderSubtasks = () => { subtasksHost.replaceChildren(); details.subtasks.forEach(subtask => { const row = el("label", "k-task-subtask-row"); const check = checkboxControl(subtask.done); check.disabled = !canEdit; check.addEventListener("change", async () => { await saveDetails({ ...details, subtasks: details.subtasks.map(item => item.id === subtask.id ? { ...item, done: check.checked } : item) }); renderSubtasks(); }); const text = el("span", "", subtask.title); const remove = button("×", "ghost"); remove.className = "k-task-subtask-remove"; remove.hidden = !canEdit; remove.addEventListener("click", async event => { event.preventDefault(); await saveDetails({ ...details, subtasks: details.subtasks.filter(item => item.id !== subtask.id) }); renderSubtasks(); }); row.append(check, text, remove); subtasksHost.append(row); }); if (canEdit) { const form = el("form", "k-task-subtask-add"); const subtaskInput = input(""); subtaskInput.placeholder = "Add Subtask"; const add = button("", "ghost"); add.type="submit";add.setAttribute("aria-label","Add subtask");add.append(workspaceIcon("plus")); form.append(add, subtaskInput); form.addEventListener("submit", async event => { event.preventDefault(); const value = subtaskInput.value.trim(); if (!value) return; await saveDetails({ ...details, subtasks: [...details.subtasks, { id: globalThis.ATHAR_UUID(), title: value, done: false }] }); subtaskInput.value = ""; renderSubtasks(); }); subtasksHost.append(form); } };
   renderSubtasks(); subtasksSection.append(subtasksHost); scroll.append(subtasksSection);
 
   const activity = el("section", "k-task-activity"); const tabs = el("div", "k-task-activity-tabs"); const panel = el("div", "k-task-activity-panel"); const composerHost = el("div", "k-task-comment-composer-host"); const tabButtons = new Map();
@@ -1675,7 +1675,7 @@ async function openTaskDetail(task, initialTab = "comments") {
         const uploaded = [];
         try {
           for (const file of selectedFiles) {
-            const id = crypto.randomUUID();
+            const id = globalThis.ATHAR_UUID();
             const safeName = (file.name || "attachment").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-160);
             const path = `${state.context.agencyId}/${state.context.folderId}/${id}/${safeName}`;
             const { error: metadataError } = await db.from("files").insert({

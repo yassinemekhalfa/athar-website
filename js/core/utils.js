@@ -76,4 +76,4 @@ export function debounce(fn, ms) {
   wrapped.flush = () => { if (timer) { clearTimeout(timer); timer = null; fn(...(lastArgs || [])); } };
   return wrapped;
 }
-export function uuid() { return crypto.randomUUID(); }
+export function uuid() { return globalThis.ATHAR_UUID(); }
