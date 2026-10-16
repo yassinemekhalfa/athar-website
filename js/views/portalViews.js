@@ -154,7 +154,8 @@ async function navigateItem(item) {
   let resourceId=item.id||null;if(item.type==='task'&&item.id){const {data,error}=await db.from('tasks').select('board_id').eq('id',item.id).single();if(error)throw error;resourceId=data.board_id;}await selectModule(moduleName,resourceId);if(item.type==='task'&&item.id)document.dispatchEvent(new CustomEvent('task:open',{detail:{taskId:item.id}}));
 }
 
-function buildFilterBar({ placeholder = "Search…", onInput, visibility = false, extra = [], defaultSort = "newest", sortModes = [["newest", "Newest first"], ["oldest", "Oldest first"], ["az", "Name A–Z"], ["za", "Name Z–A"]] } = {}) {
+const smartFilterPanelState = new Map();
+function buildFilterBar({ placeholder = "Search…", onInput, visibility = false, extra = [], defaultSort = "newest", alwaysOpen = false, sortModes = [["newest", "Newest first"], ["oldest", "Oldest first"], ["az", "Name A–Z"], ["za", "Name Z–A"]] } = {}) {
   const bar = el("div", "ap-smart-toolbar");
   const searchWrap = el("label", "ap-smart-search");
   searchWrap.append(workspaceIcon("search", "ap-smart-search__icon"));
@@ -175,7 +176,7 @@ function buildFilterBar({ placeholder = "Search…", onInput, visibility = false
   sortButton.append(workspaceIcon("sort"));
   const filterPanel = el("div", "ap-smart-filter-panel");
   filterPanel.id = `smart-filter-${crypto.randomUUID()}`;
-  filterPanel.hidden = true;
+  filterPanel.hidden = !(alwaysOpen||smartFilterPanelState.get(placeholder));
   filterPanel.setAttribute("aria-label", "Filter and sort options");
   filterButton.setAttribute("aria-controls", filterPanel.id);
   sortButton.setAttribute("aria-controls", filterPanel.id);
@@ -200,16 +201,17 @@ function buildFilterBar({ placeholder = "Search…", onInput, visibility = false
   Object.values(controls).forEach(control => control?.addEventListener?.("change", () => onInput?.(search.value, controls)));
   const setPanelOpen = (open, focusSort = false) => {
     filterPanel.hidden = !open;
+    smartFilterPanelState.set(placeholder,open);
     for (const button of [filterButton, sortButton]) {
       button.classList.toggle("is-active", open);
       button.setAttribute("aria-expanded", String(open));
     }
     if (open && focusSort) controls.sort.focus();
   };
-  filterButton.addEventListener("click", () => setPanelOpen(filterPanel.hidden));
+  filterButton.addEventListener("click", () => {if(!alwaysOpen)setPanelOpen(filterPanel.hidden);});
   const updateSortTitle = () => { const label=sortModes.find(item=>item[0]===controls.sort.value)?.[1]||"Sort";sortButton.title=`Sort: ${label}`;sortButton.setAttribute("aria-label",`Sort: ${label}`); };
   updateSortTitle();controls.sort.addEventListener("change",updateSortTitle);
-  sortButton.addEventListener("click", () => setPanelOpen(filterPanel.hidden, filterPanel.hidden));
+  sortButton.addEventListener("click", () => {if(!alwaysOpen)setPanelOpen(filterPanel.hidden, filterPanel.hidden);else controls.sort.focus();});
   filterPanel.addEventListener("keydown", event => {
     if (event.key === "Escape") {
       setPanelOpen(false);
@@ -218,6 +220,7 @@ function buildFilterBar({ placeholder = "Search…", onInput, visibility = false
   });
   bar.append(searchWrap, filterButton, sortButton);
   bar.append(filterPanel);if(!visibility&&!extra.length)filterButton.hidden=true;
+  if(!filterPanel.hidden)for(const button of [filterButton,sortButton]){button.classList.add("is-active");button.setAttribute("aria-expanded","true");}
   return { bar, search, controls, filterButton, sortButton, filterPanel };
 }
 
@@ -977,7 +980,7 @@ async function renderArchive(container, context) {
     placeholder:"Search archive…",
     visibility:true,
     extra:[{key:"type",label:"Kind",options:[["","All kinds"],["folder","Folders"],["board","Boards"],["task","Tasks"],["conversation","Conversations"],["doc","Documents"],["embed","Embeds"],["file","Files"]]}],
-    onInput:apply
+    onInput:apply,alwaysOpen:true
   });
   root.append(libraryBreadcrumb("Archive"),libraryHeading("Archive","Archived items don’t appear in folders or the sidebar. Clients can’t access them.","archive"),bar,host);
   container.append(root);
@@ -1018,7 +1021,7 @@ async function renderTrash(container, context) {
     if(!filtered.length){const isEmpty=!text&&!type&&!visibility;const empty=el("div","ap-centered-empty");appendLibraryEmptyIcon(empty,"trash");empty.append(el("h3","",isEmpty?"Trash is empty":"No results found"),el("p","",isEmpty?"Anything you delete will appear here.":"Try another search or filter."));host.replaceChildren(empty);return;}
     renderDataTable(host,filtered,{showVisibility:false,actions:(item,cell)=>{const restore=btn("Restore","ap-btn ap-btn--secondary ap-btn--sm");restore.addEventListener("click",()=>restoreTrash(item,()=>renderTrash(container,context)));cell.append(restore);}});
   };
-  const {bar,search,controls}=buildFilterBar({placeholder:"Search trash…",visibility:true,extra:[{key:"type",label:"Kind",options:[["","All kinds"],["folder","Folders"],["board","Boards"],["conversation","Conversations"],["doc","Documents"],["embed","Embeds"],["file","Files"]]}],onInput:apply});
+  const {bar,search,controls}=buildFilterBar({placeholder:"Search trash…",visibility:true,extra:[{key:"type",label:"Kind",options:[["","All kinds"],["folder","Folders"],["board","Boards"],["conversation","Conversations"],["doc","Documents"],["embed","Embeds"],["file","Files"]]}],onInput:apply,alwaysOpen:true});
   root.append(libraryBreadcrumb("Trash"),heading,bar,host);
   container.append(root);
   apply(search.value,controls);
