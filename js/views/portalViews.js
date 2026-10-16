@@ -1283,8 +1283,19 @@ function renderTaskTable(host, tasks, boardMap = new Map(), memberMap = new Map(
   }
   host.append(table, el("div", "k-task-count", `${tasks.length} task${tasks.length === 1 ? "" : "s"}`));
 }
-function openCalendarTaskForm(context,boards,members,date,onDone,existing=null){
-  if(!boards.length)return AppCore.ui.toast("Create a board before adding tasks.","warning");
+async function ensureCalendarBoard(context,boards){
+  if(boards.length)return boards;
+  const folder=await ensureUnfiledFolder();
+  const boardResult=await db.from("boards").insert({agency_id:context.agencyId,folder_id:folder.id,title:"Calendar tasks",description:"Tasks created from the workspace calendar",privacy:"private",client_visible:false,position:100,created_by:context.user.id}).select().single();
+  if(boardResult.error)throw boardResult.error;
+  const columnResult=await db.from("board_columns").insert({agency_id:context.agencyId,board_id:boardResult.data.id,name:"To do",color:"#8A90A6",position:100}).select().single();
+  if(columnResult.error){await db.from("boards").delete().eq("id",boardResult.data.id);throw columnResult.error;}
+  boards.push(boardResult.data);
+  emit("data:changed",{entity:"board",entityId:boardResult.data.id,folderId:folder.id,action:"created"});
+  return boards;
+}
+async function openCalendarTaskForm(context,boards,members,date,onDone,existing=null){
+  try{await ensureCalendarBoard(context,boards);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),"error");return;}
   const form=el("form","ap-stack ap-calendar-task-form");
   const title=el("input","ap-input");title.required=true;title.maxLength=200;title.placeholder="Task name";title.value=existing?.title||"";title.setAttribute("aria-label","Task name");
   const board=el("select","ap-select");board.setAttribute("aria-label","Board");for(const item of boards){const option=el("option","",item.title);option.value=item.id;board.append(option);}board.value=existing?.board_id||boards[0]?.id||"";
