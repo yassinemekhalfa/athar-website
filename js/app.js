@@ -10,7 +10,7 @@ import { activateAgency } from "./workspace/agencies.js";
 import { renderFolderTree, openCreateFolder } from "./workspace/folderTree.js";
 import { renderBreadcrumb, selectFolder } from "./workspace/folders.js";
 import { openFolderSharing } from "./workspace/folderPermissions.js";
-import { renderClientsView, renderClientSpaces } from "./workspace/clients.js?v=client-spaces-1";
+import { renderClientsView, renderClientSpaces } from "./workspace/clients.js?v=client-stability-1";
 import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js";
 import { mountGlobalSearch } from "./modules/search.js";
 import { AppCore } from "./core/appCore.js";

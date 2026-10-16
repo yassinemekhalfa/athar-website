@@ -6,7 +6,7 @@ import { AppCore } from "../core/appCore.js";
 import { selectFolder, loadFolders, createFolder, ensureUnfiledFolder } from "../workspace/folders.js";
 import { openFolderSharing } from "../workspace/folderPermissions.js";
 import { openCreateFolder } from "../workspace/folderTree.js";
-import { openCreateClient } from "../workspace/clients.js?v=emailjs-2";
+import { openCreateClient } from "../workspace/clients.js?v=client-stability-1";
 import { selectModule } from "../core/moduleRegistry.js";
 import { emit, on } from "../core/events.js";
 import {getState} from '../core/state.js';
