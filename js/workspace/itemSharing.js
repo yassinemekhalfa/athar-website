@@ -55,7 +55,7 @@ export async function openItemSharing(item,context,onSaved){
     }
     visibility.addEventListener('change',draw);search.addEventListener('input',draw);draw();
     const route=type==='folders'?`#/folder/${item.id}`:`#/resource/${item.type}/${item.id}`;
-    const linkLabel=el('label','ap-field','Access link'),link=el('input','ap-input');link.readOnly=true;link.value=new URL(`workspace.html${route}`,location.href).href;link.setAttribute('aria-label','Access link');link.addEventListener('focus',()=>link.select());linkLabel.append(link);form.append(linkLabel);
+    const linkLabel=el('label','ap-field','Access link'),link=el('input','ap-input');link.readOnly=true;link.value=new URL(`client-view.html${route}`,location.href).href;link.setAttribute('aria-label','Access link');link.addEventListener('focus',()=>link.select());linkLabel.append(link);form.append(linkLabel);
     form.append(el('small','ap-muted-text','Save access after choosing people. A link alone does not grant access.'));
     const footer=el('div','ap-sharing-footer'),copy=el('button','ap-btn ap-btn--secondary','Copy link');copy.type='button';copy.prepend(workspaceIcon('embed'));
     copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(link.value);AppCore.ui.toast('Link copied. Only people with access can open it.','success');}catch{link.focus();link.select();let copied=false;try{copied=document.execCommand('copy');}catch{}AppCore.ui.toast(copied?'Link copied.':'The link is selected. Use Copy on your device.',copied?'success':'info');}});

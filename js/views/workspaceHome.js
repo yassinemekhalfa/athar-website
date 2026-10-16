@@ -226,7 +226,7 @@ async function createResource(_title, moduleName) {
       await selectModule(moduleName, resource.id);
     };
     if (moduleName === 'boards') (await import('../modules/boards.js?v=home-create-1')).openBoardForm(null, { context, onDone: openCreatedResource });
-    else if (moduleName === 'conversation') (await import('../modules/conversation.js?v=conversation-ui-7')).openCreateConversation({ context, onDone: openCreatedResource });
+    else if (moduleName === 'conversation') (await import('../modules/conversation.js?v=client-conversation-1')).openCreateConversation({ context, onDone: openCreatedResource });
     else if (moduleName === 'embeds') (await import('../modules/embeds.js?v=home-create-1')).openEmbedCreation(context, openCreatedResource);
     else if (moduleName === 'docs') await (await import('../modules/docs.js')).createDocument();
   } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), 'error'); }
