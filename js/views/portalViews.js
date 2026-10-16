@@ -113,6 +113,13 @@ function matchesVisibility(item, value, raw = item.raw || item) {
       : visibility === "Internal";
 }
 
+async function fetchActiveRows(table, filterColumn, filterValue, order = "updated_at") {
+  let result = await db.from(table).select("*").eq(filterColumn, filterValue).is("archived_at", null).is("trashed_at", null).order(order, { ascending: false });
+  if (result.error) result = await db.from(table).select("*").eq(filterColumn, filterValue);
+  if (result.error) throw result.error;
+  return (result.data || []).filter(row => !row.archived_at && !row.trashed_at);
+}
+
 function sortableDate(value) {
   if (!value) return 0;
   const time = new Date(value).getTime();
@@ -311,15 +318,14 @@ export async function renderFolderOverview(container, context, folderId = contex
   if (!folder) return AppCore.ui.renderEmpty(container, { title: "Folder not found", message: "This folder is not available." });
   AppCore.ui.renderLoading(container, "Loading folder…");
   try {
-    const [boards, conversations, docs, files, embeds] = await Promise.all([
-      db.from("boards").select("*").eq("folder_id", folderId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false }),
-      db.from("conversations").select("*").eq("folder_id", folderId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false }),
-      db.from("docs").select("*").eq("folder_id", folderId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false }),
-      db.from("files").select("*").eq("folder_id", folderId).is("archived_at", null).is("trashed_at", null).order("created_at", { ascending: false }),
-      db.from("embeds").select("*").eq("folder_id", folderId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false })
+    const settled = await Promise.allSettled([
+      fetchActiveRows("boards", "folder_id", folderId),
+      fetchActiveRows("conversations", "folder_id", folderId),
+      fetchActiveRows("docs", "folder_id", folderId),
+      fetchActiveRows("files", "folder_id", folderId, "created_at"),
+      fetchActiveRows("embeds", "folder_id", folderId)
     ]);
-    const failure = [boards, conversations, docs, files, embeds].find((r) => r.error);
-    if (failure) throw failure.error;
+    const [boards, conversations, docs, files, embeds] = settled.map(result => result.status === "fulfilled" ? { data: result.value } : { data: [] });
     const items = [
       ...(boards.data || []).map((r) => ({ id:r.id,type:"board",folder_id:folderId,title:r.title,visibility:visibilityText(r),created_at:r.created_at,owner_id:r.created_by })),
       ...(conversations.data || []).map((r) => ({ id:r.id,type:"conversation",folder_id:folderId,title:r.title,visibility:visibilityText(r),created_at:r.created_at,owner_id:r.created_by })),
@@ -436,15 +442,7 @@ export function openEmbedForm(context, existing = null, onDone = null) {
 
 async function fetchLibraryItems(context, category) {
   const agencyId = context.agencyId;
-  const activeRows = async (table, order = "updated_at") => {
-    let result = await db.from(table).select("*").eq("agency_id", agencyId).is("archived_at", null).is("trashed_at", null).order(order, { ascending: false });
-    // Older browser schema caches can reject a recently-added filter or order
-    // column. The shell already proves this account can read the table, so retry
-    // the smallest safe query and apply lifecycle filtering in the browser.
-    if (result.error) result = await db.from(table).select("*").eq("agency_id", agencyId);
-    if (result.error) throw result.error;
-    return (result.data || []).filter(row => !row.archived_at && !row.trashed_at);
-  };
+  const activeRows = (table, order = "updated_at") => fetchActiveRows(table, "agency_id", agencyId, order);
   const fetchers = {
     boards: async () => (await activeRows("boards")).map((r) => ({ id: r.id, type: "board", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })),
     conversations: async () => (await activeRows("conversations")).map((r) => ({ id: r.id, type: "conversation", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })),
@@ -1049,12 +1047,15 @@ async function loadTasks(context, mineOnly = false) {
 export async function renderTasksHub(container, context, { mineOnly = false, initialMode = "table", initialCalendarDate = null } = {}) {
   AppCore.ui.renderLoading(container, "Loading tasks…");
   try {
-    const [tasks, { data: boards, error: boardError }, members] = await Promise.all([
+    const taskResults = await Promise.allSettled([
       loadTasks(context, mineOnly),
       db.from("boards").select("id,title,folder_id").eq("agency_id", context.agencyId),
       fetchAssignableProfiles(context.agencyId)
     ]);
-    if (boardError) throw boardError;
+    const tasks = taskResults[0].status === "fulfilled" ? taskResults[0].value : [];
+    const boardResult = taskResults[1].status === "fulfilled" && !taskResults[1].value.error ? taskResults[1].value : { data: [] };
+    const boards = boardResult.data || [];
+    const members = taskResults[2].status === "fulfilled" ? taskResults[2].value : [];
 
     const boardMap = new Map((boards || []).map((board) => [board.id, board.title]));
     const memberMap = new Map((members || []).map((member) => [member.id, profileLabel(member)]));
