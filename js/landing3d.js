@@ -150,10 +150,11 @@ function initHero(){
     const w = canvas.clientWidth, h = canvas.clientHeight;
     renderer.setSize(w,h,false); camera.aspect = w/h; camera.updateProjectionMatrix();
     const vh = 2*Math.tan(THREE.MathUtils.degToRad(20))*14, vw = vh*camera.aspect;
-    if (w >= 900){ const LW = Math.min(vw*.4, 8.6); group.scale.setScalar(LW/8.5); group.position.set(-vw*.24, .2, 0); }
+    if (w >= 900){ const LW = Math.min(vw*.4, 8.6); group.scale.setScalar(LW/8.5); group.position.set(document.documentElement.lang==='en'?vw*.24:-vw*.24, .2, 0); }
     else { const LW = Math.min(vw*.42, 3.8); group.scale.setScalar(LW/8.5); group.position.set(0, vh*.34, 0); }
   }
   addEventListener('resize', resize);
+  document.addEventListener('landing-language-change',resize);
 
   const mouse = {x:0,y:0,tx:0,ty:0,active:0,last:0};
   const setPointer = (cx,cy) => { mouse.tx = cx/innerWidth*2-1; mouse.ty = -(cy/innerHeight*2-1); mouse.last = performance.now(); };

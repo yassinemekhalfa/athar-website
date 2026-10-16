@@ -17,7 +17,7 @@ import { AppCore } from "./core/appCore.js";
 import { db } from "./dataClient.js";
 import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=calendar-library-fix-3";
 import { renderSettingsHub } from "./views/kitchenSettings.js?v=emailjs-2";
-import { renderProfilePage } from "./views/profilePage.js";
+import { renderProfilePage } from "./views/profilePage.js?v=profile-email-support-1";
 import { applyTheme } from "./workspace/preferences.js";
 
 let currentView = "home";
@@ -146,23 +146,17 @@ function renderUserMenu() {
     button.addEventListener("click", async () => { closeMenu(); try { await onClick?.(); } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), "error"); } });
     return button;
   };
-  menu.append(separator(), createItem({ label: "Profile", icon: "user", onClick: () => showView("profile") }), createItem({ label: "Notifications", icon: "bell", onClick: () => showView("settings", { settingsSection: "notifications" }) }), separator(), createItem({ label: "Chat with Support", icon: "support", onClick: () => openSupportDialog() }), createItem({ label: "Get a 1:1 Demo", icon: "demo", onClick: () => openDemoDialog() }), separator(), createItem({ label: "Log out", icon: "logout", danger: true, onClick: () => signOut() }));
+  menu.append(separator(), createItem({ label: "Profile", icon: "user", onClick: () => showView("profile") }), createItem({ label: "Notifications", icon: "bell", onClick: () => showView("settings", { settingsSection: "notifications" }) }), separator(), createItem({ label: "Chat with Support", icon: "support", onClick: () => openSupportChat() }), createItem({ label: "Get a 1:1 Demo", icon: "demo", onClick: () => openDemoDialog() }), separator(), createItem({ label: "Log out", icon: "logout", danger: true, onClick: () => signOut() }));
   function openMenu() { menu.hidden = false; trigger.setAttribute("aria-expanded", "true"); document.addEventListener("mousedown", outsideClick); }
   trigger.addEventListener("click", event => { event.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
   menu.addEventListener("click", event => event.stopPropagation());
   host.append(trigger, menu);
 }
 
-function openSupportDialog() {
-  const wrap = document.createElement("div"); wrap.className = "k-account-action-dialog";
-  const icon = document.createElement("div"); icon.className = "k-account-action-dialog__icon"; icon.append(workspaceIcon("support"));
-  const title = document.createElement("h3"); title.textContent = "Chat with Support";
-  const text = document.createElement("p"); text.textContent = "Save a support note locally. No message is sent to an external support team.";
-  const subject = document.createElement("input"); subject.className = "ap-input"; subject.placeholder = "What do you need help with?";
-  const message = document.createElement("textarea"); message.className = "ap-textarea"; message.rows = 4; message.placeholder = "Describe the problem...";
-  const send = document.createElement("button"); send.type = "button"; send.className = "ap-btn ap-btn--primary"; send.textContent = "Save support note";
-  send.addEventListener("click", async () => { if (!subject.value.trim() || !message.value.trim()) return AppCore.ui.toast("Please enter a subject and message.", "warning"); const {error}=await db.from("support_requests").insert({agency_id:getState().agency.id,created_by:getState().user.id,subject:subject.value.trim(),body:message.value.trim()});if(error)return AppCore.ui.toast(AppCore.ui.describeError(error),"error");AppCore.ui.closeModal(); AppCore.ui.toast("Support note saved locally.", "success"); });
-  wrap.append(icon, title, text, subject, message, send); AppCore.ui.openModal({ title: "Support", content: wrap, actions: [] });
+function openSupportChat() {
+  const name=getState().profile?.full_name?.trim()||getState().user?.email||"Athar client";
+  const message=encodeURIComponent(`Hello Yassine Mekhalfa, I am ${name}. I need help with my Athar workspace.`);
+  window.open(`https://wa.me/213798998842?text=${message}`,"_blank","noopener,noreferrer");
 }
 
 function openDemoDialog() {
