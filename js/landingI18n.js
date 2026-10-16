@@ -44,11 +44,11 @@ function applyLanguage(next,{updateUrl=false}={}){
   for(const link of document.querySelectorAll('a[href^="projects.html"],a[href^="landing.html"]')){
     if(link===switcher)continue;
     const url=new URL(link.getAttribute('href'),location.href);url.searchParams.set('lang',next);
-    link.href=url.pathname+url.search+url.hash;
+    link.href=url.href;
   }
   const target=next==='en'?'ar':'en';
   const targetUrl=new URL(location.href);targetUrl.searchParams.set('lang',target);
-  switcher.href=targetUrl.pathname+targetUrl.search+targetUrl.hash;
+  switcher.href=targetUrl.href;
   switcher.lang=target;switcher.hreflang=target;switcher.dir=target==='ar'?'rtl':'ltr';
   switcher.querySelector('span').textContent=next==='en'?'العربية':'English';
   switcher.setAttribute('aria-label',next==='en'?'Switch to Arabic':'Switch to English');

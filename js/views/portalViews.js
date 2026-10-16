@@ -144,11 +144,11 @@ function taskCalendarDate(task) {
 }
 
 async function navigateItem(item) {
-  if (item.type === "embed") {
-    await selectFolder(item.folder_id,{skipOverview:true,refreshModule:false});await selectModule("embeds",item.id);
+  if (item.type === "folder") return selectFolder(item.id);
+  if (item.id && ["board", "conversation", "doc", "embed", "file"].includes(item.type)) {
+    location.hash = `#/resource/${item.type}/${item.id}`;
     return;
   }
-  if (item.type === "folder") return selectFolder(item.id);
   await selectFolder(item.folder_id, { skipOverview: true,refreshModule:false });
   const moduleName = TYPE_META[item.type]?.module || "conversation";
   let resourceId=item.id||null;if(item.type==='task'&&item.id){const {data,error}=await db.from('tasks').select('board_id').eq('id',item.id).single();if(error)throw error;resourceId=data.board_id;}await selectModule(moduleName,resourceId);if(item.type==='task'&&item.id)document.dispatchEvent(new CustomEvent('task:open',{detail:{taskId:item.id}}));
@@ -445,7 +445,9 @@ async function fetchLibraryItems(context, category) {
     embeds: async () => { const { data, error } = await db.from("embeds").select("*").eq("agency_id", agencyId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false }); if (error) throw error; return (data || []).map((r) => ({ id: r.id, type: "embed", folder_id: r.folder_id, title: r.title, subtitle: r.url, url: r.url, visibility: visibilityText(r), created_at: r.created_at, raw: r })); }
   };
   if (category === "everything") {
-    const chunks = await Promise.all(Object.entries(fetchers).filter(([key]) => key !== "favorites").map(([, fn]) => fn()));
+    const results = await Promise.allSettled(Object.entries(fetchers).filter(([key]) => key !== "favorites").map(([, fn]) => fn()));
+    const chunks = results.filter((result) => result.status === "fulfilled").map((result) => result.value);
+    if (!chunks.length) throw results.find((result) => result.status === "rejected")?.reason || new Error("Library unavailable");
     return chunks.flat().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }
   return fetchers[category]?.() || [];

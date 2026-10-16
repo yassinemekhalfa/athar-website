@@ -151,7 +151,7 @@ function initHero(){
     renderer.setSize(w,h,false); camera.aspect = w/h; camera.updateProjectionMatrix();
     const vh = 2*Math.tan(THREE.MathUtils.degToRad(20))*14, vw = vh*camera.aspect;
     if (w >= 900){ const LW = Math.min(vw*.4, 8.6); group.scale.setScalar(LW/8.5); group.position.set(-vw*.24, .2, 0); }
-    else { const LW = Math.min(vw*.46, 4.3); group.scale.setScalar(LW/8.5); group.position.set(0, vh*.25, 0); }
+    else { const LW = Math.min(vw*.42, 3.8); group.scale.setScalar(LW/8.5); group.position.set(0, vh*.34, 0); }
   }
   addEventListener('resize', resize);
 

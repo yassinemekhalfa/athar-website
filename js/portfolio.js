@@ -18,7 +18,7 @@ const legacyConceptSectors={nova:'medical',form:'realestate',atelier:'realestate
 const sectorKey=project=>project.sector||legacyConceptSectors[project.id]||'other';
 const sectorLabel=project=>sectorLabels[sectorKey(project)][getLanguage()];
 function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
-function projectUrl(project){const url=new URL('projects.html',location.href);url.searchParams.set('lang',getLanguage());url.searchParams.set('project',project.id);return url.pathname+url.search;}
+function projectUrl(project){const url=new URL('projects.html',location.href);url.searchParams.set('lang',getLanguage());url.searchParams.set('project',project.id);return url.href;}
 const cropFor=(project,kind)=>({ratio:'landscape',x:50,y:50,zoom:1,...(project.presentation?.[kind]||{})});
 const cropRatio=value=>value==='portrait'?'4 / 5':value==='square'?'1 / 1':'16 / 10';
 function applyCrop(host,item,crop,{useRatio=true}={}){if(useRatio)host.style.aspectRatio=cropRatio(crop.ratio);item.style.setProperty('--media-x',`${crop.x}%`);item.style.setProperty('--media-y',`${crop.y}%`);item.style.setProperty('--media-zoom',crop.zoom);}
@@ -117,7 +117,7 @@ function renderLoadState(){
 }
 async function loadProjects(){
  loaded=false;loadError=false;refresh();
- try{let data;if(conceptMode){data=(await import('./portfolioProjects.js')).portfolioProjects;}else if(isSupabaseMode){const {data:rows,error}=await db.from('website_projects').select('published').not('published','is',null).order('published_at',{ascending:false});if(error)throw error;data=(rows||[]).map(row=>row.published);}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');portfolioProjects=data.map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
+ try{let data;if(conceptMode){data=(await import('./portfolioProjects.js')).portfolioProjects;}else if(isSupabaseMode){const {data:rows,error}=await db.from('website_projects').select('published').not('published','is',null).order('published_at',{ascending:false});if(error)throw error;data=(rows||[]).map(row=>row.published);}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');if(!data.length)data=(await import('./portfolioProjects.js')).portfolioProjects;portfolioProjects=data.map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
 if(dialog){const requested=new URL(location.href).searchParams.get('project');const project=portfolioProjects.find(item=>item.id===requested);if(project)openProject(project,{updateUrl:false});else if(requested){const notice=element('p','project-disclaimer',`${t('مشروع غير موجود')}. ${t('يمكنك استكشاف المشاريع الأخرى في المعرض.')}`);grid.before(notice);}}
 
  }catch{loaded=false;loadError=true;renderLoadState();}
