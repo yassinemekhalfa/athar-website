@@ -15,9 +15,9 @@ import { selectModule, unmountActiveModule, hasActiveModule } from "./core/modul
 import { mountGlobalSearch } from "./modules/search.js";
 import { AppCore } from "./core/appCore.js";
 import { db } from "./dataClient.js";
-import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=calendar-library-fix-3";
+import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=password-library-1";
 import { renderSettingsHub } from "./views/kitchenSettings.js?v=emailjs-2";
-import { renderProfilePage } from "./views/profilePage.js?v=profile-email-support-1";
+import { renderProfilePage, changePassword } from "./views/profilePage.js?v=password-library-1";
 import { applyTheme } from "./workspace/preferences.js";
 
 let currentView = "home";
@@ -146,7 +146,7 @@ function renderUserMenu() {
     button.addEventListener("click", async () => { closeMenu(); try { await onClick?.(); } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), "error"); } });
     return button;
   };
-  menu.append(separator(), createItem({ label: "Profile", icon: "user", onClick: () => showView("profile") }), createItem({ label: "Notifications", icon: "bell", onClick: () => showView("settings", { settingsSection: "notifications" }) }), separator(), createItem({ label: "Chat with Support", icon: "support", onClick: () => openSupportChat() }), createItem({ label: "Get a 1:1 Demo", icon: "demo", onClick: () => openDemoDialog() }), separator(), createItem({ label: "Log out", icon: "logout", danger: true, onClick: () => signOut() }));
+  menu.append(separator(), createItem({ label: "Profile", icon: "user", onClick: () => showView("profile") }), createItem({ label: "Change password", icon: "settings", onClick: () => changePassword() }), createItem({ label: "Notifications", icon: "bell", onClick: () => showView("settings", { settingsSection: "notifications" }) }), separator(), createItem({ label: "Chat with Support", icon: "support", onClick: () => openSupportChat() }), createItem({ label: "Get a 1:1 Demo", icon: "demo", onClick: () => openDemoDialog() }), separator(), createItem({ label: "Log out", icon: "logout", danger: true, onClick: () => signOut() }));
   function openMenu() { menu.hidden = false; trigger.setAttribute("aria-expanded", "true"); document.addEventListener("mousedown", outsideClick); }
   trigger.addEventListener("click", event => { event.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
   menu.addEventListener("click", event => event.stopPropagation());

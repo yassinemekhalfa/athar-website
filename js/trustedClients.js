@@ -17,10 +17,13 @@ function clientItem(client){
 if(track&&section){
   const {data,error}=await db.from('website_trusted_clients').select('id,name,logo_url,website_url,position').eq('published',true).order('position').order('created_at');
   if(!error&&data?.length){
-    const repeat=Math.max(1,Math.ceil(6/data.length));
+    // Keep one complete sequence wider than the viewport. Two identical,
+    // touching sequences can then cross the seam without exposing empty space.
+    const cardWidth=228;
+    const repeat=Math.max(2,Math.ceil((window.innerWidth+cardWidth*2)/(cardWidth*data.length)));
     const sequence=Array.from({length:repeat},()=>data).flat();
     const first=document.createElement('div'),second=document.createElement('div');first.className='trusted-client-sequence';second.className='trusted-client-sequence';second.setAttribute('aria-hidden','true');first.append(...sequence.map(clientItem));second.append(...sequence.map(clientItem));track.replaceChildren(first,second);
-    const sizeLoop=()=>{const distance=first.getBoundingClientRect().width+18;track.style.setProperty('--trusted-loop-distance',`${distance}px`);track.style.setProperty('--trusted-loop-duration',`${Math.max(18,distance/62)}s`);};
+    const sizeLoop=()=>{const distance=first.getBoundingClientRect().width;track.style.setProperty('--trusted-loop-distance',`${distance}px`);track.style.setProperty('--trusted-loop-duration',`${Math.max(18,distance/62)}s`);};
     sizeLoop();new ResizeObserver(sizeLoop).observe(first);
     section.hidden=false;
   }

@@ -436,13 +436,22 @@ export function openEmbedForm(context, existing = null, onDone = null) {
 
 async function fetchLibraryItems(context, category) {
   const agencyId = context.agencyId;
+  const activeRows = async (table, order = "updated_at") => {
+    let result = await db.from(table).select("*").eq("agency_id", agencyId).is("archived_at", null).is("trashed_at", null).order(order, { ascending: false });
+    // Older browser schema caches can reject a recently-added filter or order
+    // column. The shell already proves this account can read the table, so retry
+    // the smallest safe query and apply lifecycle filtering in the browser.
+    if (result.error) result = await db.from(table).select("*").eq("agency_id", agencyId);
+    if (result.error) throw result.error;
+    return (result.data || []).filter(row => !row.archived_at && !row.trashed_at);
+  };
   const fetchers = {
-    boards: async () => { const { data, error } = await db.from("boards").select("*").eq("agency_id", agencyId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false }); if (error) throw error; return (data || []).map((r) => ({ id: r.id, type: "board", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })); },
-    conversations: async () => { const { data, error } = await db.from("conversations").select("*").eq("agency_id", agencyId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false }); if (error) throw error; return (data || []).map((r) => ({ id: r.id, type: "conversation", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })); },
-    favorites: async () => {const result=await Promise.all(['conversations','boards'].map(table=>db.from(table).select('*').eq('agency_id',agencyId).eq('pinned',true).is('archived_at',null).is('trashed_at',null)));for(const r of result)if(r.error)throw r.error;return result.flatMap((r,i)=>(r.data||[]).map(row=>({id:row.id,type:i?'board':'conversation',folder_id:row.folder_id,title:row.title,visibility:visibilityText(row),created_at:row.created_at,raw:row})));},
-    docs: async () => { const { data, error } = await db.from("docs").select("*").eq("agency_id", agencyId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false }); if (error) throw error; return (data || []).map((r) => ({ id: r.id, type: "doc", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })); },
-    files: async () => {     const { data, error } = await db.from("files").select("*").eq("agency_id", agencyId).is("archived_at", null).is("trashed_at", null).order("created_at", { ascending: false }); if (error) throw error; return (data || []).map((r) => ({ id: r.id, type: "file", folder_id: r.folder_id, title: r.original_name, subtitle: AppCore.utils.formatBytes(r.size_bytes), visibility: visibilityText(r), created_at: r.created_at, raw: r })); },
-    embeds: async () => { const { data, error } = await db.from("embeds").select("*").eq("agency_id", agencyId).is("archived_at", null).is("trashed_at", null).order("updated_at", { ascending: false }); if (error) throw error; return (data || []).map((r) => ({ id: r.id, type: "embed", folder_id: r.folder_id, title: r.title, subtitle: r.url, url: r.url, visibility: visibilityText(r), created_at: r.created_at, raw: r })); }
+    boards: async () => (await activeRows("boards")).map((r) => ({ id: r.id, type: "board", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })),
+    conversations: async () => (await activeRows("conversations")).map((r) => ({ id: r.id, type: "conversation", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })),
+    favorites: async () => {const result=await Promise.all([activeRows('conversations'),activeRows('boards')]);return result.flatMap((rows,i)=>rows.filter(row=>row.pinned).map(row=>({id:row.id,type:i?'board':'conversation',folder_id:row.folder_id,title:row.title,visibility:visibilityText(row),created_at:row.created_at,raw:row})));},
+    docs: async () => (await activeRows("docs")).map((r) => ({ id: r.id, type: "doc", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })),
+    files: async () => (await activeRows("files", "created_at")).map((r) => ({ id: r.id, type: "file", folder_id: r.folder_id, title: r.original_name, subtitle: AppCore.utils.formatBytes(r.size_bytes), visibility: visibilityText(r), created_at: r.created_at, raw: r })),
+    embeds: async () => (await activeRows("embeds")).map((r) => ({ id: r.id, type: "embed", folder_id: r.folder_id, title: r.title, subtitle: r.url, url: r.url, visibility: visibilityText(r), created_at: r.created_at, raw: r }))
   };
   if (category === "everything") {
     const results = await Promise.allSettled(Object.entries(fetchers).filter(([key]) => key !== "favorites").map(([, fn]) => fn()));
@@ -950,7 +959,7 @@ async function renderArchive(container, context) {
     db.from("embeds").select("id,folder_id,title,url,created_at,archived_at,trashed_at,privacy,client_visible").eq("agency_id", context.agencyId).not("archived_at", "is", null).is("trashed_at", null),
     db.from("files").select("id,folder_id,original_name,created_at,archived_at,privacy,client_visible").eq("agency_id", context.agencyId).not("archived_at", "is", null).is("trashed_at", null)
   ];
-  const rows = await Promise.all(q); const fail = rows.find((r) => r.error); if (fail) throw fail.error;
+  const rows = (await Promise.allSettled(q)).map(result => result.status === "fulfilled" && !result.value.error ? result.value : { data: [] });
   const archivedTasks=rows.shift().data||[];
   const items = [
     ...archivedTasks.map(r=>({id:r.id,type:"task",folder_id:r.folder_id,title:r.title,created_at:r.archived_at,raw:r})),
@@ -1007,7 +1016,7 @@ async function renderTrash(container, context) {
     db.from("embeds").select("id,folder_id,title,url,trashed_at,privacy,client_visible").eq("agency_id",context.agencyId).not("trashed_at","is",null),
     db.from("files").select("id,folder_id,original_name,storage_path,bucket_name,trashed_at,privacy,client_visible").eq("agency_id",context.agencyId).not("trashed_at","is",null)
   ];
-  const rows=await Promise.all(qs);const fail=rows.find(r=>r.error);if(fail)throw fail.error;
+  const rows=(await Promise.allSettled(qs)).map(result=>result.status==="fulfilled"&&!result.value.error?result.value:{data:[]});
   const items=[...(rows[0].data||[]).map(r=>({id:r.id,type:"folder",folder_id:r.id,title:r.name,created_at:r.trashed_at,raw:r})),...(rows[1].data||[]).map(r=>({id:r.id,type:"board",folder_id:r.folder_id,title:r.title,created_at:r.trashed_at,raw:r})),...(rows[2].data||[]).map(r=>({id:r.id,type:"conversation",folder_id:r.folder_id,title:r.title,created_at:r.trashed_at,raw:r})),...(rows[3].data||[]).map(r=>({id:r.id,type:"doc",folder_id:r.folder_id,title:r.title,created_at:r.trashed_at,raw:r})),...(rows[4].data||[]).map(r=>({id:r.id,type:"embed",folder_id:r.folder_id,title:r.title,url:r.url,created_at:r.trashed_at,raw:r})),...(rows[5].data||[]).map(r=>({id:r.id,type:"file",folder_id:r.folder_id,title:r.original_name,created_at:r.trashed_at,raw:r}))].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   container.replaceChildren();
   const root=el("section","ap-hub-view ap-library-view ap-library-view--trash");

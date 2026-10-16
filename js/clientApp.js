@@ -1,5 +1,5 @@
 import {openResourceRoute} from './workspace/resourceRoute.js';
-import {renderProfilePage} from './views/profilePage.js';
+import {renderProfilePage} from './views/profilePage.js?v=password-library-1';
 import {isClientRole,roleBadge} from './core/permissions.js';
 import './core/adaptive.js';
 import { loadResources } from "./workspace/resources.js";

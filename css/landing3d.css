@@ -24,8 +24,8 @@ html{scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
 .trusted-clients{padding:92px 0;border-block:1px solid var(--line);overflow:hidden;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--violet) 5%,transparent),transparent)}
 .trusted-clients-head{text-align:center;margin-bottom:42px}.trusted-clients-head h2{margin:0;font-size:clamp(28px,3.6vw,48px);line-height:1.25}
 .trusted-client-marquee{position:relative;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
-.trusted-client-track{display:flex;align-items:center;width:max-content;gap:18px;direction:ltr;will-change:transform;animation:trusted-client-scroll var(--trusted-loop-duration,32s) linear infinite}
-.trusted-client-sequence{display:flex;align-items:center;flex:none;gap:18px}
+.trusted-client-track{display:flex;align-items:center;width:max-content;gap:0;direction:ltr;will-change:transform;animation:trusted-client-scroll var(--trusted-loop-duration,32s) linear infinite}
+.trusted-client-sequence{display:flex;align-items:center;flex:none;gap:18px;padding-inline-end:18px}
 .trusted-client{display:grid;place-items:center;width:210px;height:112px;padding:22px 30px;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--ink);text-decoration:none;filter:saturate(.75);transition:transform .2s ease,border-color .2s ease,filter .2s ease}
 .trusted-client:hover{transform:translateY(-4px);border-color:var(--violet-ink);filter:saturate(1)}.trusted-client img{max-width:145px;max-height:58px;width:auto;height:auto;object-fit:contain}.trusted-client strong{font-size:19px;text-align:center}
 @keyframes trusted-client-scroll{to{transform:translate3d(calc(-1 * var(--trusted-loop-distance,50%)),0,0)}}
