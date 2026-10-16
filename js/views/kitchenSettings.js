@@ -1,5 +1,5 @@
 import {renderCustomization} from './workspaceCustomization.js';
-import {renderMembersView} from '../workspace/members.js';
+import {renderMembersView} from '../workspace/members.js?v=member-password-1';
 import {savePreferences} from '../workspace/preferences.js';
 import {db} from '../dataClient.js';
 import {AppCore} from '../core/appCore.js';
