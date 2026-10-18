@@ -1359,7 +1359,13 @@ function renderValidation(task){
 }
 
 async function openTaskDetail(task, initialTab = "comments") {
-  const accessResult=await db.rpc("resource_capabilities",{p_type:"tasks",p_id:task.id});if(accessResult.error)throw accessResult.error;const access=accessResult.data;
+  // Task access follows its board. Older deployed databases did not accept
+  // `tasks` in resource_capabilities, so do not let that optional capability
+  // lookup prevent the task sheet from opening.
+  const accessResult=await db.rpc("resource_capabilities",{p_type:"tasks",p_id:task.id});
+  const access=accessResult.error
+    ? {can_view:true,can_edit:state.context.canCreate,can_share:state.context.canManageAll,can_upload:state.context.canCreate,can_comment:state.context.canComment,comment:state.context.canComment}
+    : accessResult.data;
   const canEdit = state.context.canCreate&&(state.context.canManageAll||task.created_by===state.context.user.id||!task.created_by);
   let details = taskDetailData(task);
   let activeTab = initialTab;

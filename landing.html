@@ -141,6 +141,9 @@ section{position:relative}
 .process .wrap{display:grid;grid-template-columns:1fr 1fr;gap:70px}
 .process-visual{position:sticky;top:12vh;height:76vh;perspective:1000px;display:flex;align-items:center;justify-content:center}
 .process-visual img{position:relative;height:100%;width:auto;max-width:100%;object-fit:contain;will-change:transform}
+.process-visual img{animation:processFloat 5.5s ease-in-out infinite}
+.process-visual::after{content:"";position:absolute;width:52%;height:7%;bottom:7%;border-radius:50%;background:rgba(89,25,211,.24);filter:blur(18px);animation:processShadow 5.5s ease-in-out infinite}
+@keyframes processFloat{0%,100%{translate:0 0}50%{translate:0 -24px}}@keyframes processShadow{0%,100%{scale:1;opacity:.5}50%{scale:.78;opacity:.24}}
 .process-visual::before{content:"";position:absolute;width:70%;aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,var(--glow),transparent);filter:blur(10px)}
 .steps{position:relative;list-style:none;margin:60px 0 0;padding:0 0 0;padding-inline-start:44px}
 .steps::before,.steps .fill{content:"";position:absolute;inset-inline-start:11px;top:10px;bottom:10px;width:2px;background:var(--line)}
@@ -155,13 +158,31 @@ section{position:relative}
 .step p{margin:0}
 
 /* CONTACT */
-.contact{padding:150px 0 120px;text-align:center;overflow:hidden}
-.contact h2{font-size:clamp(38px,5.6vw,78px);margin-inline:auto;max-width:14ch}
-.contact p{margin:0 auto 40px}
-.contact .hero-ctas{justify-content:center}
-.contact-lines{margin-top:46px;display:flex;justify-content:center;gap:36px;flex-wrap:wrap;color:var(--muted);font-size:16px}
-.contact-lines a{text-decoration:none;direction:ltr;display:inline-block}
-.contact-lines a:hover{color:var(--ink)}
+.contact{padding:0;text-align:initial;overflow:hidden;background:#061f33;color:#f7fbff}
+.contact-intro{padding:110px 0 90px;background:#061f33;position:relative;isolation:isolate}
+.contact-intro::before{content:"";position:absolute;inset:0;opacity:.16;z-index:-1;background-image:linear-gradient(135deg,transparent 45%,rgba(255,255,255,.12) 46% 49%,transparent 50%);background-size:72px 72px}
+.contact-intro-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:80px;align-items:center}
+.contact-intro-copy{text-align:start}.contact-intro .sec-label{color:#bda6ff}
+.contact-intro h2{font-size:clamp(42px,5vw,78px);max-width:10ch;margin:14px 0 26px;color:#fff}
+.contact-intro p{margin:0;max-width:62ch;color:#b9cad8;font-size:clamp(17px,1.45vw,21px);line-height:1.9}
+.contact-portrait{aspect-ratio:4/5;max-height:620px;border:1px solid rgba(255,255,255,.18);background:radial-gradient(circle at 50% 35%,rgba(124,43,255,.52),transparent 43%),linear-gradient(145deg,#102f49,#061622);display:grid;place-items:center;overflow:hidden;box-shadow:0 36px 80px rgba(0,0,0,.32)}
+.contact-portrait img{width:62%;height:auto;filter:drop-shadow(0 28px 30px rgba(0,0,0,.35))}
+.contact-project{background:#7428ff;padding:105px 0}.contact-project-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr);gap:72px;align-items:center}
+.contact-project-copy{order:2;text-align:start}.contact-project-copy .sec-label{color:#fff;opacity:.78}
+.contact-project-copy h2{font-size:clamp(48px,6vw,90px);line-height:1.03;max-width:8ch;margin:12px 0 24px;color:#fff}
+.contact-project-copy>p{margin:0 0 34px;color:#fff;font-size:18px;line-height:1.8}
+.contact-lines{border-top:1px solid rgba(255,255,255,.28);display:grid;color:#fff}
+.contact-lines a{padding:20px 0;border-bottom:1px solid rgba(255,255,255,.28);text-decoration:none;direction:ltr;display:flex;justify-content:space-between;gap:18px;font-weight:700}
+.contact-lines a span{min-width:0;overflow-wrap:anywhere}
+.contact-lines a:hover{color:#fff;background:rgba(255,255,255,.08)}
+.contact-brief{order:1;background:#061f33;padding:42px;color:#fff;box-shadow:0 28px 70px rgba(18,0,52,.28)}
+.contact-brief-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.contact-field{display:grid;gap:8px;font-weight:700;font-size:14px}.contact-field--wide{grid-column:1/-1}
+.contact-field input,.contact-field select,.contact-field textarea{width:100%;border:1px solid #6f879a;background:transparent;color:#fff;padding:14px 15px;font:inherit;border-radius:0;outline:none}
+.contact-field select option{color:#111}.contact-field textarea{min-height:112px;resize:vertical}
+.contact-field input:focus,.contact-field select:focus,.contact-field textarea:focus{border-color:#bda6ff;box-shadow:0 0 0 3px rgba(189,166,255,.15)}
+.contact-services{border:0;padding:0;margin:22px 0;display:flex;flex-wrap:wrap;gap:9px}.contact-services legend{width:100%;font-weight:700;margin-bottom:10px}
+.contact-chip input{position:absolute;opacity:0;pointer-events:none}.contact-chip span{display:block;border:1px solid #5d778a;padding:10px 13px;cursor:pointer;color:#c9d7e2;font-size:14px}.contact-chip input:checked+span{background:#fff;color:#061f33;border-color:#fff}
+.contact-submit{display:flex;gap:14px;margin-top:20px}.contact-submit .btn{flex:1;text-align:center;justify-content:center;border-radius:0}.contact-submit .btn-main{background:#7428ff;color:#fff;border-color:#7428ff}.contact-submit .btn-ghost{color:#fff;border-color:#fff}
 footer{border-top:1px solid var(--line);padding:30px 0;font-size:14px;color:var(--muted)}
 footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 
@@ -188,9 +209,15 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
   .process-visual{position:relative;top:0;height:52vh}
   .steps{margin-top:20px}
   .step{padding-bottom:12vh}
+  .contact-intro-grid,.contact-project-grid{grid-template-columns:1fr;gap:42px}.contact-portrait{width:min(100%,480px);margin:auto;aspect-ratio:16/10}.contact-project-copy{order:1}.contact-brief{order:2}
+}
+@media (max-width: 600px){
+  .contact-intro{padding:76px 0 64px}.contact-project{padding:72px 0}.contact-intro-grid,.contact-project-grid{gap:32px}
+  .contact-intro h2,.contact-project-copy h2{font-size:clamp(40px,13vw,58px)}.contact-brief{padding:26px 20px}.contact-brief-grid{grid-template-columns:1fr}.contact-field--wide{grid-column:auto}.contact-submit{flex-direction:column}
+  .contact-lines a{flex-wrap:wrap}
 }
 @media (prefers-reduced-motion: reduce){
-  .statue-float,.statue-shadow,.orbit,.scroll-hint i{animation:none}
+  .statue-float,.statue-shadow,.orbit,.scroll-hint i,.process-visual img,.process-visual::after{animation:none}
   .step{opacity:1}
 }
 </style>
@@ -334,19 +361,32 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
   </section>
 
   <section class="contact" id="contact">
-    <div class="wrap">
-      <p class="sec-label">لنبدأ من فكرتك</p>
-      <h2>مستعد للانتقال إلى المستوى التالي؟</h2>
-      <p>لنحدّد موعدًا ونبني معًا استراتيجية تناسب أهدافك.</p>
-      <div class="hero-ctas">
-        <a class="btn btn-main" href="https://wa.me/213562591461" target="_blank" rel="noopener">راسلنا على واتساب</a>
-        <a class="btn btn-ghost" href="mailto:atharagence@gmail.com">أرسل بريدًا</a>
+    <div class="contact-intro">
+      <div class="wrap contact-intro-grid">
+        <div class="contact-intro-copy"><p class="sec-label">لنبدأ من فكرتك</p><h2>فريق واحد لفكرة تستحق أن تكبر.</h2><p>نجمع الاستراتيجية والتصميم والمحتوى والإنتاج في فريق متكامل. نبدأ بفهم مشروعك، ثم نحوّل الفكرة إلى حضور واضح ومتناسق يترك أثرًا.</p></div>
+        <div class="contact-portrait" aria-label="فريق أثر"><img src="assets/images/athar-login-logo.png" alt="أثر"></div>
       </div>
-      <div class="contact-lines">
-        <a href="mailto:atharagence@gmail.com">atharagence@gmail.com</a>
-        <a href="tel:+213562591461">+213 562 59 14 61</a>
-        <a href="tel:+213556988107">+213 556 98 81 07</a>
-        <span>بئر خادم، الجزائر</span>
+    </div>
+    <div class="contact-project">
+      <div class="wrap contact-project-grid">
+        <div class="contact-project-copy"><p class="sec-label">ابدأ مشروعك</p><h2>حدّثنا عن مشروعك</h2><p>املأ الموجز، وسنفتح رسالتك جاهزة للإرسال عبر واتساب أو البريد الإلكتروني.</p>
+          <div class="contact-lines">
+            <a href="https://wa.me/213797791948" target="_blank" rel="noopener"><span>واتساب والهاتف</span><span>0797 791 948</span></a>
+            <a href="tel:+213556988107"><span>الهاتف</span><span>0556 988 107</span></a>
+            <a href="mailto:Oussama@atharmarketing.agency"><span>البريد الإلكتروني</span><span>Oussama@atharmarketing.agency</span></a>
+          </div>
+        </div>
+        <form class="contact-brief" id="contact-brief">
+          <div class="contact-brief-grid">
+            <label class="contact-field"><span>الاسم</span><input name="name" required autocomplete="name"></label><label class="contact-field"><span>الشركة</span><input name="company" required autocomplete="organization"></label>
+            <label class="contact-field contact-field--wide"><span>القطاع</span><select name="sector" required><option value="">اختر القطاع</option><option>التجارة والخدمات</option><option>العقارات</option><option>الصناعة</option><option>الصحة والجمال</option><option>قطاع آخر</option></select></label>
+          </div>
+          <fieldset class="contact-services"><legend>ما تحتاجه</legend>
+            <label class="contact-chip"><input type="checkbox" name="services" value="التصوير المرئي"><span>التصوير المرئي</span></label><label class="contact-chip"><input type="checkbox" name="services" value="التصوير الفوتوغرافي"><span>التصوير الفوتوغرافي</span></label><label class="contact-chip"><input type="checkbox" name="services" value="المونتاج"><span>المونتاج</span></label><label class="contact-chip"><input type="checkbox" name="services" value="الرسوم المتحركة"><span>الرسوم المتحركة</span></label><label class="contact-chip"><input type="checkbox" name="services" value="التصميم الجرافيكي"><span>التصميم الجرافيكي</span></label><label class="contact-chip"><input type="checkbox" name="services" value="إدارة الإعلانات"><span>إدارة الإعلانات</span></label><label class="contact-chip"><input type="checkbox" name="services" value="تصميم المواقع"><span>تصميم المواقع</span></label>
+          </fieldset>
+          <label class="contact-field"><span>ما النتيجة التي تريد أن يحققها المشروع؟</span><textarea name="outcome" required placeholder="اكتب جملة أو جملتين"></textarea></label>
+          <div class="contact-submit"><button class="btn btn-main" type="submit" name="channel" value="whatsapp">إرسال عبر واتساب</button><button class="btn btn-ghost" type="submit" name="channel" value="email">إرسال عبر البريد الإلكتروني</button></div>
+        </form>
       </div>
     </div>
   </section>
@@ -363,5 +403,6 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 <script type="module" src="js/portfolio.js?v=20261016-1"></script>
 <script type="module" src="js/trustedClients.js?v=20261016-2"></script>
 <script type="module" src="js/presentationVideo.js?v=20261016-4"></script>
+<script type="module" src="js/landingContact.js?v=20261018-1"></script>
 </body>
 </html>
