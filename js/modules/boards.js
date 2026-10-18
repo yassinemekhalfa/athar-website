@@ -1371,7 +1371,12 @@ async function openTaskDetail(task, initialTab = "comments") {
   let details = taskDetailData(task);
   let activeTab = initialTab;
   const patchTask = async patch => { try{const updated=await updateTask(task.id,patch,state.context.folderId);Object.assign(task,updated||patch);details=taskDetailData(task);return updated;}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),"error");return null;} };
-  const saveDetails = next => patchTask({ details: { ...next, subtasks: Array.isArray(next.subtasks) ? next.subtasks : [], attachments: Array.isArray(next.attachments) ? next.attachments : [] } });
+  let detailsSave=Promise.resolve();
+  const saveDetails = next => {
+    const normalized={...next,subtasks:Array.isArray(next.subtasks)?next.subtasks:[],attachments:Array.isArray(next.attachments)?next.attachments:[]};
+    const save=async()=>{const updated=await updateTask(task.id,{details:normalized},state.context.folderId);Object.assign(task,updated);details=taskDetailData(task);return updated;};
+    detailsSave=detailsSave.catch(()=>{}).then(save);return detailsSave;
+  };
 
   const sheet = el("section", "k-task-sheet-v2");
   const upload = document.createElement("input");
@@ -1489,8 +1494,29 @@ async function openTaskDetail(task, initialTab = "comments") {
 
   const descriptionSection = el("section", "k-task-sheet-section k-task-description-section"); descriptionSection.append(el("h3", "k-task-sheet-section-title", "Description")); const description = textarea(task.description || ""); description.className = "k-task-description"; description.placeholder = "Add Description"; description.disabled = !canEdit; description.addEventListener("change", () => patchTask({ description: description.value.trim() || null })); descriptionSection.append(description); scroll.append(descriptionSection);
 
-  const subtasksSection = el("section", "k-task-sheet-section k-task-subtasks"); subtasksSection.append(el("h3", "k-task-sheet-section-title", "Subtasks")); const subtasksHost = el("div", "k-task-subtasks-list");
-  const renderSubtasks = () => { subtasksHost.replaceChildren(); details.subtasks.forEach(subtask => { const row = el("label", "k-task-subtask-row"); const check = checkboxControl(subtask.done); check.disabled = !canEdit; check.addEventListener("change", async () => { await saveDetails({ ...details, subtasks: details.subtasks.map(item => item.id === subtask.id ? { ...item, done: check.checked } : item) }); renderSubtasks(); }); const text = el("span", "", subtask.title); const remove = button("×", "ghost"); remove.className = "k-task-subtask-remove"; remove.hidden = !canEdit; remove.addEventListener("click", async event => { event.preventDefault(); await saveDetails({ ...details, subtasks: details.subtasks.filter(item => item.id !== subtask.id) }); renderSubtasks(); }); row.append(check, text, remove); subtasksHost.append(row); }); if (canEdit) { const form = el("form", "k-task-subtask-add"); const subtaskInput = input(""); subtaskInput.placeholder = "Add Subtask"; const add = button("", "ghost"); add.type="submit";add.setAttribute("aria-label","Add subtask");add.append(workspaceIcon("plus")); form.append(add, subtaskInput); form.addEventListener("submit", async event => { event.preventDefault(); const value = subtaskInput.value.trim(); if (!value) return; await saveDetails({ ...details, subtasks: [...details.subtasks, { id: globalThis.ATHAR_UUID(), title: value, done: false }] }); subtaskInput.value = ""; renderSubtasks(); }); subtasksHost.append(form); } };
+  const subtasksSection = el("section", "k-task-sheet-section k-task-subtasks");
+  const subtasksHeading=el("div","k-task-subtasks-heading");subtasksHeading.append(el("h3", "k-task-sheet-section-title", "Subtasks"));
+  const subtaskProgress=el("span","k-task-subtasks-progress");subtasksHeading.append(subtaskProgress);subtasksSection.append(subtasksHeading);
+  const subtasksHost = el("div", "k-task-subtasks-list");
+  const persistSubtasks=async next=>{subtasksHost.setAttribute("aria-busy","true");subtasksHost.inert=true;try{await saveDetails({...details,subtasks:next});renderSubtasks();}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),"error");renderSubtasks();}finally{subtasksHost.removeAttribute("aria-busy");subtasksHost.inert=false;}};
+  const renderSubtasks = () => {
+    subtasksHost.replaceChildren();
+    const completed=details.subtasks.filter(item=>item.done).length,total=details.subtasks.length;subtaskProgress.textContent=total?`${completed} of ${total} completed`:"No subtasks";
+    for(const subtask of details.subtasks){
+      const row=el("div","k-task-subtask-row");row.dataset.subtaskId=subtask.id;
+      const check=checkboxControl(Boolean(subtask.done));check.disabled=!canEdit;check.setAttribute("aria-label",`Complete ${subtask.title}`);
+      check.addEventListener("change",()=>persistSubtasks(details.subtasks.map(item=>item.id===subtask.id?{...item,done:check.checked}:item)));
+      const titleControl=canEdit?input(subtask.title):el("span","k-task-subtask-title",subtask.title);titleControl.className="k-task-subtask-title";
+      if(canEdit){titleControl.maxLength=240;titleControl.setAttribute("aria-label",`Subtask title: ${subtask.title}`);titleControl.addEventListener("change",()=>{const title=titleControl.value.trim();if(!title){titleControl.value=subtask.title;return;}if(title!==subtask.title)persistSubtasks(details.subtasks.map(item=>item.id===subtask.id?{...item,title}:item));});}
+      const remove=button("?","ghost");remove.className="k-task-subtask-remove";remove.hidden=!canEdit;remove.setAttribute("aria-label",`Remove subtask: ${subtask.title}`);remove.addEventListener("click",()=>persistSubtasks(details.subtasks.filter(item=>item.id!==subtask.id)));
+      row.append(check,titleControl,remove);subtasksHost.append(row);
+    }
+    if(canEdit){
+      const form=el("form","k-task-subtask-add"),subtaskInput=input("");subtaskInput.placeholder="Add a subtask";subtaskInput.setAttribute("aria-label","New subtask title");subtaskInput.maxLength=240;
+      const add=button("","ghost");add.type="submit";add.setAttribute("aria-label","Add subtask");add.append(workspaceIcon("plus"));form.append(subtaskInput,add);
+      form.addEventListener("submit",async event=>{event.preventDefault();const value=subtaskInput.value.trim();if(!value)return subtaskInput.focus();add.disabled=true;subtaskInput.disabled=true;await persistSubtasks([...details.subtasks,{id:globalThis.ATHAR_UUID(),title:value,done:false}]);add.disabled=false;subtaskInput.disabled=false;subtaskInput.value="";subtaskInput.focus();});subtasksHost.append(form);
+    }
+  };
   renderSubtasks(); subtasksSection.append(subtasksHost); scroll.append(subtasksSection);
 
   const activity = el("section", "k-task-activity"); const tabs = el("div", "k-task-activity-tabs"); const panel = el("div", "k-task-activity-panel"); const composerHost = el("div", "k-task-comment-composer-host"); const tabButtons = new Map();
