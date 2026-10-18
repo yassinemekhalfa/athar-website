@@ -1,4 +1,6 @@
 const form = document.getElementById('contact-brief');
+const status = document.getElementById('contact-form-status');
+let selectedChannel = 'whatsapp';
 
 function briefMessage(data) {
   const english = document.documentElement.lang === 'en';
@@ -14,15 +16,28 @@ function briefMessage(data) {
   ].join('\n');
 }
 
+form?.querySelectorAll('button[name="channel"]').forEach(button => {
+  button.addEventListener('click', () => { selectedChannel = button.value; });
+});
+
 form?.addEventListener('submit', event => {
   event.preventDefault();
   if (!form.reportValidity()) return;
   const message = briefMessage(new FormData(form));
-  const channel = event.submitter?.value || 'whatsapp';
+  const channel = event.submitter?.value || selectedChannel;
   const url = channel === 'email'
     ? `mailto:Oussama@atharmarketing.agency?subject=${encodeURIComponent('Athar project brief')}&body=${encodeURIComponent(message)}`
     : `https://wa.me/213797791948?text=${encodeURIComponent(message)}`;
-  window.open(url, channel === 'email' ? '_self' : '_blank', channel === 'email' ? undefined : 'noopener');
+  if (status) {
+    const english = document.documentElement.lang === 'en';
+    status.replaceChildren(document.createTextNode(english ? `Opening ${channel === 'email' ? 'your email app' : 'WhatsApp'}… ` : `جارٍ فتح ${channel === 'email' ? 'البريد الإلكتروني' : 'واتساب'}… `));
+    const fallback = document.createElement('a');
+    fallback.href = url;
+    fallback.textContent = english ? 'Open it here' : 'افتحه من هنا';
+    status.append(fallback);
+  }
+  // Direct navigation works reliably on mobile browsers that block popups.
+  window.location.href = url;
 });
 
 // Keep process steps animated if ScrollTrigger is unavailable or delayed.

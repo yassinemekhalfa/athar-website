@@ -183,6 +183,7 @@ section{position:relative}
 .contact-services{border:0;padding:0;margin:22px 0;display:flex;flex-wrap:wrap;gap:9px}.contact-services legend{width:100%;font-weight:700;margin-bottom:10px}
 .contact-chip input{position:absolute;opacity:0;pointer-events:none}.contact-chip span{display:block;border:1px solid #5d778a;padding:10px 13px;cursor:pointer;color:#c9d7e2;font-size:14px}.contact-chip input:checked+span{background:#fff;color:#061f33;border-color:#fff}
 .contact-submit{display:flex;gap:14px;margin-top:20px}.contact-submit .btn{flex:1;text-align:center;justify-content:center;border-radius:0}.contact-submit .btn-main{background:#7428ff;color:#fff;border-color:#7428ff}.contact-submit .btn-ghost{color:#fff;border-color:#fff}
+.contact-form-status{min-height:24px;margin:14px 0 0!important;color:#c9d7e2!important;font-size:14px!important}.contact-form-status a{color:#fff;font-weight:700}
 footer{border-top:1px solid var(--line);padding:30px 0;font-size:14px;color:var(--muted)}
 footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 
@@ -386,6 +387,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
           </fieldset>
           <label class="contact-field"><span>ما النتيجة التي تريد أن يحققها المشروع؟</span><textarea name="outcome" required placeholder="اكتب جملة أو جملتين"></textarea></label>
           <div class="contact-submit"><button class="btn btn-main" type="submit" name="channel" value="whatsapp">إرسال عبر واتساب</button><button class="btn btn-ghost" type="submit" name="channel" value="email">إرسال عبر البريد الإلكتروني</button></div>
+          <p class="contact-form-status" id="contact-form-status" role="status" aria-live="polite"></p>
         </form>
       </div>
     </div>
@@ -403,6 +405,6 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 <script type="module" src="js/portfolio.js?v=20261016-1"></script>
 <script type="module" src="js/trustedClients.js?v=20261016-2"></script>
 <script type="module" src="js/presentationVideo.js?v=20261016-4"></script>
-<script type="module" src="js/landingContact.js?v=20261018-1"></script>
+<script type="module" src="js/landingContact.js?v=20261018-2"></script>
 </body>
 </html>
