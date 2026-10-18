@@ -5,7 +5,7 @@ import { AppCore } from "./appCore.js";
 const MODULE_LOADERS = {
   embeds:()=>import("../modules/embeds.js?v=home-create-1"),
   conversation:()=>import("../modules/conversation.js?v=client-conversation-1"),
-  boards:()=>import("../modules/boards.js?v=task-access-1"),
+  boards:()=>import("../modules/boards.js?v=task-complete-1"),
   docs:()=>import("../modules/docs.js"),
   files:()=>import("../modules/files.js"),
   invoices:()=>import("../modules/invoices.js")

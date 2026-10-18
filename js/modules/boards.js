@@ -386,6 +386,7 @@ function renderColumn(column) {
 
 function renderTaskCard(task) {
   const card = el("article", "ap-task-card");applyTaskColor(card,task);
+  card.classList.toggle("is-completed",Boolean(task.completed_at));
   card.dataset.taskId = task.id;
   card.dataset.module = "boards";
   card.tabIndex = 0;
@@ -1410,10 +1411,14 @@ async function openTaskDetail(task, initialTab = "comments") {
   const actions = el("div", "k-task-sheet-actions");
   const complete = taskActionButton("check", task.completed_at ? "Reopen" : "Complete");
   const updateCompleteState = () => {
+    const stageRequiresValidation = !task.completed_at &&
+      (task.validation?.status === "pending" || state.columns.find(column => column.id === task.column_id)?.validation_hours > 0);
     complete.disabled = (!canEdit && task.assignee_id !== state.context.user.id) ||
-      (!task.completed_at && (task.validation?.status === "pending" || state.columns.find(column => column.id === task.column_id)?.validation_hours > 0));
+      stageRequiresValidation;
     complete.title = complete.disabled ? "Use stage validation to approve this task" : task.completed_at ? "Reopen task" : "Mark task complete";
     complete.setAttribute("aria-label", task.completed_at ? "Reopen" : "Complete");
+    complete.setAttribute("aria-pressed",String(Boolean(task.completed_at)));
+    complete.classList.toggle("is-completed",Boolean(task.completed_at));
     complete.querySelector("span:last-child").textContent = task.completed_at ? "Reopen" : "Complete";
   };
   updateCompleteState();
@@ -1424,7 +1429,7 @@ async function openTaskDetail(task, initialTab = "comments") {
     try {
       const updated = await updateTask(task.id, { completed_at: completedAt }, state.context.folderId);
       Object.assign(task, updated);
-      if (completedAt) await createNextRepeatTask(task, completedAt, canEdit);
+      if (completedAt) createNextRepeatTask(task, completedAt, canEdit).catch(error=>AppCore.ui.toast(`Task completed, but the next repeated task could not be created: ${AppCore.ui.describeError(error)}`,"warning"));
       updateCompleteState();
       await loadActiveBoard();
       if (completedAt) AppCore.ui.toast("Task completed.", "success");

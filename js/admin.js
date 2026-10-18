@@ -2,7 +2,7 @@ import {googleDrivePreview,googleDriveImage} from './drive-video.js';
 import {db,isSupabaseMode} from './dataClient.js';
 const $=id=>document.getElementById(id);
 const form=$('project-form'),status=$('status');
-let projects=[],current=null,dirty=false,busy=false,trustedClients=[],presentationSettings=null,uploadedTrustedLogo='';
+let projects=[],current=null,dirty=false,busy=false,trustedClients=[],presentationSettings=null,profileSettings=null,uploadedTrustedLogo='';
 const node=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
 function notify(text,error=false){status.textContent=text;status.classList.toggle('error',error);}
 async function api(url,options={}){
@@ -86,6 +86,29 @@ $('trusted-client-form').addEventListener('submit',async event=>{
 });
 $('trusted-client-logo-upload').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{notify('Uploading client logo…');uploadedTrustedLogo=(await uploadPublicFile(file)).src;$('trusted-client-logo').value='';notify('Logo uploaded. Add the client to publish it.');}catch(error){notify(error.message,true);}finally{event.target.value='';}});
 
+function renderWebsiteProfilePhoto(){
+ const profile=profileSettings||{},preview=$('website-profile-preview');preview.replaceChildren();
+ if(profile.photo_url){const photo=node('img');photo.src=profile.photo_url;photo.alt='Profile preview';preview.append(photo);}else preview.append(node('span','Add your photo'));
+}
+function renderWebsiteProfile(){
+ const profile=profileSettings||{};renderWebsiteProfilePhoto();
+ for(const key of ['name_en','role_en','bio_en','name_ar','role_ar','bio_ar','tiktok_url','facebook_url','instagram_url','linkedin_url']){
+  const id=`website-profile-${key.replaceAll('_','-').replace('-url','')}`;if($(id))$(id).value=profile[key]||'';
+ }
+ $('website-profile-photo-url').value=profile.photo_url||'';$('website-profile-published').checked=!!profile.published;
+}
+async function refreshWebsiteProfile(){
+ const {membership}=await getOwnerContext();const {data,error}=await db.from('website_profile').select('*').eq('agency_id',membership.agency_id).maybeSingle();if(error)throw error;
+ profileSettings=data||{agency_id:membership.agency_id,published:false};renderWebsiteProfile();
+}
+$('website-profile-photo-url').addEventListener('input',event=>{profileSettings.photo_url=event.target.value.trim();renderWebsiteProfilePhoto();});
+$('website-profile-photo').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{notify('Uploading your profile photo…');profileSettings.photo_url=(await uploadPublicFile(file)).src;$('website-profile-photo-url').value=/^https?:\/\//i.test(profileSettings.photo_url)?profileSettings.photo_url:'';renderWebsiteProfilePhoto();notify('Photo uploaded. Save the profile to publish it.');}catch(error){notify(error.message,true);}finally{event.target.value='';}});
+$('website-profile-form').addEventListener('submit',async event=>{
+ event.preventDefault();const {membership}=await getOwnerContext(),submit=event.submitter;submit.disabled=true;
+ const values={agency_id:membership.agency_id,photo_url:$('website-profile-photo-url').value.trim()||profileSettings.photo_url||null,name_en:$('website-profile-name-en').value.trim(),role_en:$('website-profile-role-en').value.trim(),bio_en:$('website-profile-bio-en').value.trim(),name_ar:$('website-profile-name-ar').value.trim(),role_ar:$('website-profile-role-ar').value.trim(),bio_ar:$('website-profile-bio-ar').value.trim(),tiktok_url:$('website-profile-tiktok').value.trim()||null,facebook_url:$('website-profile-facebook').value.trim()||null,instagram_url:$('website-profile-instagram').value.trim()||null,linkedin_url:$('website-profile-linkedin').value.trim()||null,published:$('website-profile-published').checked,updated_at:new Date().toISOString()};
+ const {error}=await db.from('website_profile').upsert(values,{onConflict:'agency_id'});submit.disabled=false;if(error)return notify(error.message,true);await refreshWebsiteProfile();notify('Homepage profile and social links saved.');
+});
+
 function renderPresentationVideo(){const host=$('presentation-video-preview');host.replaceChildren();const url=presentationSettings?.presentation_video_url;if(!url){host.hidden=true;return;}host.hidden=false;if(presentationSettings.presentation_video_type==='video/google-drive'){const frame=node('iframe');frame.src=url;frame.title='Presentation video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;host.append(frame);}else{const video=node('video');video.src=url;video.controls=true;video.playsInline=true;host.append(video);}}
 async function refreshPresentationVideo(){const {membership}=await getOwnerContext();const {data,error}=await db.from('website_settings').select('*').eq('agency_id',membership.agency_id).maybeSingle();if(error)throw error;presentationSettings=data||{agency_id:membership.agency_id,presentation_video_url:null,presentation_video_type:null,presentation_video_published:false};$('presentation-video-link').value=presentationSettings.presentation_video_type==='video/google-drive'?presentationSettings.presentation_video_url||'':'';$('presentation-video-published').checked=!!presentationSettings.presentation_video_published;renderPresentationVideo();}
 $('presentation-video-link').addEventListener('input',event=>{const value=event.target.value.trim(),preview=googleDrivePreview(value);event.target.setCustomValidity(value&&!preview?'Paste a valid Google Drive video link.':'');if(preview){presentationSettings.presentation_video_url=preview;presentationSettings.presentation_video_type='video/google-drive';renderPresentationVideo();}});
@@ -150,4 +173,4 @@ $('preview-project').addEventListener('click',()=>{
 $('close-preview').addEventListener('click',()=>$('preview-dialog').close());$('preview-dialog').addEventListener('close',()=>{for(const video of $('preview-dialog').querySelectorAll('video'))video.pause();});
 $('sign-out').addEventListener('click',async()=>{if(busy||!confirmLeave())return;try{await api('/api/auth/signout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});dirty=false;location.assign('login.html?next=admin');}catch(error){notify(error.message,true);}});
 window.addEventListener('beforeunload',event=>{if(dirty||busy){event.preventDefault();event.returnValue='';}});
-try{const data=await refresh();await Promise.all([refreshTrustedClients(),refreshPresentationVideo()]);$('studio').hidden=false;$('trusted-clients-admin').hidden=false;$('presentation-video-admin').hidden=false;$('new-project').disabled=false;notify(`Signed in as ${data.email}. Only published content is public.`);}catch(error){if(error.status===401)location.replace('login.html?next=admin');else{$('access-denied').hidden=false;notify(error.message,true);}}
+try{const data=await refresh();await Promise.all([refreshTrustedClients(),refreshPresentationVideo(),refreshWebsiteProfile()]);$('studio').hidden=false;$('trusted-clients-admin').hidden=false;$('presentation-video-admin').hidden=false;$('website-profile-admin').hidden=false;$('new-project').disabled=false;notify(`Signed in as ${data.email}. Only published content is public.`);}catch(error){if(error.status===401)location.replace('login.html?next=admin');else{$('access-denied').hidden=false;notify(error.message,true);}}

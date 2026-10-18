@@ -358,7 +358,7 @@ export function openFolderCreateMenu(context,folderId=null,anchorElement=null){
   const withFolder=async(handler)=>handler(folderId||(await ensureUnfiledFolder()).id);
   const createResource=(title,subtitle,iconName,moduleName,openForm)=>makeItem({title,subtitle,icon:iconName,action:async()=>{AppCore.ui.closeModal();await withFolder(async id=>{await selectFolder(id,{skipOverview:true,refreshModule:false});await selectModule(moduleName);await openForm();});}});
   wrap.append(makeItem({title:"Folder",subtitle:"Organize everything",icon:"folder",action:async()=>{AppCore.ui.closeModal();openCreateFolder(folderId);}}));
-  wrap.append(createResource("Board","Track and manage projects","board","boards",async()=>{(await import("../modules/boards.js?v=task-access-1")).openBoardForm();}));
+  wrap.append(createResource("Board","Track and manage projects","board","boards",async()=>{(await import("../modules/boards.js?v=task-complete-1")).openBoardForm();}));
   wrap.append(createResource("Conversation","Discuss anything with clients","conversation","conversation",async()=>{(await import("../modules/conversation.js?v=client-conversation-1")).openCreateConversation();}));
   wrap.append(makeItem({title:"Embed",subtitle:"Add third-party apps",icon:"embed",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openEmbedForm({...context,folderId:id}));}}));
   wrap.append(makeItem({title:"Link",subtitle:"Share external resources",icon:"link",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openLinkForm({...context,folderId:id}));}}));

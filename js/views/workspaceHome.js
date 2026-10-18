@@ -225,7 +225,7 @@ async function createResource(_title, moduleName) {
       await selectFolder(resource.folder_id || folder.id, { skipOverview: true, refreshModule: false });
       await selectModule(moduleName, resource.id);
     };
-    if (moduleName === 'boards') (await import('../modules/boards.js?v=task-access-1')).openBoardForm(null, { context, onDone: openCreatedResource });
+    if (moduleName === 'boards') (await import('../modules/boards.js?v=task-complete-1')).openBoardForm(null, { context, onDone: openCreatedResource });
     else if (moduleName === 'conversation') (await import('../modules/conversation.js?v=client-conversation-1')).openCreateConversation({ context, onDone: openCreatedResource });
     else if (moduleName === 'embeds') (await import('../modules/embeds.js?v=home-create-1')).openEmbedCreation(context, openCreatedResource);
     else if (moduleName === 'docs') await (await import('../modules/docs.js')).createDocument();

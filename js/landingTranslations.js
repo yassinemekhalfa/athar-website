@@ -385,5 +385,6 @@ export const englishCopy = {
   "ما النتيجة التي تريد أن يحققها المشروع؟": "What should this project achieve?",
   "اكتب جملة أو جملتين": "Write one or two sentences",
   "إرسال عبر واتساب": "Send with WhatsApp",
-  "إرسال عبر البريد الإلكتروني": "Send by email"
+  "إرسال عبر البريد الإلكتروني": "Send by email",
+  "شبكات التواصل الاجتماعي": "Social media"
 };
