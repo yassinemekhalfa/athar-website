@@ -18,9 +18,19 @@ function confirmLeave(){return !dirty||confirm('Discard your unsaved changes?');
 function setBusy(value){busy=value;for(const control of document.querySelectorAll('#studio button,#studio input,#studio textarea,#studio select,#new-project'))control.disabled=value;}
 function image(src){const el=node('img');el.src=src;el.alt='Project image';return el;}
 const defaultCrop=()=>({ratio:'landscape',x:50,y:50,zoom:1});
+const defaultVideoFrame=()=>({ratio:'auto'});
 function cropFor(kind){return {...defaultCrop(),...(current.presentation?.[kind]||{})};}
 function cropRatio(value){return value==='portrait'?'4 / 5':value==='square'?'1 / 1':'16 / 10';}
 function applyCrop(host,media,crop){host.style.aspectRatio=cropRatio(crop.ratio);media.style.objectFit='cover';media.style.objectPosition=`${crop.x}% ${crop.y}%`;media.style.transform=`scale(${crop.zoom})`;media.style.transformOrigin=`${crop.x}% ${crop.y}%`;}
+function videoFrame(){return {...defaultVideoFrame(),...(current.presentation?.video||{})};}
+function videoAspect(frame=videoFrame()){
+ if(frame.ratio==='auto'&&Number(frame.aspect)>0)return String(frame.aspect);
+ return {vertical:'9 / 16',portrait:'4 / 5',square:'1 / 1',standard:'4 / 3',landscape:'16 / 9'}[frame.ratio]||'16 / 9';
+}
+function applyVideoFrame(host,media,frame=videoFrame()){
+ host.style.aspectRatio=videoAspect(frame);media.style.objectFit='contain';media.style.objectPosition='center';media.style.transform='none';
+}
+function readVideoDimensions(file){return new Promise((resolve,reject)=>{const src=URL.createObjectURL(file),video=document.createElement('video');video.preload='metadata';video.onloadedmetadata=()=>{const width=video.videoWidth,height=video.videoHeight;URL.revokeObjectURL(src);if(!width||!height)return reject(new Error('The video dimensions could not be read.'));resolve({width,height,aspect:Number((width/height).toFixed(6))});};video.onerror=()=>{URL.revokeObjectURL(src);reject(new Error('The selected video could not be read.'));};video.src=src;});}
 function renderList(){
  $('project-count').textContent=projects.length;
  $('project-list').replaceChildren(...projects.map(entry=>{
@@ -33,14 +43,15 @@ function renderList(){
 function renderMedia(){
  const coverHost=$('cover-preview');coverHost.replaceChildren();if(current.cover){const cover=image(current.cover);applyCrop(coverHost,cover,cropFor('cover'));coverHost.append(cover);}else coverHost.append(node('span','Choose a cover image'));
  const video=$('video-preview');video.replaceChildren();
- if(current.video?.type==='video/google-drive'){const frame=node('iframe');frame.src=current.video.src;frame.title='Google Drive project video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';applyCrop(video,frame,cropFor('video'));video.append(frame);}else if(current.video){const player=node('video');player.src=current.video.src;player.controls=true;player.preload='metadata';player.playsInline=true;player.poster=current.cover||'';applyCrop(video,player,cropFor('video'));video.append(player);}else video.append(node('span','Optional project film'));
+ if(current.video?.type==='video/google-drive'){const frame=node('iframe');frame.src=current.video.src;frame.title='Google Drive project video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';applyVideoFrame(video,frame);video.append(frame);}else if(current.video){const player=node('video');player.src=current.video.src;player.controls=true;player.preload='metadata';player.playsInline=true;player.poster=current.cover||'';applyVideoFrame(video,player);video.append(player);}else video.append(node('span','Optional project film'));
+ const frame=videoFrame(),dimensions=$('video-dimensions');dimensions.textContent=frame.width&&frame.height?`Detected ${frame.width} × ${frame.height}px${frame.ratio==='auto'?' — using natural format':''}`:frame.ratio==='auto'?'Auto detects uploaded video dimensions.':'Selected format is used; the full video remains visible.';
  $('remove-video').hidden=!current.video;
  $('gallery-preview').replaceChildren(...current.images.map((src,index)=>{
   const wrap=node('div');wrap.className='gallery-item';const remove=node('button','×');remove.type='button';remove.setAttribute('aria-label',`Remove gallery image ${index+1}`);remove.addEventListener('click',()=>{current.images.splice(index,1);dirty=true;renderMedia();});wrap.append(image(src),remove);return wrap;
  }));
 }
 function select(project){
- current=structuredClone(project);current.presentation={cover:{...defaultCrop(),...(current.presentation?.cover||{})},video:{...defaultCrop(),...(current.presentation?.video||{})}};dirty=false;form.reset();$('editor-empty').hidden=true;form.hidden=false;
+ current=structuredClone(project);current.presentation={cover:{...defaultCrop(),...(current.presentation?.cover||{})},video:{...defaultVideoFrame(),...(current.presentation?.video||{})}};dirty=false;form.reset();$('editor-empty').hidden=true;form.hidden=false;
  for(const key of ['name','year','category','sector'])form.elements[key].value=current[key]||'other';
  form.elements.concept.checked=!!current.concept;
  for(const lang of ['en','ar'])for(const key of ['title','summary','description','services'])form.elements[`${key}_${lang}`].value=key==='services'?(current.services?.[lang]||[]).join('\n'):current[key]?.[lang]||'';
@@ -48,7 +59,7 @@ function select(project){
  $('video-drive-url').value=current.video?.type==='video/google-drive'?current.video.src:'';
  $('cover-drive-url').value=current.cover?.startsWith('https://drive.google.com/thumbnail?')?current.cover:'';
  $('gallery-drive-urls').value='';
- for(const kind of ['cover','video']){const crop=cropFor(kind);$(`${kind}-ratio`).value=crop.ratio;$(`${kind}-x`).value=String(crop.x);$(`${kind}-y`).value=String(crop.y);$(`${kind}-zoom`).value=String(Math.round(crop.zoom*100));}
+ const coverCrop=cropFor('cover');$('cover-ratio').value=coverCrop.ratio;$('cover-x').value=String(coverCrop.x);$('cover-y').value=String(coverCrop.y);$('cover-zoom').value=String(Math.round(coverCrop.zoom*100));$('video-ratio').value=videoFrame().ratio;
  const entry=projects.find(p=>p.project.id===current.id);$('publication-state').textContent=entry?.published?'Published':'Draft';$('unpublish').hidden=!entry?.published;$('delete-project').hidden=!entry;
  renderList();renderMedia();
 }
@@ -58,7 +69,7 @@ function readProject(){
  const drive=$('video-drive-url').value.trim();
  if(drive){const preview=googleDrivePreview(drive);if(!preview)throw new Error('Paste a valid Google Drive file sharing link. Set access to “Anyone with the link”.');project.video={src:preview,type:'video/google-drive',poster:project.cover};}
  else if(project.video?.type==='video/google-drive')delete project.video;
- project.presentation={};for(const kind of ['cover','video'])project.presentation[kind]={ratio:$(`${kind}-ratio`).value,x:Number($(`${kind}-x`).value),y:Number($(`${kind}-y`).value),zoom:Number($(`${kind}-zoom`).value)/100};
+ project.presentation={cover:{ratio:$('cover-ratio').value,x:Number($('cover-x').value),y:Number($('cover-y').value),zoom:Number($('cover-zoom').value)/100},video:{...videoFrame(),ratio:$('video-ratio').value}};
  if(project.video)project.video={...project.video,poster:project.cover};return project;
 }
 async function refresh(){const data=await api('/api/website/admin');projects=data.projects;renderList();return data;}
@@ -126,16 +137,16 @@ async function upload(input,kind){
  if(files.some(file=>file.size>25*1024*1024)){notify('Each file must be 25 MB or smaller.',true);input.value='';return;}
  if(kind==='gallery'&&current.images.length+files.length>30){notify('You can add up to 30 gallery images.',true);input.value='';return;}
  setBusy(true);try{for(const [index,file] of files.entries()){
-  notify(`Uploading ${index+1} of ${files.length}…`);const media=await uploadPublicFile(file);
-  if(kind==='video')current.video={src:media.src,type:media.type,poster:current.cover};else if(kind==='cover')current.cover=media.src;else current.images.push(media.src);dirty=true;
+  notify(`Uploading ${index+1} of ${files.length}…`);const dimensions=kind==='video'?await readVideoDimensions(file):null;const media=await uploadPublicFile(file);
+  if(kind==='video'){current.video={src:media.src,type:media.type,poster:current.cover};current.presentation.video={ratio:'auto',...dimensions};$('video-ratio').value='auto';}else if(kind==='cover')current.cover=media.src;else current.images.push(media.src);dirty=true;
  }if(kind==='video')$('video-drive-url').value='';notify('Upload complete. Save your draft or publish to keep these changes in the project.');}catch(error){notify(error.message,true);}finally{renderMedia();setBusy(false);input.value='';}
 }
-form.addEventListener('input',event=>{dirty=true;if(event.target.closest('.crop-controls')){const kind=event.target.closest('.crop-controls').dataset.crop;current.presentation[kind]={ratio:$(`${kind}-ratio`).value,x:Number($(`${kind}-x`).value),y:Number($(`${kind}-y`).value),zoom:Number($(`${kind}-zoom`).value)/100};renderMedia();}});form.addEventListener('submit',event=>{event.preventDefault();save('save');});
+form.addEventListener('input',event=>{dirty=true;if(event.target.closest('.crop-controls'))current.presentation.cover={ratio:$('cover-ratio').value,x:Number($('cover-x').value),y:Number($('cover-y').value),zoom:Number($('cover-zoom').value)/100};if(event.target.closest('[data-video-format]'))current.presentation.video={...videoFrame(),ratio:$('video-ratio').value};if(event.target.closest('.crop-controls')||event.target.closest('[data-video-format]'))renderMedia();});form.addEventListener('submit',event=>{event.preventDefault();save('save');});
 const driveInput=$('video-drive-url');
 driveInput.addEventListener('input',()=>{
  const value=driveInput.value.trim(),preview=googleDrivePreview(value);
  driveInput.setCustomValidity(value&&!preview?'Paste a valid Google Drive file link. Set access to “Anyone with the link”.':'');
- if(preview){current.video={src:preview,type:'video/google-drive',poster:current.cover};dirty=true;renderMedia();}
+ if(preview){current.video={src:preview,type:'video/google-drive',poster:current.cover};current.presentation.video={ratio:$('video-ratio').value||'auto'};dirty=true;renderMedia();}
  else if(!value&&current.video?.type==='video/google-drive'){delete current.video;dirty=true;renderMedia();}
 });
 document.getElementById('use-example-drive-video').addEventListener('click',()=>{
@@ -159,7 +170,7 @@ $('add-drive-images').addEventListener('click',()=>{
 for(const kind of ['cover','video','gallery'])$(`${kind}-upload`).addEventListener('change',event=>upload(event.target,kind));
 $('remove-video').addEventListener('click',()=>{delete current.video;$('video-drive-url').value='';driveInput.setCustomValidity('');dirty=true;renderMedia();});
 $('publish').addEventListener('click',()=>save('publish'));
-$('new-project').addEventListener('click',()=>{if(confirmLeave()){select({name:'',year:String(new Date().getFullYear()),category:'identity',sector:'other',concept:false,title:{},summary:{},description:{},services:{en:[],ar:[]},cover:'',images:[],presentation:{cover:defaultCrop(),video:defaultCrop()}});notify('Add your project details, then save a draft.');}});
+$('new-project').addEventListener('click',()=>{if(confirmLeave()){select({name:'',year:String(new Date().getFullYear()),category:'identity',sector:'other',concept:false,title:{},summary:{},description:{},services:{en:[],ar:[]},cover:'',images:[],presentation:{cover:defaultCrop(),video:defaultVideoFrame()}});notify('Add your project details, then save a draft.');}});
 for(const action of ['unpublish','delete'])$(action==='delete'?'delete-project':'unpublish').addEventListener('click',async()=>{
  if(busy||!confirm(action==='delete'?'Delete this project and remove it from the public website?':'Remove this project from the public website? Your saved draft will remain.'))return;
  setBusy(true);try{await api('/api/website/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:current.id,action})});dirty=false;await refresh();if(action==='delete'){current=null;form.hidden=true;$('editor-empty').hidden=false;}else select(projects.find(p=>p.project.id===current.id).project);notify(action==='delete'?'Project deleted.':'Project unpublished.');}catch(error){notify(error.message,true);}finally{setBusy(false);}

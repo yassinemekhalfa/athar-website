@@ -88,8 +88,8 @@ section{position:relative}
 .sec p{color:var(--muted);max-width:56ch}
 
 /* ABOUT with floating statue */
-.about .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center}
-.statue-stage{position:relative;aspect-ratio:1/0.82;perspective:1100px}
+.about .wrap{display:grid;grid-template-columns:1fr;gap:54px;align-items:center}.about .wrap>div:first-child{width:min(100%,900px);margin-inline:auto;text-align:center}.about-points{text-align:start}
+.statue-stage{position:relative;width:min(100%,980px);margin-inline:auto;aspect-ratio:1/0.82;perspective:1100px}
 .statue-tilt{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
 .statue-glow{position:absolute;inset:12% 14%;border-radius:50%;background:radial-gradient(closest-side,var(--glow),transparent);filter:blur(10px);transform:translateZ(-120px)}
 .statue-float{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;animation:float 7s ease-in-out infinite}
