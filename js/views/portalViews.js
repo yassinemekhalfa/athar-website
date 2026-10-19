@@ -102,7 +102,7 @@ function appendLibraryEmptyIcon(empty, category) {
   empty.dataset.libraryCategory = category;
   empty.append(iconWrap);
 }
-function safeDate(value) { return value ? AppCore.utils.formatDate(value, "short") : "â€”"; }
+function safeDate(value) { return value ? AppCore.utils.formatDate(value, "short") : "—"; }
 function visibilityText(row) { return row.privacy === "private" ? "Private" : row.client_visible || row.privacy === "shared" ? "Client" : "Internal"; }
 function matchesVisibility(item, value, raw = item.raw || item) {
   if (!value) return true;
@@ -162,7 +162,7 @@ async function navigateItem(item) {
 }
 
 const smartFilterPanelState = new Map();
-function buildFilterBar({ placeholder = "Searchâ€¦", onInput, visibility = false, extra = [], defaultSort = "newest", alwaysOpen = false, sortModes = [["newest", "Newest first"], ["oldest", "Oldest first"], ["az", "Name Aâ€“Z"], ["za", "Name Zâ€“A"]] } = {}) {
+function buildFilterBar({ placeholder = "Search…", onInput, visibility = false, extra = [], defaultSort = "newest", alwaysOpen = false, sortModes = [["newest", "Newest first"], ["oldest", "Oldest first"], ["az", "Name A–Z"], ["za", "Name Z–A"]] } = {}) {
   const bar = el("div", "ap-smart-toolbar");
   const searchWrap = el("label", "ap-smart-search");
   searchWrap.append(workspaceIcon("search", "ap-smart-search__icon"));
@@ -170,8 +170,8 @@ function buildFilterBar({ placeholder = "Searchâ€¦", onInput, visibility = f
   search.type = "search";
   search.placeholder = placeholder;
   search.autocomplete = "off";
-  search.setAttribute("aria-label", placeholder.replace("â€¦", ""));
-  const clear = btn("Ã—", "ap-smart-search__clear");
+  search.setAttribute("aria-label", placeholder.replace("…", ""));
+  const clear = btn("×", "ap-smart-search__clear");
   clear.hidden = true;
   clear.setAttribute("aria-label", "Clear search");
   searchWrap.append(search, clear);
@@ -260,7 +260,7 @@ function renderDataTable(host, items, { showVisibility = true, onOpen = navigate
     row.append(el("span", "ap-library-muted", safeDate(item.created_at)));
     const actionCell = el("div", "ap-library-actions");
     if (actions) actions(item, actionCell);
-    else { const arrow = btn("â€º", "ap-icon-button"); arrow.addEventListener("click", () => onOpen(item)); actionCell.append(arrow); }
+    else { const arrow = btn("›", "ap-icon-button"); arrow.addEventListener("click", () => onOpen(item)); actionCell.append(arrow); }
     row.append(actionCell);
     table.append(row);
   }
@@ -277,8 +277,8 @@ function renderFolderTable(host,items,context){
     if(context.canCreate){row.draggable=true;row.addEventListener('dragstart',event=>{startWorkspaceDrag(event,{type:item.type,id:item.id});row.classList.add('is-dragging');});row.addEventListener('dragend',()=>row.classList.remove('is-dragging'));}
     const name=el('span','v-folder-table-name');name.append(workspaceIcon(item.type==='conversation'?'chat':item.type==='doc'?'doc':item.type==='file'?'folder':'shared'),el('span','',item.title));
     if(item.visibility==='Internal')name.append(el('small','v-internal-tag','Internal'));
-    const owner=el('span');if(item.owner_id===context.user?.id){const avatar=el('span','v-owner-avatar',AppCore.utils.initials(context.profile?.full_name||context.user.email));avatar.title=context.profile?.full_name||context.user.email;owner.append(avatar);}else owner.textContent='â€”';
-    row.append(name,el('span','',item.type==='file'?item.subtitle||'â€”':'â€”'),owner,el('time','',item.created_at?new Date(item.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'â€”'));
+    const owner=el('span');if(item.owner_id===context.user?.id){const avatar=el('span','v-owner-avatar',AppCore.utils.initials(context.profile?.full_name||context.user.email));avatar.title=context.profile?.full_name||context.user.email;owner.append(avatar);}else owner.textContent='—';
+    row.append(name,el('span','',item.type==='file'?item.subtitle||'—':'—'),owner,el('time','',item.created_at?new Date(item.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—'));
     if(context.canCreate&&WORKSPACE_ITEM_TYPES.has(item.type)){const actions=btn('','ap-icon-button v-folder-item-menu');actions.append(workspaceIcon('more'));actions.setAttribute('aria-label',`Actions for ${item.title}`);actions.addEventListener('click',event=>{event.stopPropagation();openWorkspaceItemActions(actions,item,context,()=>renderFolderOverview(document.getElementById('module-content'),context,context.folderId));});row.append(actions);}else row.append(el('span'));table.append(row);
   }host.append(table);
 }
@@ -303,7 +303,7 @@ function buildFolderEmptyState(folderId,context){
   const message=el('p','','Nothing has been added yet');
   const actions=el('div','v-folder-empty__actions');
   const create=btn('+ Create','ap-btn ap-btn--secondary');create.setAttribute('aria-haspopup','dialog');create.addEventListener('click',()=>openFolderCreateMenu(context,folderId,create));
-  const upload=btn('â†‘ Upload or Drag','ap-btn ap-btn--secondary');upload.addEventListener('click',()=>openUploadMenu(context,folderId,()=>fileInput.click(),()=>renderFolderOverview(document.getElementById('module-content'),context,folderId)));
+  const upload=btn('↑ Upload or Drag','ap-btn ap-btn--secondary');upload.addEventListener('click',()=>openUploadMenu(context,folderId,()=>fileInput.click(),()=>renderFolderOverview(document.getElementById('module-content'),context,folderId)));
   const fileInput=el('input');fileInput.type='file';fileInput.multiple=true;fileInput.hidden=true;fileInput.accept='image/*,application/pdf,text/*,application/zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
   fileInput.addEventListener('change',async()=>{const files=[...fileInput.files||[]];if(!files.length)return;upload.disabled=true;try{await uploadDroppedFiles(files,folderId,context);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{upload.disabled=false;fileInput.value='';}});
   actions.append(create,upload);empty.append(icon,title,message,actions,fileInput);
@@ -316,7 +316,7 @@ function buildFolderEmptyState(folderId,context){
 export async function renderFolderOverview(container, context, folderId = context.folderId) {
   const folder = AppCore.getFolders().find((f) => f.id === folderId);
   if (!folder) return AppCore.ui.renderEmpty(container, { title: "Folder not found", message: "This folder is not available." });
-  AppCore.ui.renderLoading(container, "Loading folderâ€¦");
+  AppCore.ui.renderLoading(container, "Loading folder…");
   try {
     const settled = await Promise.allSettled([
       fetchActiveRows("boards", "folder_id", folderId),
@@ -344,7 +344,7 @@ export async function renderFolderOverview(container, context, folderId = contex
     if(children.length){const childList=el("div","v-home-table");for(const child of children){const b=el("div","v-home-row");b.setAttribute("role","button");b.tabIndex=0;b.append(workspaceIcon("folder","v-folder-symbol"),el("span","",child.name));b.style.setProperty("--folder-color",child.color||"#ffbd0a");b.addEventListener("click",event=>{if(!event.target.closest("button"))selectFolder(child.id);});b.addEventListener("keydown",event=>{if(event.target===b&&(event.key==="Enter"||event.key===" ")){event.preventDefault();selectFolder(child.id);}});if(context.canCreate){b.draggable=true;b.addEventListener("dragstart",event=>startWorkspaceDrag(event,{type:"folder",id:child.id}));const menu=btn("","ap-icon-button v-folder-item-menu");menu.append(workspaceIcon("more"));menu.setAttribute("aria-label",`Actions for ${child.name}`);menu.addEventListener("click",event=>{event.stopPropagation();openWorkspaceItemActions(menu,{...child,type:"folder",title:child.name},context,()=>renderFolderOverview(document.getElementById("module-content"),context,folderId));});b.append(menu);}b.style.gridTemplateColumns="28px minmax(0,1fr) 34px";makeFolderDropTarget(b,child.id,context);childList.append(b);}root.append(childList);}
     let filtered=items;const host=el("div");
       const apply=(q,controls)=>{const text=q.trim().toLowerCase();const vis=controls.visibility?.value||"";filtered=items.filter(item=>(!text||`${item.title} ${item.subtitle||""}`.toLowerCase().includes(text))&&matchesVisibility(item,vis));filtered=sortCollection(filtered,controls.sort?.value||"newest");if(!filtered.length){host.replaceChildren();if(!items.length&&!children.length&&!text&&!vis){host.append(buildFolderEmptyState(folderId,context));}else{const empty=el("div","ap-centered-empty");const emptyMessage=text&&vis?"No items match your search and filters.":text?"Try another search.":vis?"No items match this visibility filter.":"This folder is empty.";empty.append(icon("folder"),el("h3","","No matching items"),el("p","",emptyMessage));host.append(empty);}}else renderFolderTable(host,filtered,context);};
-    const {bar,search,controls}=buildFilterBar({placeholder:"Search this folderâ€¦",visibility:true,onInput:apply});
+    const {bar,search,controls}=buildFilterBar({placeholder:"Search this folder…",visibility:true,onInput:apply});
     root.append(bar,host);container.append(root);apply(search.value,controls);
   } catch(error) {
     if(String(error?.message||error).includes("embeds")){container.replaceChildren();const root=el("section","ap-hub-view");root.append(titleBlock(folder.name,"Run migration 0300_portal_experience.sql to enable the complete folder view."));container.append(root);return;}
@@ -358,7 +358,7 @@ export function openFolderCreateMenu(context,folderId=null,anchorElement=null){
   const withFolder=async(handler)=>handler(folderId||(await ensureUnfiledFolder()).id);
   const createResource=(title,subtitle,iconName,moduleName,openForm)=>makeItem({title,subtitle,icon:iconName,action:async()=>{AppCore.ui.closeModal();await withFolder(async id=>{await selectFolder(id,{skipOverview:true,refreshModule:false});await selectModule(moduleName);await openForm();});}});
   wrap.append(makeItem({title:"Folder",subtitle:"Organize everything",icon:"folder",action:async()=>{AppCore.ui.closeModal();openCreateFolder(folderId);}}));
-  wrap.append(createResource("Board","Track and manage projects","board","boards",async()=>{(await import("../modules/boards.js?v=subtasks-1")).openBoardForm();}));
+  wrap.append(createResource("Board","Track and manage projects","board","boards",async()=>{(await import("../modules/boards.js?v=subtasks-2")).openBoardForm();}));
   wrap.append(createResource("Conversation","Discuss anything with clients","conversation","conversation",async()=>{(await import("../modules/conversation.js?v=client-conversation-1")).openCreateConversation();}));
   wrap.append(makeItem({title:"Embed",subtitle:"Add third-party apps",icon:"embed",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openEmbedForm({...context,folderId:id}));}}));
   wrap.append(makeItem({title:"Link",subtitle:"Share external resources",icon:"link",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openLinkForm({...context,folderId:id}));}}));
@@ -415,7 +415,7 @@ export function openEmbedForm(context, existing = null, onDone = null) {
   const field=(labelText,control)=>{const label=el("label","ap-resource-create-field");label.append(el("span","ap-resource-create-field__label",labelText),control);return label;};
   const title = el("input", "ap-input"); title.placeholder = "Embed"; title.setAttribute("aria-label","Embed name");title.required = true; title.maxLength = 200; title.value = existing?.title || "";
   const url = el("input", "ap-input"); url.type = "url"; url.placeholder = "https://";url.setAttribute("aria-label","URL"); url.required = true; url.value = existing?.url || "";
-  const description = el("textarea", "ap-textarea"); description.rows = 2; description.placeholder = "Enter descriptionâ€¦";description.setAttribute("aria-label","Description (optional)"); description.value = existing?.description || "";
+  const description = el("textarea", "ap-textarea"); description.rows = 2; description.placeholder = "Enter description…";description.setAttribute("aria-label","Description (optional)"); description.value = existing?.description || "";
   const titleField=field("EMBED NAME",title),urlField=field("URL",url),descriptionField=field("DESCRIPTION (optional)",description);descriptionField.append(el("small","","Displayed in folder view"));
   const folder = el("select", "ap-select");
   folder.setAttribute("aria-label","Folder");folder.required=true;
@@ -499,7 +499,7 @@ export async function renderLibrary(
     `Loading ${
       labels[category] ||
       "library"
-    }â€¦`
+    }…`
   );
 
   try {
@@ -720,11 +720,11 @@ export async function renderLibrary(
         );
 
         const emptyCopy = {
-          everything: ["Nothing here yet. Letâ€™s get started.", "Create a folder, kick off a project board, or start a conversation with a client."],
-          boards: ["No boards yet. Letâ€™s go.", "Organize, track and manage projects with ease."],
-          conversations: ["No conversations yet. Letâ€™s get talking.", "Start the first conversation with your clients and team."],
-          docs: ["No documentsâ€”yet", "Create and share knowledge with your clients and team."],
-          embeds: ["No embedsâ€”for now", "Add your favorite tools to collaborate with your clients and team."],
+          everything: ["Nothing here yet. Let’s get started.", "Create a folder, kick off a project board, or start a conversation with a client."],
+          boards: ["No boards yet. Let’s go.", "Organize, track and manage projects with ease."],
+          conversations: ["No conversations yet. Let’s get talking.", "Start the first conversation with your clients and team."],
+          docs: ["No documents—yet", "Create and share knowledge with your clients and team."],
+          embeds: ["No embeds—for now", "Add your favorite tools to collaborate with your clients and team."],
           files: ["No files yet", "Any files shared in folders, conversations or tasks will show up here."],
           favorites: ["No favorites yet", "Favorite a board or conversation to keep it close at hand."]
         }[category];
@@ -781,7 +781,7 @@ export async function renderLibrary(
               ) {
                 const edit =
                   btn(
-                    "â€¢â€¢â€¢",
+                    "•••",
                     "ap-icon-button"
                   );
 
@@ -853,13 +853,13 @@ export async function renderLibrary(
           category ===
           "everything"
 
-            ? "Search shared workâ€¦"
+            ? "Search shared work…"
 
             : `Search ${
                 labels[
                   category
                 ].toLowerCase()
-              }â€¦`,
+              }…`,
 
         visibility:
           !context.isClient,
@@ -986,12 +986,12 @@ async function renderArchive(container, context) {
     }});
   };
   const {bar,search,controls}=buildFilterBar({
-    placeholder:"Search archiveâ€¦",
+    placeholder:"Search archive…",
     visibility:true,
     extra:[{key:"type",label:"Kind",options:[["","All kinds"],["folder","Folders"],["board","Boards"],["task","Tasks"],["conversation","Conversations"],["doc","Documents"],["embed","Embeds"],["file","Files"]]}],
     onInput:apply,alwaysOpen:true
   });
-  root.append(libraryBreadcrumb("Archive"),libraryHeading("Archive","Archived items donâ€™t appear in folders or the sidebar. Clients canâ€™t access them.","archive"),bar,host);
+  root.append(libraryBreadcrumb("Archive"),libraryHeading("Archive","Archived items don’t appear in folders or the sidebar. Clients can’t access them.","archive"),bar,host);
   container.append(root);
   apply(search.value,controls);
 }
@@ -1030,7 +1030,7 @@ async function renderTrash(container, context) {
     if(!filtered.length){const isEmpty=!text&&!type&&!visibility;const empty=el("div","ap-centered-empty");appendLibraryEmptyIcon(empty,"trash");empty.append(el("h3","",isEmpty?"Trash is empty":"No results found"),el("p","",isEmpty?"Anything you delete will appear here.":"Try another search or filter."));host.replaceChildren(empty);return;}
     renderDataTable(host,filtered,{showVisibility:false,actions:(item,cell)=>{const restore=btn("Restore","ap-btn ap-btn--secondary ap-btn--sm");restore.addEventListener("click",()=>restoreTrash(item,()=>renderTrash(container,context)));cell.append(restore);}});
   };
-  const {bar,search,controls}=buildFilterBar({placeholder:"Search trashâ€¦",visibility:true,extra:[{key:"type",label:"Kind",options:[["","All kinds"],["folder","Folders"],["board","Boards"],["conversation","Conversations"],["doc","Documents"],["embed","Embeds"],["file","Files"]]}],onInput:apply,alwaysOpen:true});
+  const {bar,search,controls}=buildFilterBar({placeholder:"Search trash…",visibility:true,extra:[{key:"type",label:"Kind",options:[["","All kinds"],["folder","Folders"],["board","Boards"],["conversation","Conversations"],["doc","Documents"],["embed","Embeds"],["file","Files"]]}],onInput:apply,alwaysOpen:true});
   root.append(libraryBreadcrumb("Trash"),heading,bar,host);
   container.append(root);
   apply(search.value,controls);
@@ -1045,7 +1045,7 @@ async function loadTasks(context, mineOnly = false) {
 }
 
 export async function renderTasksHub(container, context, { mineOnly = false, initialMode = "table", initialCalendarDate = null } = {}) {
-  AppCore.ui.renderLoading(container, "Loading tasksâ€¦");
+  AppCore.ui.renderLoading(container, "Loading tasks…");
   try {
     const taskResults = await Promise.allSettled([
       loadTasks(context, mineOnly),
@@ -1291,8 +1291,8 @@ function renderTaskTable(host, tasks, boardMap = new Map(), memberMap = new Map(
     }
     check.addEventListener("click", () => onToggle?.(taskData));
     task.append(check, el("strong", "", taskData.title));
-    const schedule=taskData.due_date?`${safeDate(taskData.due_date)}${taskData.due_time?` Â· ${taskData.due_time}`:""}`:"--";
-    row.append(task, el("span", "", boardMap.get(taskData.board_id) || "â€”"), el("span", "k-task-muted", taskData.assignee_id ? memberMap.get(taskData.assignee_id)||"Member" : "Anyone"), el("span", "k-task-muted", schedule));
+    const schedule=taskData.due_date?`${safeDate(taskData.due_date)}${taskData.due_time?` · ${taskData.due_time}`:""}`:"--";
+    row.append(task, el("span", "", boardMap.get(taskData.board_id) || "—"), el("span", "k-task-muted", taskData.assignee_id ? memberMap.get(taskData.assignee_id)||"Member" : "Anyone"), el("span", "k-task-muted", schedule));
     row.addEventListener("dblclick", () => navigateItem({ type: "task", folder_id: taskData.folder_id, id: taskData.id }));
     table.append(row);
   }
@@ -1324,7 +1324,7 @@ async function openCalendarTaskForm(context,boards,members,date,onDone,existing=
   const save=btn(existing?"Save changes":"Create task","ap-btn ap-btn--primary");save.type="submit";form.append(row("Task",title),row("Board",board),row("Date",due),row("Time",time),row("Assign to",assignee),row("Color",color),row("Priority",priority),row("Description",description),save);
   form.addEventListener("submit",async event=>{event.preventDefault();save.disabled=true;try{const selected=boards.find(item=>item.id===board.value);const {data:columns,error:columnError}=await db.from("board_columns").select("id,position").eq("board_id",board.value).order("position",{ascending:true});if(columnError)throw columnError;if(!columns?.length)throw new Error("This board needs a section before tasks can be added.");const values={folder_id:selected?.folder_id||null,board_id:board.value,column_id:existing?.board_id===board.value?existing.column_id:columns[0].id,title:title.value.trim(),description:description.value.trim()||null,due_date:due.value,due_time:time.value||null,task_color:color.value,priority:priority.value,assignee_id:assignee.value||null};let error;if(existing){({error}=await db.from("tasks").update(values).eq("id",existing.id));if(error)throw error;Object.assign(existing,values);emit("data:changed",{entity:"task",entityId:existing.id,folderId:existing.folder_id,action:"updated"});}else{({error}=await db.from("tasks").insert({...values,agency_id:context.agencyId,board_id:board.value,column_id:columns[0].id,title:title.value.trim(),client_visible:false,position:100,created_by:context.user.id}));if(error)throw error;}AppCore.ui.closeModal();AppCore.ui.toast(existing?"Task updated.":"Task created.","success");await onDone?.();}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),"error");}finally{save.disabled=false;}});
   const dateLabel=new Date(`${date}T12:00:00`).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
-  AppCore.ui.openModal({title:existing?`Customize task Â· ${existing.title}`:`New task Â· ${dateLabel}`,content:form,actions:[]});title.focus();
+  AppCore.ui.openModal({title:existing?`Customize task · ${existing.title}`:`New task · ${dateLabel}`,content:form,actions:[]});title.focus();
 }
 
 function renderTaskCalendar(host,tasks,focusDate=new Date(),onNavigate,onCreate,onEdit){
@@ -1361,7 +1361,7 @@ function renderTaskCalendar(host,tasks,focusDate=new Date(),onNavigate,onCreate,
 function openCalendarDayTasks(tasks,date,onEdit){
   const list=el("div","ap-stack");
   tasks.forEach(task=>{
-    const item=btn(`${task.due_time?`${task.due_time} Â· `:""}${task.title}`,"k-calendar-day-task");
+    const item=btn(`${task.due_time?`${task.due_time} · `:""}${task.title}`,"k-calendar-day-task");
     item.addEventListener("click",()=>{AppCore.ui.closeModal();if(onEdit)onEdit(task);else navigateItem({type:"task",folder_id:task.folder_id,id:task.id});});
     list.append(item);
   });
@@ -1370,16 +1370,16 @@ function openCalendarDayTasks(tasks,date,onEdit){
 
 function priorityColor(priority){return priority==="urgent"?"red":priority==="high"?"orange":priority==="low"?"green":"blue";}
 
-export async function renderInvoicesHub(container,context){AppCore.ui.renderLoading(container,"Loading invoicesâ€¦");try{const [{data:invoices,error:iErr},{data:clients,error:cErr}]=await Promise.all([db.from("invoices").select("*").eq("agency_id",context.agencyId).order("created_at",{ascending:false}),context.canManageBilling?db.from("clients").select("id,name").eq("agency_id",context.agencyId).is("archived_at",null):Promise.resolve({data:[],error:null})]);if(iErr)throw iErr;if(cErr)throw cErr;const clientMap=new Map((clients||[]).map(c=>[c.id,c.name]));container.replaceChildren();const root=el("section","ap-hub-view ap-global-invoices");const heading=el("div","ap-library-heading");heading.append(titleBlock("Invoices","Create, send and track billing across the whole workspace."));if(context.canManageBilling){const actions=el("div","ap-invoice-global-actions");const upload=btn("Upload Invoice","ap-btn ap-btn--secondary ap-btn--sm");upload.addEventListener("click",()=>openInvoiceUpload(context,clients||[],()=>renderInvoicesHub(container,context)));const create=btn("Create Invoice","ap-btn ap-btn--primary ap-btn--sm");create.addEventListener("click",()=>openInvoiceCreateMenu(context));actions.append(upload,create);heading.append(actions);}root.append(heading);let filtered=invoices||[];const host=el("div");const apply=(q,controls)=>{const text=q.trim().toLowerCase(),status=controls.status?.value||"",client=controls.client?.value||"";filtered=(invoices||[]).filter(inv=>(!text||`${inv.invoice_number} ${clientMap.get(inv.client_id)||""}`.toLowerCase().includes(text))&&(!status||inv.status===status)&&(!client||inv.client_id===client));renderInvoiceRows(host,filtered,clientMap);};const extra=[{key:"status",options:[["","Status"],["draft","Draft"],["sent","Sent"],["overdue","Overdue"],["paid","Paid"],["void","Void"]]}];if(context.canManageBilling)extra.push({key:"client",options:[["","Client"],...(clients||[]).map(c=>[c.id,c.name])]});const {bar,search,controls}=buildFilterBar({placeholder:"Search invoicesâ€¦",extra,onInput:apply});root.append(bar,host);container.append(root);apply(search.value,controls);}catch(error){AppCore.ui.renderError(container,error,()=>renderInvoicesHub(container,context));}}
+export async function renderInvoicesHub(container,context){AppCore.ui.renderLoading(container,"Loading invoices…");try{const [{data:invoices,error:iErr},{data:clients,error:cErr}]=await Promise.all([db.from("invoices").select("*").eq("agency_id",context.agencyId).order("created_at",{ascending:false}),context.canManageBilling?db.from("clients").select("id,name").eq("agency_id",context.agencyId).is("archived_at",null):Promise.resolve({data:[],error:null})]);if(iErr)throw iErr;if(cErr)throw cErr;const clientMap=new Map((clients||[]).map(c=>[c.id,c.name]));container.replaceChildren();const root=el("section","ap-hub-view ap-global-invoices");const heading=el("div","ap-library-heading");heading.append(titleBlock("Invoices","Create, send and track billing across the whole workspace."));if(context.canManageBilling){const actions=el("div","ap-invoice-global-actions");const upload=btn("Upload Invoice","ap-btn ap-btn--secondary ap-btn--sm");upload.addEventListener("click",()=>openInvoiceUpload(context,clients||[],()=>renderInvoicesHub(container,context)));const create=btn("Create Invoice","ap-btn ap-btn--primary ap-btn--sm");create.addEventListener("click",()=>openInvoiceCreateMenu(context));actions.append(upload,create);heading.append(actions);}root.append(heading);let filtered=invoices||[];const host=el("div");const apply=(q,controls)=>{const text=q.trim().toLowerCase(),status=controls.status?.value||"",client=controls.client?.value||"";filtered=(invoices||[]).filter(inv=>(!text||`${inv.invoice_number} ${clientMap.get(inv.client_id)||""}`.toLowerCase().includes(text))&&(!status||inv.status===status)&&(!client||inv.client_id===client));renderInvoiceRows(host,filtered,clientMap);};const extra=[{key:"status",options:[["","Status"],["draft","Draft"],["sent","Sent"],["overdue","Overdue"],["paid","Paid"],["void","Void"]]}];if(context.canManageBilling)extra.push({key:"client",options:[["","Client"],...(clients||[]).map(c=>[c.id,c.name])]});const {bar,search,controls}=buildFilterBar({placeholder:"Search invoices…",extra,onInput:apply});root.append(bar,host);container.append(root);apply(search.value,controls);}catch(error){AppCore.ui.renderError(container,error,()=>renderInvoicesHub(container,context));}}
 
 function openInvoiceUpload(context,clients,onDone){
  if(!clients.length)return AppCore.ui.toast("Create a client before uploading an invoice.","warning");
  chooseFolder("Choose the invoice project",folderId=>{
-  const uploadField=(label,control,hint="")=>{const row=el("label","ap-field");row.append(el("span","ap-field__label",label),control);if(hint)row.append(el("span","ap-field__hint",hint));return row;};const form=el("form","ap-stack");const client=el("select","ap-select");for(const item of clients){const option=el("option","",item.name);option.value=item.id;client.append(option);}const currency=el("select","ap-select");for(const [value,label] of [["USD","USD â€” US Dollar"],["EUR","EUR â€” Euro"],["DZD","DZD â€” Algerian Dinar"]]){const option=el("option","",label);option.value=value;currency.append(option);}currency.value=["USD","EUR","DZD"].includes(context.agency?.settings?.currency)?context.agency.settings.currency:"USD";const amount=el("input","ap-input");amount.type="number";amount.min="0";amount.step="0.01";amount.required=true;amount.placeholder="Invoice total";const file=el("input","ap-input");file.type="file";file.accept="application/pdf,image/png,image/jpeg,image/webp";file.required=true;const submit=btn("Upload invoice","ap-btn ap-btn--primary");submit.type="submit";form.append(uploadField("Client",client),uploadField("Currency",currency),uploadField("Total",amount),uploadField("Invoice file",file,"PDF or image, maximum 25 MiB."),submit);
-  form.addEventListener("submit",async event=>{event.preventDefault();const chosen=file.files?.[0],total=Number(amount.value);if(!chosen||chosen.size<=0||chosen.size>26214400||!Number.isFinite(total)||total<0)return AppCore.ui.toast("Choose a valid invoice file and total.","warning");submit.disabled=true;try{const fileId=globalThis.ATHAR_UUID(),safe=AppCore.utils.sanitizeFilename(chosen.name),storagePath=`${context.agencyId}/${folderId}/${fileId}/${safe}`;const {error:fileError}=await db.from("files").insert({id:fileId,agency_id:context.agencyId,folder_id:folderId,uploaded_by:context.user.id,bucket_name:"project-files",storage_path:storagePath,original_name:chosen.name,mime_type:chosen.type||"application/pdf",size_bytes:chosen.size,client_visible:true});if(fileError)throw fileError;const {error:uploadError}=await db.storage.from("project-files").upload(storagePath,chosen,{contentType:chosen.type||"application/pdf",upsert:false});if(uploadError){await db.from("files").delete().eq("id",fileId);throw uploadError;}const {data:invoice,error:invoiceError}=await db.from("invoices").insert({agency_id:context.agencyId,folder_id:folderId,client_id:client.value,currency:currency.value,status:"draft",issue_date:new Date().toISOString().slice(0,10),tax_rate_bp:0,discount_cents:0,notes:`Uploaded invoice: ${chosen.name}`}).select().single();if(invoiceError)throw invoiceError;const {error:lineError}=await db.from("invoice_line_items").insert({agency_id:context.agencyId,invoice_id:invoice.id,description:`Uploaded invoice â€” ${chosen.name}`,quantity_milli:1000,unit_price_cents:Math.round(total*100),position:100});if(lineError)throw lineError;AppCore.ui.closeModal();AppCore.ui.toast("Invoice uploaded as a draft.","success");onDone?.();}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),"error");}finally{submit.disabled=false;}});AppCore.ui.openModal({title:"Upload invoice",content:form,actions:[]});
+  const uploadField=(label,control,hint="")=>{const row=el("label","ap-field");row.append(el("span","ap-field__label",label),control);if(hint)row.append(el("span","ap-field__hint",hint));return row;};const form=el("form","ap-stack");const client=el("select","ap-select");for(const item of clients){const option=el("option","",item.name);option.value=item.id;client.append(option);}const currency=el("select","ap-select");for(const [value,label] of [["USD","USD — US Dollar"],["EUR","EUR — Euro"],["DZD","DZD — Algerian Dinar"]]){const option=el("option","",label);option.value=value;currency.append(option);}currency.value=["USD","EUR","DZD"].includes(context.agency?.settings?.currency)?context.agency.settings.currency:"USD";const amount=el("input","ap-input");amount.type="number";amount.min="0";amount.step="0.01";amount.required=true;amount.placeholder="Invoice total";const file=el("input","ap-input");file.type="file";file.accept="application/pdf,image/png,image/jpeg,image/webp";file.required=true;const submit=btn("Upload invoice","ap-btn ap-btn--primary");submit.type="submit";form.append(uploadField("Client",client),uploadField("Currency",currency),uploadField("Total",amount),uploadField("Invoice file",file,"PDF or image, maximum 25 MiB."),submit);
+  form.addEventListener("submit",async event=>{event.preventDefault();const chosen=file.files?.[0],total=Number(amount.value);if(!chosen||chosen.size<=0||chosen.size>26214400||!Number.isFinite(total)||total<0)return AppCore.ui.toast("Choose a valid invoice file and total.","warning");submit.disabled=true;try{const fileId=globalThis.ATHAR_UUID(),safe=AppCore.utils.sanitizeFilename(chosen.name),storagePath=`${context.agencyId}/${folderId}/${fileId}/${safe}`;const {error:fileError}=await db.from("files").insert({id:fileId,agency_id:context.agencyId,folder_id:folderId,uploaded_by:context.user.id,bucket_name:"project-files",storage_path:storagePath,original_name:chosen.name,mime_type:chosen.type||"application/pdf",size_bytes:chosen.size,client_visible:true});if(fileError)throw fileError;const {error:uploadError}=await db.storage.from("project-files").upload(storagePath,chosen,{contentType:chosen.type||"application/pdf",upsert:false});if(uploadError){await db.from("files").delete().eq("id",fileId);throw uploadError;}const {data:invoice,error:invoiceError}=await db.from("invoices").insert({agency_id:context.agencyId,folder_id:folderId,client_id:client.value,currency:currency.value,status:"draft",issue_date:new Date().toISOString().slice(0,10),tax_rate_bp:0,discount_cents:0,notes:`Uploaded invoice: ${chosen.name}`}).select().single();if(invoiceError)throw invoiceError;const {error:lineError}=await db.from("invoice_line_items").insert({agency_id:context.agencyId,invoice_id:invoice.id,description:`Uploaded invoice — ${chosen.name}`,quantity_milli:1000,unit_price_cents:Math.round(total*100),position:100});if(lineError)throw lineError;AppCore.ui.closeModal();AppCore.ui.toast("Invoice uploaded as a draft.","success");onDone?.();}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),"error");}finally{submit.disabled=false;}});AppCore.ui.openModal({title:"Upload invoice",content:form,actions:[]});
  });
 }
-function renderInvoiceRows(host,invoices,clientMap){host.replaceChildren();if(!invoices.length){const empty=el("div","ap-centered-empty");empty.append(icon("invoice"),el("h3","","No invoices yet"),el("p","","Create an invoice when a project is ready to bill."));host.append(empty);return;}const table=el("div","ap-library-table ap-invoice-hub-table");const head=el("div","ap-library-table__row ap-library-table__row--head");["Invoice","Client","Status","Amount","Due",""] .forEach(x=>head.append(el("span","",x)));table.append(head);for(const inv of invoices){const row=el("div","ap-library-table__row");row.append(el("strong","",inv.invoice_number),el("span","ap-library-muted",clientMap.get(inv.client_id)||"Client"),el("span",`ap-badge ap-badge--${inv.status==="paid"?"success":inv.status==="overdue"?"danger":inv.status==="sent"?"info":"neutral"}`,inv.status),el("span","",AppCore.utils.formatMoney(inv.total_cents,inv.currency)),el("span","ap-library-muted",safeDate(inv.due_date)));const open=btn("â€º","ap-icon-button");open.addEventListener("click",async()=>{if(inv.folder_id){await selectFolder(inv.folder_id,{skipOverview:true});await selectModule("invoices");}});row.append(open);table.append(row);}host.append(table);}
+function renderInvoiceRows(host,invoices,clientMap){host.replaceChildren();if(!invoices.length){const empty=el("div","ap-centered-empty");empty.append(icon("invoice"),el("h3","","No invoices yet"),el("p","","Create an invoice when a project is ready to bill."));host.append(empty);return;}const table=el("div","ap-library-table ap-invoice-hub-table");const head=el("div","ap-library-table__row ap-library-table__row--head");["Invoice","Client","Status","Amount","Due",""] .forEach(x=>head.append(el("span","",x)));table.append(head);for(const inv of invoices){const row=el("div","ap-library-table__row");row.append(el("strong","",inv.invoice_number),el("span","ap-library-muted",clientMap.get(inv.client_id)||"Client"),el("span",`ap-badge ap-badge--${inv.status==="paid"?"success":inv.status==="overdue"?"danger":inv.status==="sent"?"info":"neutral"}`,inv.status),el("span","",AppCore.utils.formatMoney(inv.total_cents,inv.currency)),el("span","ap-library-muted",safeDate(inv.due_date)));const open=btn("›","ap-icon-button");open.addEventListener("click",async()=>{if(inv.folder_id){await selectFolder(inv.folder_id,{skipOverview:true});await selectModule("invoices");}});row.append(open);table.append(row);}host.append(table);}
 function openInvoiceCreateMenu(_context){const wrap=el("div","ap-create-menu");const one=btn("","ap-create-menu__item");one.append(icon("invoice"),el("div","","One-time Invoice"));one.addEventListener("click",()=>{AppCore.ui.closeModal();chooseFolder("Choose a project",async(folderId)=>{await selectFolder(folderId,{skipOverview:true});await selectModule("invoices");document.dispatchEvent(new CustomEvent("invoice:create-requested"));});});wrap.append(one);AppCore.ui.openModal({title:"Create Invoice",content:wrap,actions:[]});}
 
 export async function renderInbox(panel,context,initialTab="chats"){
@@ -1414,13 +1414,13 @@ shell.append(head);
   const labels=[["chats","Chats"],["tasks","Tasks"],["files","Files"],["updates","Updates"]];
   for(const [key,label] of labels){const b=btn(label,"ap-inbox-tab");if(key===initialTab)b.classList.add("ap-inbox-tab--active");b.addEventListener("click",async()=>{tabs.querySelectorAll("button").forEach(x=>x.classList.remove("ap-inbox-tab--active"));b.classList.add("ap-inbox-tab--active");await renderInboxTab(body,context,key);});tabs.append(b);}shell.append(tabs,body);panel.append(shell);await renderInboxTab(body,context,initialTab);
 }
-async function renderInboxTab(host,context,tab){const preference={chats:'messages',tasks:'tasks',files:'files'}[tab];if(preference&&getState().profile?.notification_preferences?.[preference]===false){host.replaceChildren(el('p','ap-local-notice','These notifications are turned off in your profile.'));return;}AppCore.ui.renderLoading(host,"Loadingâ€¦");try{let rows=[];if(tab==="chats"){const {data,error}=await db.from("conversations").select("*").eq("agency_id",context.agencyId).is("archived_at",null).is("trashed_at",null).order("last_message_at",{ascending:false,nullsFirst:false}).limit(30);if(error)throw error;rows=(data||[]).map(r=>({title:r.title,sub:"Conversation",date:r.last_message_at||r.created_at,onClick:()=>navigateItem({type:"conversation",id:r.id,folder_id:r.folder_id})}));}else if(tab==="tasks"){const {data,error}=await db.from("tasks").select("*").eq("agency_id",context.agencyId).is("archived_at",null).is("trashed_at",null).order("updated_at",{ascending:false}).limit(30);if(error)throw error;rows=(data||[]).map(r=>({title:r.title,sub:r.completed_at?"Completed task":"Task updated",date:r.updated_at,onClick:()=>navigateItem({type:"task",id:r.id,folder_id:r.folder_id})}));}else if(tab==="files"){const {data,error}=await db.from("files").select("*").eq("agency_id",context.agencyId).order("created_at",{ascending:false}).limit(30);if(error)throw error;rows=(data||[]).map(r=>({title:r.original_name,sub:"File added",date:r.created_at,onClick:()=>navigateItem({type:"file",folder_id:r.folder_id})}));}else{const {data,error}=await db.from("activity_logs").select("*").eq("agency_id",context.agencyId).order("created_at",{ascending:false}).limit(30);if(error)throw error;rows=(data||[]).map(r=>({title:r.action.replaceAll("."," Â· "),sub:r.entity_type||"Workspace update",date:r.created_at,onClick:null}));}host.replaceChildren();if(!rows.length){const empty=el("div","ap-inbox-empty");empty.append(icon(tab==="chats"?"chat":tab==="tasks"?"task":tab==="files"?"file":"bell"),el("h3","",tab==="chats"?"All quiet in chats.":tab==="tasks"?"No task activity":tab==="files"?"No file activity":"No updates yet"),el("p","",tab==="chats"?"When someone sends you a message, youâ€™ll see it here.":"New activity will show up here."));host.append(empty);return;}for(const row of rows){const item=btn("","ap-inbox-item");const text=el("div");text.append(el("strong","",row.title),el("span","",row.sub),el("small","",AppCore.utils.formatDate(row.date,"relative")));item.append(text);if(row.onClick)item.addEventListener("click",()=>{document.getElementById("inbox-panel")?.classList.remove("ap-inbox-panel--open");row.onClick();});host.append(item);}}catch(error){AppCore.ui.renderError(host,error,()=>renderInboxTab(host,context,tab));}}
+async function renderInboxTab(host,context,tab){const preference={chats:'messages',tasks:'tasks',files:'files'}[tab];if(preference&&getState().profile?.notification_preferences?.[preference]===false){host.replaceChildren(el('p','ap-local-notice','These notifications are turned off in your profile.'));return;}AppCore.ui.renderLoading(host,"Loading…");try{let rows=[];if(tab==="chats"){const {data,error}=await db.from("conversations").select("*").eq("agency_id",context.agencyId).is("archived_at",null).is("trashed_at",null).order("last_message_at",{ascending:false,nullsFirst:false}).limit(30);if(error)throw error;rows=(data||[]).map(r=>({title:r.title,sub:"Conversation",date:r.last_message_at||r.created_at,onClick:()=>navigateItem({type:"conversation",id:r.id,folder_id:r.folder_id})}));}else if(tab==="tasks"){const {data,error}=await db.from("tasks").select("*").eq("agency_id",context.agencyId).is("archived_at",null).is("trashed_at",null).order("updated_at",{ascending:false}).limit(30);if(error)throw error;rows=(data||[]).map(r=>({title:r.title,sub:r.completed_at?"Completed task":"Task updated",date:r.updated_at,onClick:()=>navigateItem({type:"task",id:r.id,folder_id:r.folder_id})}));}else if(tab==="files"){const {data,error}=await db.from("files").select("*").eq("agency_id",context.agencyId).order("created_at",{ascending:false}).limit(30);if(error)throw error;rows=(data||[]).map(r=>({title:r.original_name,sub:"File added",date:r.created_at,onClick:()=>navigateItem({type:"file",folder_id:r.folder_id})}));}else{const {data,error}=await db.from("activity_logs").select("*").eq("agency_id",context.agencyId).order("created_at",{ascending:false}).limit(30);if(error)throw error;rows=(data||[]).map(r=>({title:r.action.replaceAll("."," · "),sub:r.entity_type||"Workspace update",date:r.created_at,onClick:null}));}host.replaceChildren();if(!rows.length){const empty=el("div","ap-inbox-empty");empty.append(icon(tab==="chats"?"chat":tab==="tasks"?"task":tab==="files"?"file":"bell"),el("h3","",tab==="chats"?"All quiet in chats.":tab==="tasks"?"No task activity":tab==="files"?"No file activity":"No updates yet"),el("p","",tab==="chats"?"When someone sends you a message, you’ll see it here.":"New activity will show up here."));host.append(empty);return;}for(const row of rows){const item=btn("","ap-inbox-item");const text=el("div");text.append(el("strong","",row.title),el("span","",row.sub),el("small","",AppCore.utils.formatDate(row.date,"relative")));item.append(text);if(row.onClick)item.addEventListener("click",()=>{document.getElementById("inbox-panel")?.classList.remove("ap-inbox-panel--open");row.onClick();});host.append(item);}}catch(error){AppCore.ui.renderError(host,error,()=>renderInboxTab(host,context,tab));}}
 
 const BUILTIN_TEMPLATES=[
-  {name:"Client Onboarding",description:"A polished client journey from intake to kickoff.",folders:["01 Â· Welcome & Contacts","02 Â· Discovery","03 Â· Brief & Scope","04 Â· Kickoff"]},
-  {name:"Creative Project",description:"Manage production, approvals and final delivery.",folders:["01 Â· Brief","02 Â· Concepts","03 Â· Production","04 Â· Client Review","05 Â· Final Files"]},
-  {name:"Website Launch",description:"Plan content, design, development and launch checks.",folders:["01 Â· Strategy","02 Â· Content","03 Â· Design","04 Â· Development","05 Â· QA & Launch"]},
-  {name:"Marketing Campaign",description:"Run a campaign with clear planning and reporting.",folders:["01 Â· Strategy","02 Â· Assets","03 Â· Approvals","04 Â· Publishing","05 Â· Reporting"]},
+  {name:"Client Onboarding",description:"A polished client journey from intake to kickoff.",folders:["01 · Welcome & Contacts","02 · Discovery","03 · Brief & Scope","04 · Kickoff"]},
+  {name:"Creative Project",description:"Manage production, approvals and final delivery.",folders:["01 · Brief","02 · Concepts","03 · Production","04 · Client Review","05 · Final Files"]},
+  {name:"Website Launch",description:"Plan content, design, development and launch checks.",folders:["01 · Strategy","02 · Content","03 · Design","04 · Development","05 · QA & Launch"]},
+  {name:"Marketing Campaign",description:"Run a campaign with clear planning and reporting.",folders:["01 · Strategy","02 · Assets","03 · Approvals","04 · Publishing","05 · Reporting"]},
   {name:"Monthly Retainer",description:"A repeatable workspace for ongoing client work.",folders:["Requests","This Month","Waiting for Client","Completed","Reports"]},
   {name:"Event Production",description:"Coordinate planning, suppliers and event delivery.",folders:["Planning","Venue & Suppliers","Creative Assets","Run of Show","Post Event"]}
 ];
@@ -1432,7 +1432,7 @@ export function bindViewRefresh(callback){return on("data:changed",()=>callback?
 export function renderProfileView(container, context, { onBack, onLogout } = {}) {
   container.replaceChildren();
   const root = el("section", "ap-hub-view ap-profile-view");
-  const back = btn("â†", "ap-icon-button");
+  const back = btn("←", "ap-icon-button");
   back.setAttribute("aria-label", "Back to workspace");
   back.addEventListener("click", () => onBack?.());
   const heading = el("div", "ap-profile-view__heading");

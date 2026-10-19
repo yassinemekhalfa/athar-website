@@ -125,9 +125,9 @@ function buildRecentItemsSection(context, onDone) {
     const empty = el('div', 'k-home-recent-row k-home-recent-row--empty');
     empty.append(
       el('span', '', 'No recent items'),
-      el('span', '', 'â€”'),
-      el('span', '', 'â€”'),
-      el('span', '', 'â€”'),
+      el('span', '', '—'),
+      el('span', '', '—'),
+      el('span', '', '—'),
       el('span', '', '')
     );
     table.append(empty);
@@ -166,7 +166,7 @@ function buildRecentItemsSection(context, onDone) {
         'ap-library-muted',
         item.created_at
           ? AppCore.utils.formatDate(item.created_at, 'short')
-          : 'â€”'
+          : '—'
       )
     );
 
@@ -225,7 +225,7 @@ async function createResource(_title, moduleName) {
       await selectFolder(resource.folder_id || folder.id, { skipOverview: true, refreshModule: false });
       await selectModule(moduleName, resource.id);
     };
-    if (moduleName === 'boards') (await import('../modules/boards.js?v=subtasks-1')).openBoardForm(null, { context, onDone: openCreatedResource });
+    if (moduleName === 'boards') (await import('../modules/boards.js?v=subtasks-2')).openBoardForm(null, { context, onDone: openCreatedResource });
     else if (moduleName === 'conversation') (await import('../modules/conversation.js?v=client-conversation-1')).openCreateConversation({ context, onDone: openCreatedResource });
     else if (moduleName === 'embeds') (await import('../modules/embeds.js?v=home-create-1')).openEmbedCreation(context, openCreatedResource);
     else if (moduleName === 'docs') await (await import('../modules/docs.js')).createDocument();
@@ -256,7 +256,7 @@ export function folderCover(root, folder, actions) {
   const crumb = el('nav', 'v-folder-crumb');
   crumb.setAttribute('aria-label', 'Folder path');
 
-  const home = el('a', '', 'âŒ‚ Home');
+  const home = el('a', '', '⌂ Home');
   home.href = '#/home';
   home.addEventListener('click', (e) => {
     e.preventDefault();
@@ -270,7 +270,7 @@ export function folderCover(root, folder, actions) {
       const b = el('button', 'v-breadcrumb', part.name);
       b.type = 'button';
       b.addEventListener('click', () => selectFolder(part.id));
-      crumb.append(' â€º ', b);
+      crumb.append(' › ', b);
     }
   }
 
@@ -300,7 +300,7 @@ export function folderCover(root, folder, actions) {
 
   let badge;
   if(folder?.avatar_url){badge=el('span','v-folder-badge v-client-folder-badge');const image=el('img');image.src=folder.avatar_url;image.alt='';badge.append(image);}
-  else if(folder?.client_id||folder?.icon_emoji){badge=el('span','v-folder-badge v-client-folder-badge',folder.icon_emoji||'ðŸ‘¤');}
+  else if(folder?.client_id||folder?.icon_emoji){badge=el('span','v-folder-badge v-client-folder-badge',folder.icon_emoji||'👤');}
   else badge=workspaceIcon(folder ? 'shared' : 'home', 'v-folder-badge');
   heading.append(badge,el('h1', '', folder?.name || 'Home'));
 
@@ -325,7 +325,7 @@ export async function renderWorkspaceHome(container, context) {
   const hero = el('section', 'ap-home-hero');
   const welcome = el('h1', 'k-reference-home__welcome');
 
-  const wave = el('span', 'k-home-wave', 'ðŸ‘‹');
+  const wave = el('span', 'k-home-wave', '👋');
   welcome.append(
     wave,
     document.createTextNode(` Welcome, ${getFirstName(context)}!`)
