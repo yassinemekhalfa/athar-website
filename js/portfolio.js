@@ -44,7 +44,7 @@ function card(project,teaser=false){
  body.append(meta,element('h3','',project.name),element('p','',localized(project.title)),element('span','portfolio-card-action',`${t('افتح المشروع')} ${getLanguage()==='en'?'↗':'↖'}`));
  meta.prepend(element('span','',sectorLabel(project)));
  link.append(art,body);article.append(link);
- if(!teaser)link.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();returnFocus=link;openProject(project);});
+ if(dialog)link.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();returnFocus=link;openProject(project,{updateUrl:!teaser});});
  return article;
 }
 function updateGrid(){
@@ -106,17 +106,19 @@ function refresh(){
 if(dialog){
  dialog.querySelector('.project-dialog-close').addEventListener('click',()=>dialog.close());
  dialog.addEventListener('click',event=>{if(event.target===dialog){const bounds=dialog.getBoundingClientRect();if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)dialog.close();}});
- dialog.addEventListener('close',()=>{for(const video of dialog.querySelectorAll('video'))video.pause();document.body.classList.remove('project-open');activeProject=null;const url=new URL(location.href);url.searchParams.delete('project');history.replaceState(null,'',url.pathname+url.search);if(returnFocus?.isConnected)returnFocus.focus();else search.focus();});
- const toggle=document.querySelector('.nav-toggle'),nav=document.querySelector('.site-nav');
+ dialog.addEventListener('close',()=>{for(const video of dialog.querySelectorAll('video'))video.pause();document.body.classList.remove('project-open');activeProject=null;const url=new URL(location.href);if(url.searchParams.has('project')){url.searchParams.delete('project');history.replaceState(null,'',url.pathname+url.search);}if(returnFocus?.isConnected)returnFocus.focus();else search?.focus();});
+}
+const toggle=document.querySelector('.nav-toggle'),nav=document.querySelector('.site-nav');
+if(toggle&&nav){
  function closeNavigation(){toggle.setAttribute('aria-expanded','false');nav.classList.remove('is-open');}
  toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(open));nav.classList.toggle('is-open',open);});
  nav.addEventListener('click',closeNavigation);document.addEventListener('click',event=>{if(!event.target.closest('.site-header'))closeNavigation();});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&toggle.getAttribute('aria-expanded')==='true'){closeNavigation();toggle.focus();}});
  document.addEventListener('landing-language-change',closeNavigation);
  matchMedia('(max-width: 760px)').addEventListener('change',closeNavigation);
- document.getElementById('copyright-year').textContent=String(new Date().getFullYear());
- search.addEventListener('input',updateGrid);
 }
+const copyrightYear=document.getElementById('copyright-year');if(copyrightYear)copyrightYear.textContent=String(new Date().getFullYear());
+if(search)search.addEventListener('input',updateGrid);
 document.addEventListener('landing-language-change',refresh);
 function renderLoadState(){
  const target=grid||preview;if(!target)return;
