@@ -107,6 +107,18 @@ function currentBoard() {
   return state.boards.find((board) => board.id === state.boardId) || null;
 }
 
+const COLUMN_WIDTH_MIN=260;
+const COLUMN_WIDTH_MAX=720;
+const clampColumnWidth=value=>Math.min(COLUMN_WIDTH_MAX,Math.max(COLUMN_WIDTH_MIN,Math.round(Number(value)||408)));
+function savedColumnWidth(columnId){const value=currentBoard()?.customization?.columnWidths?.[columnId];return Number.isFinite(Number(value))?clampColumnWidth(value):null;}
+async function saveColumnWidth(columnId,width){
+  const board=currentBoard();if(!board)return;
+  const customization={...(board.customization||{})},columnWidths={...(board.customization?.columnWidths||{})};
+  if(width===null)delete columnWidths[columnId];else columnWidths[columnId]=clampColumnWidth(width);
+  customization.columnWidths=columnWidths;board.customization=customization;
+  const {error}=await db.from('boards').update({customization}).eq('id',board.id);if(error)throw error;
+}
+
 function taskMatchesFilter(task) {
   if (state.taskFilter === "active") return !task.completed_at;
   if (state.taskFilter === "completed") return Boolean(task.completed_at);
@@ -275,10 +287,11 @@ function renderColumn(column) {
   columnNode.style.setProperty("--column-background", /^#[\da-f]{6}$/i.test(column.background_color || "") ? column.background_color : "#f7f7f7");
   columnNode.dataset.columnId = column.id;
   columnNode.dataset.module = "boards";
+  const storedWidth=savedColumnWidth(column.id);if(storedWidth)columnNode.style.setProperty('--board-column-width',`${storedWidth}px`);
   if (state.context.canCreate) {
     columnNode.draggable = true;
     columnNode.addEventListener("dragstart", (event) => {
-      if (event.target.closest(".ap-task-card")) return;
+      if (event.target.closest(".ap-task-card,.k-board-column-resizer")){event.preventDefault();return;}
       state.draggedColumnId = column.id;
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", `column:${column.id}`);
@@ -381,6 +394,13 @@ function renderColumn(column) {
     list.append(quick);
   }
   columnNode.append(header, list);
+  if(state.context.canCreate){
+    const resize=el('div','k-board-column-resizer');resize.tabIndex=0;resize.setAttribute('role','separator');resize.setAttribute('aria-orientation','vertical');resize.setAttribute('aria-label',`Resize ${column.name} column`);resize.title='Drag to resize · Double-click to reset';
+    const updateAria=()=>resize.setAttribute('aria-valuenow',String(Math.round(columnNode.getBoundingClientRect().width)));resize.setAttribute('aria-valuemin',String(COLUMN_WIDTH_MIN));resize.setAttribute('aria-valuemax',String(COLUMN_WIDTH_MAX));
+    resize.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();const startX=event.clientX,startWidth=columnNode.getBoundingClientRect().width;columnNode.draggable=false;columnNode.classList.add('is-resizing');resize.setPointerCapture(event.pointerId);const move=moveEvent=>{const width=clampColumnWidth(startWidth+moveEvent.clientX-startX);columnNode.style.setProperty('--board-column-width',`${width}px`);resize.setAttribute('aria-valuenow',String(width));};const finish=async()=>{resize.removeEventListener('pointermove',move);resize.removeEventListener('pointerup',finish);resize.removeEventListener('pointercancel',finish);columnNode.draggable=true;columnNode.classList.remove('is-resizing');try{await saveColumnWidth(column.id,columnNode.getBoundingClientRect().width);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}};resize.addEventListener('pointermove',move);resize.addEventListener('pointerup',finish);resize.addEventListener('pointercancel',finish);});
+    resize.addEventListener('keydown',async event=>{if(!['ArrowLeft','ArrowRight','Home'].includes(event.key))return;event.preventDefault();const width=event.key==='Home'?null:clampColumnWidth(columnNode.getBoundingClientRect().width+(event.key==='ArrowRight'?16:-16));if(width===null)columnNode.style.removeProperty('--board-column-width');else columnNode.style.setProperty('--board-column-width',`${width}px`);updateAria();try{await saveColumnWidth(column.id,width);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}});
+    resize.addEventListener('dblclick',async event=>{event.preventDefault();event.stopPropagation();columnNode.style.removeProperty('--board-column-width');updateAria();try{await saveColumnWidth(column.id,null);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}});columnNode.append(resize);requestAnimationFrame(updateAria);
+  }
   return columnNode;
 }
 
