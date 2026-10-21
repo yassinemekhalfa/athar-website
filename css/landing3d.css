@@ -70,6 +70,7 @@ html[dir=rtl] .hero-showreel{justify-self:start}
  .hero:has(.hero-showreel:not([hidden])) .wrap{height:auto;min-height:100svh;align-items:start;padding-top:112px;padding-bottom:86px}
  .hero:has(.hero-showreel:not([hidden])) .hero-text{align-self:auto}
  .hero:has(.hero-showreel:not([hidden])) .scroll-hint{display:none}
+ .hero:has(.hero-showreel:not([hidden])) .hero-showreel{place-self:center!important;margin-inline:auto!important;max-width:calc(100vw - 32px)}
 }
 @media(max-width:600px){
  .nav .wrap{height:68px;gap:8px}
