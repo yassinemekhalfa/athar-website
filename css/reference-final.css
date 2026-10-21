@@ -22,6 +22,7 @@
 .k-home-folder-card-wrap .k-home-item-menu{position:absolute;top:7px;right:7px;z-index:1;background:#fff;opacity:0}
 .k-home-folder-card-wrap:hover .k-home-item-menu,.k-home-folder-card-wrap:focus-within .k-home-item-menu{opacity:1}
 .k-home-folder-icon-emoji{font-size:72px;line-height:1}
+.k-home-folder-client-photo{width:108px;height:108px;border-radius:50%;object-fit:cover;object-position:center;box-shadow:0 8px 24px rgb(0 0 0/.12)}
 .k-home-recent-row{grid-template-columns:minmax(240px,1.45fr) 120px 150px 100px 34px!important}
 .k-home-recent-row--head{grid-template-columns:minmax(240px,1.45fr) 120px 150px 100px 34px!important}
 .k-home-recent-actions{display:flex;justify-content:flex-end}

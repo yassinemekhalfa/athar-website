@@ -47,7 +47,14 @@ function buildFolderCard(folder, allFolders, context, onDone) {
   card.style.setProperty('--folder-color', folder.color || '#f0bd2f');
 
   const tile = el('span', 'ap-folder-card__tile');
-  tile.append(folder.icon_emoji ? el('span', 'k-home-folder-icon-emoji', folder.icon_emoji) : workspaceIcon('folder', 'k-home-folder-icon'));
+  if (folder.client_id && folder.avatar_url) {
+    const image = el('img', 'k-home-folder-client-photo');
+    image.src = folder.avatar_url;
+    image.alt = `${folder.name} photo`;
+    tile.append(image);
+  } else {
+    tile.append(folder.icon_emoji ? el('span', 'k-home-folder-icon-emoji', folder.icon_emoji) : workspaceIcon('folder', 'k-home-folder-icon'));
+  }
 
   const name = el('strong', 'ap-folder-card__name', folder.name);
   const meta = el('small', 'ap-folder-card__meta', countFolderItems(folder, allFolders));
