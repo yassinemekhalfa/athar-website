@@ -70,6 +70,8 @@ body[data-workspace-view="home"] .ap-sidebar, body[data-workspace-view="folder"]
 .k-task-choice-item:focus-visible { box-shadow:inset 0 0 0 2px #526ddd!important; }
 .k-board-canvas .ap-task-card__top { position: relative !important; inset: auto !important; height: auto !important; display: flex !important; align-items: center !important; gap: 6px !important; margin: 0 0 6px !important; pointer-events: none !important; }
 .k-board-canvas .ap-task-card__top .ap-badge:not(.ap-validation-status) { display: none !important; }
+.k-board-canvas .ap-task-card__top .ap-task-state { display:inline-flex!important;align-items:center!important;padding:3px 8px!important;border-radius:999px!important;font-size:10px!important;font-weight:650!important;line-height:1.25!important; }
+.k-board-canvas .ap-task-card__top .ap-task-state--active { background:#eef1f5!important;color:#596273!important; }
 .k-board-canvas .ap-task-card__description,.k-board-canvas .ap-task-card__meta { display: none !important; }
 .k-task-card__more { position: absolute !important; top: 0 !important; right: 0 !important; width: 30px !important; height: 30px !important; flex: 0 0 30px !important; margin-left: auto !important; padding: 0 !important; border-radius: 6px !important; background: #f0f0f0 !important; color: #444 !important; opacity: 0 !important; pointer-events: auto !important; transition: opacity .12s ease !important; }
 .ap-task-card:hover .k-task-card__more,.ap-task-card:focus-within .k-task-card__more { opacity: 1 !important; }

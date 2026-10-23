@@ -417,7 +417,8 @@ function renderColumn(column) {
 
 function renderTaskCard(task) {
   const card = el("article", "ap-task-card");applyTaskColor(card,task);
-  card.classList.toggle("is-completed",Boolean(task.completed_at));
+  const taskCompleted=Boolean(task.completed_at||task.completed);
+  card.classList.toggle("is-completed",taskCompleted);
   card.dataset.taskId = task.id;
   card.dataset.module = "boards";
   card.tabIndex = 0;
@@ -468,7 +469,8 @@ function renderTaskCard(task) {
   }
   top.append(el("span", `ap-badge ap-task-card__priority ap-task-card__priority--${task.priority}`, priorityLabel(task.priority)));
   if (task.client_visible && state.context.canCreate) top.append(el("span", "ap-badge ap-badge--info", "Client"));
-  if (task.completed_at) top.append(el("span", "ap-badge ap-badge--success", "Completed"));
+  if (taskCompleted) top.append(el("span", "ap-badge ap-badge--success ap-task-state", task.validation?.status==="auto_completed" ? "Completed automatically" : "Completed"));
+  else top.append(el("span", "ap-badge ap-task-state ap-task-state--active", "Still in progress"));
   if(task.details?.label)top.append(el("span","ap-task-label",task.details.label));
   if(task.validation?.status==="pending")top.append(validationStatus(task));
   if (state.context.canCreate) {
