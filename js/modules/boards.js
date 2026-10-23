@@ -174,6 +174,11 @@ async function loadActiveBoard() {
     return;
   }
 
+  // The scheduled database job handles deadlines even when nobody is online.
+  // Running the same idempotent operation here removes the scheduler's
+  // one-minute delay as soon as somebody opens a board.
+  await db.rpc("complete_expired_board_tasks");
+
   const [{ data: columns, error: columnsError }, { data: tasks, error: tasksError }] = await Promise.all([
     db.from("board_columns").select("*").eq("board_id", state.boardId).order("position", { ascending: true }).order("created_at", { ascending: true }),
     db.from("tasks").select("*").eq("board_id", state.boardId).is("archived_at",null).is("trashed_at",null).order("position", { ascending: true }).order("created_at", { ascending: true })
@@ -317,6 +322,12 @@ function renderColumn(column) {
   dot.style.backgroundColor = column.color;
   dot.setAttribute("aria-hidden", "true");
   titleWrap.append(dot, el("h3", "ap-board-column__title", column.name));
+  if (column.validation_hours > 0 && column.validation_due_at) {
+    const due = new Date(column.validation_due_at);
+    const deadline = el("span", "ap-board-column__deadline", due <= new Date() ? "Completing…" : `Auto-completes ${due.toLocaleString()}`);
+    deadline.title = `Timer started ${new Date(column.validation_started_at || column.created_at).toLocaleString()}`;
+    titleWrap.append(deadline);
+  }
   header.append(titleWrap);
   const count = tasksInColumn(column.id).length;
   if (count) header.append(el("span", "k-board-column-count", String(count)));
@@ -696,7 +707,7 @@ function openColumnForm(column = null) {
   const hours=Number(column?.validation_hours||0);
   const deadline=selectControl([{value:'0',label:'No validation required'},{value:'24',label:'24 hours'},{value:'48',label:'48 hours'},{value:'custom',label:'Custom deadline'}],[0,24,48].includes(hours)?String(hours):'custom');
   const customHours=input(hours||24,'number');customHours.min=1;customHours.max=8760;customHours.step=1;customHours.hidden=deadline.value!=='custom';deadline.addEventListener('change',()=>{customHours.hidden=deadline.value!=='custom';});
-  const customField=field('Custom deadline (hours)',customHours);customField.hidden=deadline.value!=='custom';deadline.addEventListener('change',()=>{customField.hidden=deadline.value!=='custom';});form.append(field('Section name',name),field('Color',color),field('Approval deadline',deadline,'Tasks stay in this stage until an owner or admin approves them.'),customField);
+  const customField=field('Custom deadline (hours)',customHours);customField.hidden=deadline.value!=='custom';deadline.addEventListener('change',()=>{customField.hidden=deadline.value!=='custom';});form.append(field('Section name',name),field('Color',color),field('Approval deadline',deadline,'The timer starts when you save. Unfinished tasks are completed automatically when it expires; an owner or admin can approve earlier.'),customField);
   const actions = el("div", "ap-module-form__actions");
   const cancel = button("Cancel", "secondary");
   const save = button(column ? "Save section" : "Add section", "primary");
@@ -708,10 +719,16 @@ function openColumnForm(column = null) {
     if (!name.value.trim()) return name.focus();
     if(deadline.value==="custom"&&!customHours.reportValidity())return;
     const validationHours=deadline.value==="custom"?Number(customHours.value):Number(deadline.value);
+    const startedAt=validationHours?new Date():null;
+    const deadlineFields={
+      validation_hours:validationHours,
+      validation_started_at:startedAt?.toISOString()||null,
+      validation_due_at:startedAt?new Date(startedAt.getTime()+validationHours*3600000).toISOString():null
+    };
     save.disabled = true;
     try {
       if (column) {
-        const { error } = await db.from("board_columns").update({ name: name.value.trim(), color: color.value, validation_hours:validationHours }).eq("id", column.id);
+        const { error } = await db.from("board_columns").update({ name: name.value.trim(), color: color.value, ...deadlineFields }).eq("id", column.id);
         if (error) throw error;
       } else {
         const { error } = await db.from("board_columns").insert({
@@ -719,7 +736,7 @@ function openColumnForm(column = null) {
           board_id: state.boardId,
           name: name.value.trim(),
           color: color.value,
-          validation_hours:validationHours,
+          ...deadlineFields,
           position: nextPosition(state.columns)
         });
         if (error) throw error;
@@ -1373,7 +1390,7 @@ function renderValidation(task){
     box.append(validationStatus(task),el('p','','Approval due '+new Date(task.validation.due_at).toLocaleString()));
     if(['owner','admin'].includes(state.context.role)){for(const [action,text] of [['approve','Approve and move'],['reject','Request changes']]){const control=button(text,action==='approve'?'primary':'secondary');control.addEventListener('click',()=>run(action,control));box.append(control);}}
   }else{
-    const hours=state.columns.find(c=>c.id===task.column_id)?.validation_hours;box.append(el('p','',task.validation?.status==='changes_requested'?'Changes requested. Update the task, then submit it again.':('Approval deadline: '+hours+' hours after submitting.')));
+    const stage=state.columns.find(c=>c.id===task.column_id);box.append(el('p','',task.validation?.status==='changes_requested'?'Changes requested. Update the task, then submit it again.':(stage?.validation_due_at?'Automatic completion: '+new Date(stage.validation_due_at).toLocaleString():'No automatic completion deadline.')));
     if(state.context.canCreate||task.assignee_id===state.context.user.id){const request=button('Request validation','primary');request.addEventListener('click',()=>run('request',request));box.append(request);}
   }
   return box;

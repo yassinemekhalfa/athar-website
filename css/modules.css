@@ -109,6 +109,13 @@
   gap: var(--space-2);
 }
 
+.ap-board-column__deadline {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .ap-board-column__title {
   margin: 0;
   overflow: hidden;
