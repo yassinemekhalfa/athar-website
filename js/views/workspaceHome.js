@@ -291,6 +291,7 @@ export function folderCover(root, folder, actions) {
         const image = el('img', 'v-folder-banner__image');
         image.src = coverUrl.href;
         image.alt = '';
+        image.style.objectFit = folder.cover_fit === 'contain' ? 'contain' : 'cover';
         const x = Math.min(100, Math.max(0, Number(folder.cover_position_x ?? 50)));
         const y = Math.min(100, Math.max(0, Number(folder.cover_position_y ?? 50)));
         const zoom = Math.min(200, Math.max(100, Number(folder.cover_zoom ?? 100)));

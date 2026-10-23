@@ -55,7 +55,7 @@ export async function ensureUnfiledFolder() {
 export async function updateFolder(id, changes) {
   const s = getState();
   const allowed = {};
-  for (const key of ["name", "description", "privacy", "internal_role", "client_visible", "color", "cover_image", "cover_position_x", "cover_position_y", "cover_zoom", "icon_emoji", "parent_id", "position", "archived_at", "trashed_at"]) if (key in changes) allowed[key] = changes[key];
+  for (const key of ["name", "description", "privacy", "internal_role", "client_visible", "color", "cover_image", "cover_position_x", "cover_position_y", "cover_zoom", "cover_fit", "icon_emoji", "avatar_url", "parent_id", "position", "archived_at", "trashed_at"]) if (key in changes) allowed[key] = changes[key];
   const { data, error } = await db.from("folders").update(allowed).eq("id", id).select().single();
   if (error) throw error;
   await loadFolders();

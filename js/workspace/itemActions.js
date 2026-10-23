@@ -171,6 +171,14 @@ export function openFolderCoverSettings(item, onDone) {
   const current = el("img", "ap-folder-cover-preview");
   current.alt = "Folder cover preview";
   let coverImage = folder.cover_image || null;
+  const fitLabel = el("label", "ap-field");
+  const fitCaption = el("span", "ap-field__label", "Image fit");
+  const fit = el("select", "ap-input");
+  for (const [value, label] of [["cover", "Fill the entire frame"], ["contain", "Show the full image"]]) {
+    const option = el("option", "", label); option.value = value; fit.append(option);
+  }
+  fit.value = folder.cover_fit === "contain" ? "contain" : "cover";
+  fitLabel.append(fitCaption, fit);
   const positionControl = (caption, value, min, max) => {
     const label = el("label", "ap-field");
     const heading = el("span", "ap-field__label", caption);
@@ -182,10 +190,12 @@ export function openFolderCoverSettings(item, onDone) {
   const vertical = positionControl("Vertical position", Number(folder.cover_position_y ?? 50), 0, 100);
   const zoom = positionControl("Zoom", Number(folder.cover_zoom ?? 100), 100, 200);
   const syncPreview = () => {
+    current.style.objectFit = fit.value;
     current.style.objectPosition = `${horizontal.input.value}% ${vertical.input.value}%`;
     current.style.transformOrigin = current.style.objectPosition;
     current.style.transform = `scale(${Number(zoom.input.value) / 100})`;
   };
+  fit.addEventListener("change", syncPreview);
   for (const control of [horizontal.input, vertical.input, zoom.input]) control.addEventListener("input", syncPreview);
   let selectedFile = null;
   let localPreviewUrl = null;
@@ -233,13 +243,13 @@ export function openFolderCoverSettings(item, onDone) {
   });
   const save = el("button", "ap-btn ap-btn--primary", "Save cover");
   save.type = "submit";
-  form.append(colorLabel, fileLabel, current, horizontal.label, vertical.label, zoom.label, clearImage, save);
+  form.append(colorLabel, fileLabel, current, fitLabel, horizontal.label, vertical.label, zoom.label, clearImage, save);
   form.addEventListener("submit", async event => {
     event.preventDefault();
     save.disabled = true;
     try {
       if (selectedFile) coverImage = await uploadBrandAsset(selectedFile, "folder-covers");
-      await updateFolder(folder.id, { color: color.value, cover_image: coverImage, cover_position_x: Number(horizontal.input.value), cover_position_y: Number(vertical.input.value), cover_zoom: Number(zoom.input.value) });
+      await updateFolder(folder.id, { color: color.value, cover_image: coverImage, cover_fit: fit.value, cover_position_x: Number(horizontal.input.value), cover_position_y: Number(vertical.input.value), cover_zoom: Number(zoom.input.value) });
       AppCore.ui.closeModal();
       await onDone?.();
       if (document.body.dataset.workspaceView === "folder" && getState().selectedFolderId === folder.id) {
