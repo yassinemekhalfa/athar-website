@@ -291,6 +291,12 @@ export function folderCover(root, folder, actions) {
         const image = el('img', 'v-folder-banner__image');
         image.src = coverUrl.href;
         image.alt = '';
+        const x = Math.min(100, Math.max(0, Number(folder.cover_position_x ?? 50)));
+        const y = Math.min(100, Math.max(0, Number(folder.cover_position_y ?? 50)));
+        const zoom = Math.min(200, Math.max(100, Number(folder.cover_zoom ?? 100)));
+        image.style.objectPosition = `${x}% ${y}%`;
+        image.style.transformOrigin = `${x}% ${y}%`;
+        image.style.transform = `scale(${zoom / 100})`;
         banner.append(image);
       }
     } catch {

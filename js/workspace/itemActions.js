@@ -171,6 +171,22 @@ export function openFolderCoverSettings(item, onDone) {
   const current = el("img", "ap-folder-cover-preview");
   current.alt = "Folder cover preview";
   let coverImage = folder.cover_image || null;
+  const positionControl = (caption, value, min, max) => {
+    const label = el("label", "ap-field");
+    const heading = el("span", "ap-field__label", caption);
+    const input = el("input", "ap-input");
+    input.type = "range"; input.min = String(min); input.max = String(max); input.step = "1"; input.value = String(value);
+    label.append(heading, input); return { label, input };
+  };
+  const horizontal = positionControl("Horizontal position", Number(folder.cover_position_x ?? 50), 0, 100);
+  const vertical = positionControl("Vertical position", Number(folder.cover_position_y ?? 50), 0, 100);
+  const zoom = positionControl("Zoom", Number(folder.cover_zoom ?? 100), 100, 200);
+  const syncPreview = () => {
+    current.style.objectPosition = `${horizontal.input.value}% ${vertical.input.value}%`;
+    current.style.transformOrigin = current.style.objectPosition;
+    current.style.transform = `scale(${Number(zoom.input.value) / 100})`;
+  };
+  for (const control of [horizontal.input, vertical.input, zoom.input]) control.addEventListener("input", syncPreview);
   let selectedFile = null;
   let localPreviewUrl = null;
   const clearLocalPreview = () => {
@@ -195,6 +211,7 @@ export function openFolderCoverSettings(item, onDone) {
     }
   };
   previewUrl(coverImage);
+  syncPreview();
   fileLabel.append(fileCaption, file);
   file.addEventListener("change", () => {
     clearLocalPreview();
@@ -216,13 +233,13 @@ export function openFolderCoverSettings(item, onDone) {
   });
   const save = el("button", "ap-btn ap-btn--primary", "Save cover");
   save.type = "submit";
-  form.append(colorLabel, fileLabel, current, clearImage, save);
+  form.append(colorLabel, fileLabel, current, horizontal.label, vertical.label, zoom.label, clearImage, save);
   form.addEventListener("submit", async event => {
     event.preventDefault();
     save.disabled = true;
     try {
       if (selectedFile) coverImage = await uploadBrandAsset(selectedFile, "folder-covers");
-      await updateFolder(folder.id, { color: color.value, cover_image: coverImage });
+      await updateFolder(folder.id, { color: color.value, cover_image: coverImage, cover_position_x: Number(horizontal.input.value), cover_position_y: Number(vertical.input.value), cover_zoom: Number(zoom.input.value) });
       AppCore.ui.closeModal();
       await onDone?.();
       if (document.body.dataset.workspaceView === "folder" && getState().selectedFolderId === folder.id) {
