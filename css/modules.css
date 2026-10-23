@@ -116,6 +116,9 @@
   white-space: nowrap;
 }
 
+.ap-deadline-custom { display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:10px; }
+@media (max-width:600px) { .ap-deadline-custom { grid-template-columns:1fr; } }
+
 .ap-board-column__title {
   margin: 0;
   overflow: hidden;

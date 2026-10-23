@@ -322,7 +322,7 @@ function renderColumn(column) {
   dot.style.backgroundColor = column.color;
   dot.setAttribute("aria-hidden", "true");
   titleWrap.append(dot, el("h3", "ap-board-column__title", column.name));
-  if (column.validation_hours > 0 && column.validation_due_at) {
+  if ((column.validation_minutes > 0 || column.validation_hours > 0) && column.validation_due_at) {
     const due = new Date(column.validation_due_at);
     const deadline = el("span", "ap-board-column__deadline", due <= new Date() ? "Completing…" : `Auto-completes ${due.toLocaleString()}`);
     deadline.title = `Timer started ${new Date(column.validation_started_at || column.created_at).toLocaleString()}`;
@@ -704,10 +704,15 @@ function openColumnForm(column = null) {
   name.required = true;
   name.maxLength = 60;
   const color = input(column?.color || "#8A90A6", "color");
-  const hours=Number(column?.validation_hours||0);
-  const deadline=selectControl([{value:'0',label:'No validation required'},{value:'24',label:'24 hours'},{value:'48',label:'48 hours'},{value:'custom',label:'Custom deadline'}],[0,24,48].includes(hours)?String(hours):'custom');
-  const customHours=input(hours||24,'number');customHours.min=1;customHours.max=8760;customHours.step=1;customHours.hidden=deadline.value!=='custom';deadline.addEventListener('change',()=>{customHours.hidden=deadline.value!=='custom';});
-  const customField=field('Custom deadline (hours)',customHours);customField.hidden=deadline.value!=='custom';deadline.addEventListener('change',()=>{customField.hidden=deadline.value!=='custom';});form.append(field('Section name',name),field('Color',color),field('Approval deadline',deadline,'The timer starts when you save. Unfinished tasks are completed automatically when it expires; an owner or admin can approve earlier.'),customField);
+  const savedMinutes=Number(column?.validation_minutes||Number(column?.validation_hours||0)*60);
+  const deadline=selectControl([{value:'0',label:'No validation required'},{value:'1440',label:'24 hours'},{value:'2880',label:'48 hours'},{value:'custom',label:'Custom deadline'}],[0,1440,2880].includes(savedMinutes)?String(savedMinutes):'custom');
+  const unitOptions=[['minutes',1],['hours',60],['days',1440],['weeks',10080]];
+  const initialUnit=unitOptions.slice().reverse().find(([,factor])=>savedMinutes&&savedMinutes%factor===0)?.[0]||'hours';
+  const unitFactor=unit=>unitOptions.find(([name])=>name===unit)?.[1]||60;
+  const customAmount=input(savedMinutes?Math.max(1,savedMinutes/unitFactor(initialUnit)):24,'number');customAmount.min=1;customAmount.max=5256000;customAmount.step=1;
+  const customUnit=selectControl(unitOptions.map(([value])=>({value,label:value[0].toUpperCase()+value.slice(1)})),initialUnit);
+  const customControls=el('div','ap-deadline-custom');customControls.append(customAmount,customUnit);
+  const customField=field('Custom deadline',customControls);customField.hidden=deadline.value!=='custom';deadline.addEventListener('change',()=>{customField.hidden=deadline.value!=='custom';});form.append(field('Section name',name),field('Color',color),field('Approval deadline',deadline,'The timer starts when you save. Unfinished tasks are completed automatically when it expires; an owner or admin can approve earlier.'),customField);
   const actions = el("div", "ap-module-form__actions");
   const cancel = button("Cancel", "secondary");
   const save = button(column ? "Save section" : "Add section", "primary");
@@ -717,13 +722,15 @@ function openColumnForm(column = null) {
 
   save.addEventListener("click", async () => {
     if (!name.value.trim()) return name.focus();
-    if(deadline.value==="custom"&&!customHours.reportValidity())return;
-    const validationHours=deadline.value==="custom"?Number(customHours.value):Number(deadline.value);
-    const startedAt=validationHours?new Date():null;
+    if(deadline.value==="custom"&&!customAmount.reportValidity())return;
+    const validationMinutes=deadline.value==="custom"?Number(customAmount.value)*unitFactor(customUnit.value):Number(deadline.value);
+    const validationHours=validationMinutes?Math.ceil(validationMinutes/60):0;
+    const startedAt=validationMinutes?new Date():null;
     const deadlineFields={
       validation_hours:validationHours,
+      validation_minutes:validationMinutes,
       validation_started_at:startedAt?.toISOString()||null,
-      validation_due_at:startedAt?new Date(startedAt.getTime()+validationHours*3600000).toISOString():null
+      validation_due_at:startedAt?new Date(startedAt.getTime()+validationMinutes*60000).toISOString():null
     };
     save.disabled = true;
     try {
@@ -1454,7 +1461,7 @@ async function openTaskDetail(task, initialTab = "comments") {
   const complete = taskActionButton("check", task.completed_at ? "Reopen" : "Complete");
   const updateCompleteState = () => {
     const stageRequiresValidation = !task.completed_at &&
-      (task.validation?.status === "pending" || state.columns.find(column => column.id === task.column_id)?.validation_hours > 0);
+      (task.validation?.status === "pending" || ((state.columns.find(column => column.id === task.column_id)?.validation_minutes || 0) > 0) || state.columns.find(column => column.id === task.column_id)?.validation_hours > 0);
     complete.disabled = (!canEdit && task.assignee_id !== state.context.user.id) ||
       stageRequiresValidation;
     complete.title = complete.disabled ? "Use stage validation to approve this task" : task.completed_at ? "Reopen task" : "Mark task complete";
@@ -1516,7 +1523,7 @@ async function openTaskDetail(task, initialTab = "comments") {
 
 
   const scroll = el("div", "k-task-sheet-scroll");
-  if(stage?.validation_hours>0||task.validation?.status==="pending")scroll.append(renderValidation(task));
+  if(stage?.validation_minutes>0||stage?.validation_hours>0||task.validation?.status==="pending")scroll.append(renderValidation(task));
   const fieldsSection = el("section", "k-task-sheet-section"); fieldsSection.append(el("h3", "k-task-sheet-section-title", "Fields"));
   const fields = el("div", "k-task-fields");
   const member = selectControl([{ value: "", label: "Anyone" }, ...state.assignees.map(profile => ({ value: profile.id, label: profileLabel(profile) }))], task.assignee_id || ""); member.className = "k-task-field-control"; member.disabled = !canEdit; member.addEventListener("change", () => patchTask({ assignee_id: member.value || null }));
