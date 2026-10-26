@@ -27,17 +27,24 @@ const videoFrame=project=>{const saved=project.presentation?.video||{};return sa
 function frameAspect(frame){if(frame.ratio==='auto'&&Number(frame.aspect)>0)return Number(frame.aspect);return{vertical:9/16,portrait:4/5,square:1,standard:4/3,landscape:16/9}[frame.ratio]||16/9;}
 function applyVideoFrame(host,project){const aspect=frameAspect(videoFrame(project));host.style.aspectRatio=String(aspect);host.style.setProperty('--video-ratio',String(aspect));}
 function projectVideo(project,{autoplay=false}={}){
- const video=element('video','portfolio-video');video.playsInline=true;video.preload=autoplay?'metadata':'none';video.poster=project.video.poster||project.cover;video.muted=autoplay;video.loop=autoplay;video.autoplay=autoplay;if(autoplay)video.setAttribute('aria-hidden','true');else video.controls=true;
+ const video=element('video','portfolio-video');video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');video.preload=autoplay?'auto':'metadata';video.poster=project.video.poster||project.cover;video.muted=autoplay;video.defaultMuted=autoplay;video.loop=autoplay;video.autoplay=autoplay;
+ if(autoplay){video.setAttribute('muted','');video.setAttribute('autoplay','');video.setAttribute('loop','');video.setAttribute('aria-hidden','true');video.tabIndex=-1;}else video.controls=true;
  const source=element('source');source.src=project.video.type==='video/google-drive'?(googleDriveDownload(project.video.src)||project.video.src):project.video.src;if(project.video.type!=='video/google-drive')source.type=project.video.type;video.append(source);
  source.addEventListener('error',()=>video.dispatchEvent(new Event('error')),{once:true});
  video.addEventListener('loadedmetadata',()=>{const frame=videoFrame(project);if(frame.ratio==='auto'&&video.videoWidth&&video.videoHeight){const host=video.closest('.portfolio-art,.project-film-frame');if(host){const aspect=video.videoWidth/video.videoHeight;host.style.aspectRatio=String(aspect);host.style.setProperty('--video-ratio',String(aspect));}}});
+ if(autoplay){const play=()=>video.play().catch(()=>{});video.addEventListener('canplay',play,{once:true});queueMicrotask(play);}
  return video;
+}
+function manageCoverPlayback(video){
+ if(!('IntersectionObserver' in window))return video.play().catch(()=>{});
+ const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting&&entry.intersectionRatio>=.2)video.play().catch(()=>{});else video.pause();}},{threshold:[0,.2,.6]});
+ observer.observe(video);video.addEventListener('error',()=>observer.disconnect(),{once:true});
 }
 function media(src,alt,className){const image=element('img',className);image.src=src;image.alt=alt;image.loading='lazy';image.width=1200;image.height=900;return image;}
 function card(project,teaser=false){
  const article=element('article','portfolio-card');const link=element('a','portfolio-card-link');link.href=projectUrl(project);
  const art=element('div','portfolio-art');
- if(teaser&&project.video){article.classList.add('portfolio-card--video');applyVideoFrame(art,project);const video=projectVideo(project,{autoplay:true});video.addEventListener('error',()=>{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.replaceChildren(cover);});art.append(video);}else{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.append(cover);}
+ if(teaser&&project.video){article.classList.add('portfolio-card--video');applyVideoFrame(art,project);const video=projectVideo(project,{autoplay:true});video.addEventListener('error',()=>{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.replaceChildren(cover);});art.append(video);manageCoverPlayback(video);}else{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.append(cover);}
  if(project.concept)art.append(element('span','portfolio-concept',t('تصور إبداعي')));
  if(project.video)art.append(element('span','portfolio-play',`▶ ${t('فيلم قصير')}`));
  const body=element('div','portfolio-card-body');const meta=element('div','portfolio-meta');meta.append(element('span','',t(categories[project.category])),element('span','',project.year));
