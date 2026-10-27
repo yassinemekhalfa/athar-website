@@ -44,13 +44,14 @@ function media(src,alt,className){const image=element('img',className);image.src
 function card(project,teaser=false){
  const article=element('article','portfolio-card');const link=element('a','portfolio-card-link');link.href=projectUrl(project);
  const art=element('div','portfolio-art');
- if(teaser&&project.video){article.classList.add('portfolio-card--video');applyVideoFrame(art,project);const video=projectVideo(project,{autoplay:true});video.addEventListener('error',()=>{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.replaceChildren(cover);});art.append(video);manageCoverPlayback(video);}else{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.append(cover);}
+ let durationBadge=null;
+ if(teaser&&project.video){article.classList.add('portfolio-card--video');applyVideoFrame(art,project);const video=projectVideo(project,{autoplay:true});video.addEventListener('error',()=>{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});video.replaceWith(cover);});durationBadge=element('span','portfolio-duration','0:00');video.addEventListener('loadedmetadata',()=>{if(!Number.isFinite(video.duration))return;const minutes=Math.floor(video.duration/60),seconds=Math.floor(video.duration%60);durationBadge.textContent=`${minutes}:${String(seconds).padStart(2,'0')}`;});art.append(video);manageCoverPlayback(video);}else{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.append(cover);}
  if(project.concept)art.append(element('span','portfolio-concept',t('تصور إبداعي')));
  if(project.video)art.append(element('span','portfolio-play',`▶ ${t('فيلم قصير')}`));
  const body=element('div','portfolio-card-body');const meta=element('div','portfolio-meta');meta.append(element('span','',t(categories[project.category])),element('span','',project.year));
  body.append(meta,element('h3','',project.name),element('p','',localized(project.title)),element('span','portfolio-card-action',`${t('افتح المشروع')} ${getLanguage()==='en'?'↗':'↖'}`));
  meta.prepend(element('span','',sectorLabel(project)));
- link.append(art,body);article.append(link);
+ if(teaser&&project.video){article.classList.add('portfolio-card--portrait');const top=element('div','portfolio-card-top');top.append(durationBadge,element('span','portfolio-card-sector',sectorLabel(project)));art.append(top,element('span','portfolio-center-play','▶'),body);link.append(art);}else link.append(art,body);article.append(link);
  if(dialog)link.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();returnFocus=link;openProject(project,{updateUrl:!teaser});});
  return article;
 }
@@ -107,7 +108,7 @@ function refresh(){
   notice.hidden=concepts===0;
   notice.textContent=t(concepts===portfolioProjects.length?'كل الأعمال المعروضة هنا مشاريع تصورية للعرض، وليست أعمال عملاء حقيقية.':'المشاريع الموسومة بتصور إبداعي أمثلة للعرض، وليست أعمال عملاء حقيقية.');
  }
- if(preview){const withVideo=portfolioProjects.filter(project=>project.video);const featured=(withVideo.length?withVideo:portfolioProjects).slice(0,2);preview.replaceChildren(...featured.map(project=>card(project,true)));}
+ if(preview){const withVideo=portfolioProjects.filter(project=>project.video);const featured=(withVideo.length?withVideo:portfolioProjects).slice(0,4);preview.replaceChildren(...featured.map(project=>card(project,true)));}
  updateFilters();updateGrid();if(activeProject&&dialog?.open)fillProject(activeProject);
 }
 if(dialog){
