@@ -385,6 +385,16 @@
   font-size: var(--font-size-xs);
 }
 
+.ap-file-upload__selection {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
 .ap-doc__editor {
   min-height: 55vh;
   padding: var(--space-5);

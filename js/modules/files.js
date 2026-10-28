@@ -154,10 +154,24 @@ export function openUploadModal() {
   const content = el("div", "ap-file-upload");
   const fileInput = el("input", "ap-input");
   fileInput.type = "file";
+  fileInput.multiple = true;
   fileInput.accept = "image/*,application/pdf,text/*,application/zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx";
   const chooser = el("label", "ap-field");
-  chooser.append(el("span", "ap-field__label", "Choose file"), fileInput, el("span", "ap-field__hint", "Maximum 25 MiB. Executable files are not accepted."));
-  content.append(chooser);
+  chooser.append(el("span", "ap-field__label", "Choose files"), fileInput, el("span", "ap-field__hint", "Select one or many files. Each file can be up to 25 MiB."));
+  const folderInput = el("input", "ap-input");
+  folderInput.type = "file";
+  folderInput.multiple = true;
+  folderInput.accept = fileInput.accept;
+  folderInput.setAttribute("webkitdirectory", "");
+  folderInput.setAttribute("directory", "");
+  const folderChooser = el("label", "ap-field");
+  folderChooser.append(el("span", "ap-field__label", "Choose a folder"), folderInput, el("span", "ap-field__hint", "Uploads every supported file and keeps its relative folder path."));
+  const selection = el("p", "ap-file-upload__selection", "No files selected.");
+  selection.setAttribute("role", "status");
+  const showSelection = input => { const files = [...input.files || []]; selection.textContent = files.length ? `${files.length} file${files.length === 1 ? "" : "s"} selected.` : "No files selected."; };
+  fileInput.addEventListener("change", () => { if (fileInput.files?.length) folderInput.value = ""; showSelection(fileInput); });
+  folderInput.addEventListener("change", () => { if (folderInput.files?.length) fileInput.value = ""; showSelection(folderInput); });
+  content.append(chooser, folderChooser, selection);
 
   let visible = null;
   if (state.context.canShare) {
@@ -174,34 +188,47 @@ export function openUploadModal() {
   const upload = button("Upload", "primary");
   cancel.addEventListener("click", () => AppCore.ui.closeModal());
   upload.addEventListener("click", async () => {
-    const file = fileInput.files?.[0];
-    if (!file) return fileInput.focus();
-    if (!isAllowedFile(file)) {
-      AppCore.ui.toast(file.size > MAX_UPLOAD_BYTES ? "That file is larger than 25 MiB." : "That file type is not allowed.", "warning");
-      return;
-    }
+    const files = [...(folderInput.files?.length ? folderInput.files : fileInput.files || [])];
+    if (!files.length) return fileInput.focus();
+    const accepted = files.filter(isAllowedFile), rejected = files.length - accepted.length;
+    if (!accepted.length) return AppCore.ui.toast("None of the selected files can be uploaded. Check their type and 25 MiB size limit.", "warning");
     upload.disabled = true;
-    upload.textContent = "Uploading…";
+    cancel.disabled = true;
+    let completed = 0;
+    const failures = [];
     try {
-      await uploadFile(file, state.context.isClient ? true : Boolean(visible?.checked));
-      AppCore.ui.closeModal();
-      AppCore.ui.toast("File uploaded.", "success");
+      for (const file of accepted) {
+        upload.textContent = `Uploading ${completed + 1} of ${accepted.length}…`;
+        selection.textContent = `Uploading ${file.webkitRelativePath || file.name}`;
+        try { await uploadFile(file, state.context.isClient ? true : Boolean(visible?.checked), state.context, state.context?.folderId, file.webkitRelativePath || file.name); }
+        catch (error) { failures.push({ file, error }); }
+        completed += 1;
+      }
       await loadAndRender();
+      const succeeded = accepted.length - failures.length;
+      if (!failures.length) {
+        AppCore.ui.closeModal();
+        AppCore.ui.toast(`${succeeded} file${succeeded === 1 ? "" : "s"} uploaded${rejected ? `; ${rejected} unsupported file${rejected === 1 ? " was" : "s were"} skipped` : ""}.`, "success");
+      } else {
+        selection.textContent = `${succeeded} uploaded, ${failures.length + rejected} skipped or failed. Select the failed files and try again.`;
+        AppCore.ui.toast(`${succeeded} uploaded. ${failures.length + rejected} could not be uploaded.`, "warning");
+      }
     } catch (error) {
       AppCore.ui.toast(AppCore.ui.describeError(error), "error");
     } finally {
       upload.disabled = false;
+      cancel.disabled = false;
       upload.textContent = "Upload";
     }
   });
   actions.append(cancel, upload);
   content.append(actions);
-  AppCore.ui.openModal({ title: "Upload file", content, actions: [] });
+  AppCore.ui.openModal({ title: "Upload files or folder", content, actions: [] });
 }
 
-async function uploadFile(file, clientVisible, context = state.context, folderId = context?.folderId) {
+async function uploadFile(file, clientVisible, context = state.context, folderId = context?.folderId, originalName = file.name) {
   const fileId = AppCore.utils.uuid();
-  const safeName = AppCore.utils.sanitizeFilename(file.name);
+  const safeName = AppCore.utils.sanitizeFilename(originalName);
   const storagePath = `${context.agencyId}/${folderId}/${fileId}/${safeName}`;
   const metadata = {
     id: fileId,
@@ -210,7 +237,7 @@ async function uploadFile(file, clientVisible, context = state.context, folderId
     uploaded_by: context.user.id,
     bucket_name: "project-files",
     storage_path: storagePath,
-    original_name: file.name,
+    original_name: originalName,
     mime_type: file.type,
     size_bytes: file.size,
     client_visible: Boolean(clientVisible), privacy: clientVisible ? "shared" : "private"
