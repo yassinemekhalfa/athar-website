@@ -29,8 +29,7 @@ function applyVideoFrame(host,project){const aspect=frameAspect(videoFrame(proje
 function projectVideo(project,{autoplay=false}={}){
  const video=element('video','portfolio-video');video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');video.preload=autoplay?'auto':'metadata';video.poster=project.video.poster||project.cover;video.muted=autoplay;video.defaultMuted=autoplay;video.loop=autoplay;video.autoplay=autoplay;
  if(autoplay){video.setAttribute('muted','');video.setAttribute('autoplay','');video.setAttribute('loop','');video.setAttribute('aria-hidden','true');video.tabIndex=-1;}else video.controls=true;
- const source=element('source');source.src=project.video.type==='video/google-drive'?(googleDriveDownload(project.video.src)||project.video.src):project.video.src;if(project.video.type!=='video/google-drive')source.type=project.video.type;video.append(source);
- source.addEventListener('error',()=>video.dispatchEvent(new Event('error')),{once:true});
+ video.src=project.video.type==='video/google-drive'?(googleDriveDownload(project.video.src)||project.video.src):project.video.src;
  video.addEventListener('loadedmetadata',()=>{const frame=videoFrame(project);if(frame.ratio==='auto'&&video.videoWidth&&video.videoHeight){const host=video.closest('.portfolio-art,.project-film-frame');if(host){const aspect=video.videoWidth/video.videoHeight;host.style.aspectRatio=String(aspect);host.style.setProperty('--video-ratio',String(aspect));}}});
  if(autoplay){const play=()=>video.play().catch(()=>{});video.addEventListener('canplay',play,{once:true});queueMicrotask(play);}
  return video;
@@ -96,9 +95,7 @@ function fillProject(project){
   const section=element('section','project-film');section.append(element('h3','',t('معاينة الفيديو')));
   const filmFrame=element('div','project-film-frame');applyVideoFrame(filmFrame,project);
   const video=projectVideo(project,{autoplay:true});video.preload='auto';video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);filmFrame.append(video,customVideoControls(video));
-  if(project.video.type==='video/google-drive'){
-   video.addEventListener('error',()=>{const frame=element('iframe'),url=new URL(project.video.src);url.searchParams.set('autoplay','1');frame.src=url.href;frame.title=`${project.name} — ${t('معاينة الفيديو')}`;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';filmFrame.replaceChildren(frame);},{once:true});
-  }else{
+  if(project.video.type!=='video/google-drive'){
    const download=element('a','small-link',t('تنزيل الفيديو'));download.href=project.video.src;download.download=project.video.src.split('/').at(-1);section.append(download);
   }
   section.insertBefore(filmFrame,section.querySelector('.small-link'));body.append(section);
