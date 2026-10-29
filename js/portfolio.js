@@ -44,14 +44,15 @@ function videoTime(value){if(!Number.isFinite(value))return'0:00';const minutes=
 function customVideoControls(video){
  video.controls=false;
  const controls=element('div','project-video-controls');
- const play=element('button','project-video-toggle','❚❚');play.type='button';play.setAttribute('aria-label',getLanguage()==='en'?'Pause video':'إيقاف الفيديو');
- const progress=element('input','project-video-progress');progress.type='range';progress.min='0';progress.max='1000';progress.value='0';progress.setAttribute('aria-label',getLanguage()==='en'?'Video progress':'تقدم الفيديو');
- const time=element('span','project-video-time','0:00 / 0:00');
- const mute=element('button','project-video-mute','🔇');mute.type='button';mute.setAttribute('aria-label',getLanguage()==='en'?'Unmute video':'تشغيل الصوت');
- const sync=()=>{play.textContent=video.paused?'▶':'❚❚';play.setAttribute('aria-label',video.paused?(getLanguage()==='en'?'Play video':'تشغيل الفيديو'):(getLanguage()==='en'?'Pause video':'إيقاف الفيديو'));progress.value=video.duration?String(Math.round(video.currentTime/video.duration*1000)):'0';time.textContent=`${videoTime(video.currentTime)} / ${videoTime(video.duration)}`;mute.textContent=video.muted?'🔇':'🔊';};
+ const control=(className,label,icon)=>{const button=element('button',className);button.type='button';button.setAttribute('aria-label',label);button.innerHTML=icon;return button;};
+ const playIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7 8 5-8 5Z"/></svg>',pauseIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7v10M15 7v10"/></svg>';
+ const soundIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h3l4 3V7l-4 3H5Zm10.5-.5a4 4 0 0 1 0 5M18 7a7 7 0 0 1 0 10"/></svg>',muteIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h3l4 3V7l-4 3H5Zm10 0 4 4m0-4-4 4"/></svg>';
+ const play=control('project-video-toggle','Pause video',pauseIcon),mute=control('project-video-mute','Turn sound on',muteIcon);
+ const progressWrap=element('div','project-video-progress-wrap'),progress=element('input','project-video-progress'),time=element('output','project-video-time','0:00 / 0:00');progress.type='range';progress.min='0';progress.max='1000';progress.step='1';progress.value='0';progress.setAttribute('aria-label','Video progress');progressWrap.append(progress,time);
+ const sync=()=>{const paused=video.paused,duration=video.duration||0,percent=duration?video.currentTime/duration*100:0;play.innerHTML=paused?playIcon:pauseIcon;play.setAttribute('aria-label',paused?'Play video':'Pause video');progress.value=duration?String(Math.round(percent*10)):'0';progress.style.setProperty('--video-progress',`${percent}%`);time.textContent=`${videoTime(video.currentTime)} / ${videoTime(duration)}`;mute.innerHTML=video.muted?muteIcon:soundIcon;mute.setAttribute('aria-label',video.muted?'Turn sound on':'Mute video');};
  const toggle=()=>video.paused?video.play().catch(()=>{}):video.pause();
  play.addEventListener('click',toggle);video.addEventListener('click',toggle);progress.addEventListener('input',()=>{if(video.duration)video.currentTime=Number(progress.value)/1000*video.duration;});mute.addEventListener('click',()=>{video.muted=!video.muted;sync();});
- for(const event of ['loadedmetadata','timeupdate','play','pause','volumechange','ended'])video.addEventListener(event,sync);sync();controls.append(play,progress,time,mute);return controls;
+ for(const event of ['loadedmetadata','durationchange','timeupdate','play','pause','volumechange','ended'])video.addEventListener(event,sync);sync();controls.append(play,progressWrap,mute);return controls;
 }
 function media(src,alt,className){const image=element('img',className);image.src=src;image.alt=alt;image.loading='lazy';image.width=1200;image.height=900;return image;}
 function card(project,teaser=false){
