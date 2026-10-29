@@ -1,7 +1,7 @@
 import {getLanguage,translate as t} from './landingI18n.js';
 import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js';
 import {db,isSupabaseMode} from './dataClient.js';
-import {googleDriveDownload} from './drive-video.js';
+import {googleDriveDownload} from './drive-video.js?v=20261029-1';
 let portfolioProjects=[];
 
 const grid=document.getElementById('portfolio-grid');

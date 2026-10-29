@@ -1,5 +1,5 @@
 import {db} from './dataClient.js';
-import {googleDriveDownload} from './drive-video.js';
+import {googleDriveDownload} from './drive-video.js?v=20261029-1';
 
 const host=document.getElementById('hero-showreel');
 const media=document.getElementById('hero-showreel-media');
