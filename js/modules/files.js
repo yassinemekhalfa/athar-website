@@ -1,9 +1,10 @@
 import {openItemSharing} from '../workspace/itemSharing.js';
-import { db } from "../dataClient.js";
+import { db, isSupabaseMode } from "../dataClient.js";
 import { AppCore } from "../core/appCore.js";
 import { emit, on } from "../core/events.js";
 
 const MAX_UPLOAD_BYTES = 26214400;
+const MAX_DRIVE_UPLOAD_BYTES = 5 * 1024 ** 4;
 const ALLOWED_EXACT_MIME = new Set([
   "application/pdf",
   "application/zip",
@@ -43,8 +44,8 @@ function extension(name) {
   return dot >= 0 ? String(name).slice(dot + 1).toLowerCase() : "";
 }
 
-function isAllowedFile(file) {
-  if (!file || file.size <= 0 || file.size > MAX_UPLOAD_BYTES) return false;
+function isAllowedFile(file, maxBytes = MAX_UPLOAD_BYTES) {
+  if (!file || file.size <= 0 || file.size > maxBytes) return false;
   if (BLOCKED_EXTENSIONS.has(extension(file.name))) return false;
   if (BLOCKED_MIME.has(file.type)) return false;
   return file.type.startsWith("image/") || file.type.startsWith("text/") || ALLOWED_EXACT_MIME.has(file.type) || file.type.startsWith("application/vnd.openxmlformats-officedocument.");
@@ -157,7 +158,7 @@ export function openUploadModal() {
   fileInput.multiple = true;
   fileInput.accept = "image/*,application/pdf,text/*,application/zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx";
   const chooser = el("label", "ap-field");
-  chooser.append(el("span", "ap-field__label", "Choose files"), fileInput, el("span", "ap-field__hint", "Select one or many files. Each file can be up to 25 MiB."));
+  chooser.append(el("span", "ap-field__label", "Choose files"), fileInput, el("span", "ap-field__hint", isSupabaseMode ? "Select one or many files. They will be stored in your connected Google Drive." : "Select one or many files. Each file can be up to 25 MiB."));
   const folderInput = el("input", "ap-input");
   folderInput.type = "file";
   folderInput.multiple = true;
@@ -190,8 +191,9 @@ export function openUploadModal() {
   upload.addEventListener("click", async () => {
     const files = [...(folderInput.files?.length ? folderInput.files : fileInput.files || [])];
     if (!files.length) return fileInput.focus();
-    const accepted = files.filter(isAllowedFile), rejected = files.length - accepted.length;
-    if (!accepted.length) return AppCore.ui.toast("None of the selected files can be uploaded. Check their type and 25 MiB size limit.", "warning");
+    const limit = isSupabaseMode ? MAX_DRIVE_UPLOAD_BYTES : MAX_UPLOAD_BYTES;
+    const accepted = files.filter(file => isAllowedFile(file, limit)), rejected = files.length - accepted.length;
+    if (!accepted.length) return AppCore.ui.toast(`None of the selected files can be uploaded. Check their type and ${isSupabaseMode ? "available Google Drive storage" : "25 MiB size limit"}.`, "warning");
     upload.disabled = true;
     cancel.disabled = true;
     let completed = 0;
@@ -227,6 +229,7 @@ export function openUploadModal() {
 }
 
 async function uploadFile(file, clientVisible, context = state.context, folderId = context?.folderId, originalName = file.name) {
+  if (isSupabaseMode) return uploadGoogleDriveFile(file, clientVisible, context, folderId, originalName);
   const fileId = AppCore.utils.uuid();
   const safeName = AppCore.utils.sanitizeFilename(originalName);
   const storagePath = `${context.agencyId}/${folderId}/${fileId}/${safeName}`;
@@ -260,6 +263,43 @@ async function uploadFile(file, clientVisible, context = state.context, folderId
   return fileId;
 }
 
+async function driveAction(action, payload = {}, agencyId = state.context?.agencyId) {
+  const { data, error } = await db.functions.invoke("google-drive", { body: { action, agency_id: agencyId, ...payload } });
+  if (error || data?.error) throw Object.assign(new Error(data?.error || error?.message || "Google Drive request failed."), { userMessage: true });
+  return data?.data;
+}
+
+let driveConnected = false;
+async function ensureDriveConnection(context = state.context) {
+  if (driveConnected) return;
+  let status = await driveAction("status", {}, context.agencyId);
+  if (!status?.connected) {
+    const connection = await driveAction("connect", {}, context.agencyId);
+    const popup = window.open(connection.authorization_url, "athar-google-drive", "popup,width=620,height=760");
+    if (!popup) throw Object.assign(new Error("Allow popups so Athar can connect Google Drive."), { userMessage: true });
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { cleanup(); reject(new Error("Google Drive connection timed out.")); }, 10 * 60_000);
+      const receive = event => { if (event.source !== popup || event.data?.type !== "athar-google-drive") return; cleanup(); event.data.ok ? resolve() : reject(new Error("Google Drive connection was not completed.")); };
+      const cleanup = () => { clearTimeout(timer); window.removeEventListener("message", receive); };
+      window.addEventListener("message", receive);
+    });
+    status = await driveAction("status", {}, context.agencyId);
+  }
+  if (!status?.connected) throw new Error("Google Drive is not connected.");
+  driveConnected = true;
+}
+
+async function uploadGoogleDriveFile(file, clientVisible, context, folderId, originalName) {
+  await ensureDriveConnection(context);
+  const started = await driveAction("start-upload", { folder_id: folderId, name: file.name, relative_path: originalName, mime_type: file.type || "application/octet-stream", size: file.size }, context.agencyId);
+  const response = await fetch(started.session_url, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
+  if (!response.ok) throw new Error(`Google Drive upload failed (${response.status}).`);
+  const uploaded = await response.json();
+  const record = await driveAction("complete-upload", { folder_id: folderId, record_id: started.record_id, relative_path: started.relative_path, mime_type: file.type || "application/octet-stream", size: file.size, client_visible: clientVisible, file: uploaded }, context.agencyId);
+  emit("data:changed", { entity: "file", entityId: record.id, folderId, action: "created" });
+  return record.id;
+}
+
 export async function uploadFileToFolder(context, folderId, file, clientVisible = false) {
   if (!context?.isStaff) throw new Error("Only workspace members can upload files here.");
   if (!isAllowedFile(file)) throw new Error(file?.size > MAX_UPLOAD_BYTES ? "That file is larger than 25 MiB." : "That file type is not allowed.");
@@ -268,6 +308,11 @@ export async function uploadFileToFolder(context, folderId, file, clientVisible 
 
 async function openFile(file) {
   try {
+    if (file.storage_provider === "google_drive" && file.external_url) {
+      const opened = window.open(file.external_url, "_blank", "noopener,noreferrer");
+      if (!opened) window.location.assign(file.external_url);
+      return;
+    }
     const { data, error } = await db.storage.from("project-files").createSignedUrl(file.storage_path, 60);
     if (error) throw error;
     const opened = window.open(data.signedUrl, "_blank", "noopener,noreferrer");
@@ -281,6 +326,13 @@ async function deleteFile(file) {
   const confirmed = await AppCore.ui.confirm({ title: "Delete file?", message: `Delete ${file.original_name}? This cannot be undone.`, confirmLabel: "Delete", danger: true });
   if (!confirmed) return;
   try {
+    if (file.storage_provider === "google_drive") {
+      await driveAction("delete", { file_id: file.id });
+      emit("data:changed", { entity: "file", entityId: file.id, folderId: state.context.folderId, action: "deleted" });
+      AppCore.ui.toast("File deleted from Google Drive.", "success");
+      await loadAndRender();
+      return;
+    }
     const { error: storageError } = await db.storage.from("project-files").remove([file.storage_path]);
     if (storageError) throw storageError;
     const { error: rowError } = await db.from("files").delete().eq("id", file.id);
