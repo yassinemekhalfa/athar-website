@@ -212,8 +212,10 @@ export function openUploadModal() {
         AppCore.ui.closeModal();
         AppCore.ui.toast(`${succeeded} file${succeeded === 1 ? "" : "s"} uploaded${rejected ? `; ${rejected} unsupported file${rejected === 1 ? " was" : "s were"} skipped` : ""}.`, "success");
       } else {
-        selection.textContent = `${succeeded} uploaded, ${failures.length + rejected} skipped or failed. Select the failed files and try again.`;
-        AppCore.ui.toast(`${succeeded} uploaded. ${failures.length + rejected} could not be uploaded.`, "warning");
+        const firstFailure = failures[0];
+        const reason = firstFailure ? AppCore.ui.describeError(firstFailure.error) : `${rejected} unsupported file${rejected === 1 ? "" : "s"}`;
+        selection.textContent = `${succeeded} uploaded, ${failures.length + rejected} skipped or failed. ${firstFailure ? `${firstFailure.file.name}: ${reason}` : reason}`;
+        AppCore.ui.toast(`${succeeded} uploaded. ${firstFailure ? reason : `${rejected} unsupported file${rejected === 1 ? "" : "s"}.`}`, "warning");
       }
     } catch (error) {
       AppCore.ui.toast(AppCore.ui.describeError(error), "error");
@@ -265,7 +267,11 @@ async function uploadFile(file, clientVisible, context = state.context, folderId
 
 async function driveAction(action, payload = {}, agencyId = state.context?.agencyId) {
   const { data, error } = await db.functions.invoke("google-drive", { body: { action, agency_id: agencyId, ...payload } });
-  if (error || data?.error) throw Object.assign(new Error(data?.error || error?.message || "Google Drive request failed."), { userMessage: true });
+  let message = data?.error || error?.message;
+  if (error?.context && typeof error.context.json === "function") {
+    try { message = (await error.context.json())?.error || message; } catch { /* use the invocation error */ }
+  }
+  if (error || data?.error) throw Object.assign(new Error(message || "Google Drive request failed."), { userMessage: true });
   return data?.data;
 }
 
@@ -292,8 +298,11 @@ async function ensureDriveConnection(context = state.context) {
 async function uploadGoogleDriveFile(file, clientVisible, context, folderId, originalName) {
   await ensureDriveConnection(context);
   const started = await driveAction("start-upload", { folder_id: folderId, name: file.name, relative_path: originalName, mime_type: file.type || "application/octet-stream", size: file.size }, context.agencyId);
-  const response = await fetch(started.session_url, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
-  if (!response.ok) throw new Error(`Google Drive upload failed (${response.status}).`);
+  const response = await fetch(started.session_url, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream", "Content-Range": `bytes 0-${file.size - 1}/${file.size}` }, body: file });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw Object.assign(new Error(`Google Drive upload failed (${response.status})${detail ? `: ${detail.slice(0, 240)}` : "."}`), { userMessage: true });
+  }
   const uploaded = await response.json();
   const record = await driveAction("complete-upload", { folder_id: folderId, record_id: started.record_id, relative_path: started.relative_path, mime_type: file.type || "application/octet-stream", size: file.size, client_visible: clientVisible, file: uploaded }, context.agencyId);
   emit("data:changed", { entity: "file", entityId: record.id, folderId, action: "created" });
