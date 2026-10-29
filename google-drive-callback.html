@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Google Drive connection</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#15151a;color:#f7f5fb}
+    body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;box-sizing:border-box}
+    main{width:min(420px,100%);padding:32px;border:1px solid #393542;border-radius:24px;background:#1d1b23;text-align:center;box-shadow:0 24px 70px #0007}
+    .mark{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 20px;border-radius:50%;background:#752cff;font-size:32px}
+    h1{margin:0 0 10px;font-size:26px}p{margin:0;color:#bdb8c7;line-height:1.6}
+    button{margin-top:24px;padding:12px 24px;border:0;border-radius:999px;background:#752cff;color:white;font:inherit;font-weight:700;cursor:pointer}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" id="mark" aria-hidden="true">✓</div>
+    <h1 id="title">Google Drive connected</h1>
+    <p id="message">You can close this window.</p>
+    <button type="button" id="close">Close window</button>
+  </main>
+  <script>
+    const params=new URLSearchParams(location.search);
+    const ok=params.get('ok')==='1';
+    const error=params.get('error')||'Google Drive could not be connected.';
+    if(!ok){
+      document.getElementById('mark').textContent='!';
+      document.getElementById('title').textContent='Connection failed';
+      document.getElementById('message').textContent=error;
+    }
+    if(window.opener){
+      window.opener.postMessage({type:'athar-google-drive',ok,error:ok?'':error},location.origin);
+      if(ok)setTimeout(()=>window.close(),350);
+    }
+    document.getElementById('close').addEventListener('click',()=>window.close());
+  </script>
+</body>
+</html>
