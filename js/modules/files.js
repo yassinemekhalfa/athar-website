@@ -317,15 +317,48 @@ export async function uploadFileToFolder(context, folderId, file, clientVisible 
 
 async function openFile(file) {
   try {
-    if (file.storage_provider === "google_drive" && file.external_url) {
-      const opened = window.open(file.external_url, "_blank", "noopener,noreferrer");
-      if (!opened) window.location.assign(file.external_url);
-      return;
+    let previewUrl;
+    let externalUrl;
+    if (file.storage_provider === "google_drive" && file.external_file_id) {
+      previewUrl = `https://drive.google.com/file/d/${encodeURIComponent(file.external_file_id)}/preview`;
+      externalUrl = file.external_url || `https://drive.google.com/file/d/${encodeURIComponent(file.external_file_id)}/view`;
+    } else {
+      const { data, error } = await db.storage.from("project-files").createSignedUrl(file.storage_path, 60 * 30);
+      if (error) throw error;
+      previewUrl = externalUrl = data.signedUrl;
     }
-    const { data, error } = await db.storage.from("project-files").createSignedUrl(file.storage_path, 60);
-    if (error) throw error;
-    const opened = window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-    if (!opened) window.location.assign(data.signedUrl);
+    const wrap = el("div", "ap-file-preview");
+    const mime = String(file.mime_type || "");
+    let viewer;
+    if (file.storage_provider === "google_drive") {
+      viewer = el("iframe", "ap-file-preview__frame");
+      viewer.src = previewUrl;
+      viewer.title = `Preview of ${file.original_name || "file"}`;
+      viewer.allow = "autoplay; fullscreen";
+    } else if (mime.startsWith("image/")) {
+      viewer = el("img", "ap-file-preview__media");
+      viewer.alt = file.original_name || "File preview";
+      viewer.src = previewUrl;
+    } else if (mime.startsWith("video/")) {
+      viewer = el("video", "ap-file-preview__media");
+      viewer.src = previewUrl;
+      viewer.controls = true;
+      viewer.playsInline = true;
+    } else if (mime.startsWith("audio/")) {
+      viewer = el("audio", "ap-file-preview__audio");
+      viewer.src = previewUrl;
+      viewer.controls = true;
+    } else {
+      viewer = el("iframe", "ap-file-preview__frame");
+      viewer.src = previewUrl;
+      viewer.title = `Preview of ${file.original_name || "file"}`;
+      viewer.allow = "autoplay; fullscreen";
+    }
+    wrap.append(viewer);
+    const openFull = button(file.storage_provider === "google_drive" ? "Open in Google Drive" : "Open in new tab", "primary");
+    openFull.addEventListener("click", () => window.open(externalUrl, "_blank", "noopener,noreferrer"));
+    AppCore.ui.openModal({ title: file.original_name || "File preview", content: wrap, actions: [openFull] });
+    document.querySelector("#modal-root .ap-modal")?.classList.add("ap-file-preview-modal");
   } catch (error) {
     AppCore.ui.toast(AppCore.ui.describeError(error), "error");
   }
