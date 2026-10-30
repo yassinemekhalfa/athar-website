@@ -1,12 +1,12 @@
 import {createTaskColorControl,applyTaskColor} from '../modules/taskAppearance.js';
-import { renderWorkspaceHome, folderCover } from "./workspaceHome.js";
+import { renderWorkspaceHome, folderCover } from "./workspaceHome.js?v=folder-icons-1";
 import { workspaceIcon } from "./workspaceIcons.js?v=library-reference-5";
 import { db } from "../dataClient.js";
 import { AppCore } from "../core/appCore.js";
 import { selectFolder, loadFolders, createFolder, ensureUnfiledFolder } from "../workspace/folders.js";
 import { openFolderSharing } from "../workspace/folderPermissions.js";
-import { openCreateFolder } from "../workspace/folderTree.js";
-import { openCreateClient } from "../workspace/clients.js?v=client-stability-1";
+import { openCreateFolder } from "../workspace/folderTree.js?v=folder-icons-1";
+import { openCreateClient } from "../workspace/clients.js?v=folder-icons-1";
 import { selectModule } from "../core/moduleRegistry.js";
 import { emit, on } from "../core/events.js";
 import {getState} from '../core/state.js';
@@ -15,7 +15,7 @@ import {canManageRole} from '../core/permissions.js';
 import { uploadFileToFolder } from "../modules/files.js?v=folder-upload-1";
 import { openUploadMenu } from "../workspace/cloudIntegrations.js";
 import { createAccessControl } from "../workspace/accessControl.js";
-import { openWorkspaceItemActions } from "../workspace/itemActions.js";
+import { openWorkspaceItemActions } from "../workspace/itemActions.js?v=folder-icons-1";
 import { hasWorkspaceDrag, moveWorkspaceItem, readWorkspaceDrag, startWorkspaceDrag } from "../workspace/dragDrop.js";
 import { fetchAssignableProfiles, profileLabel } from "../modules/tasks.js";
 
@@ -53,6 +53,17 @@ function el(tag, className = "", text = null) {
   if (className) node.className = className;
   if (text !== null) node.textContent = text;
   return node;
+}
+
+function folderMark(folder, className = "") {
+  if (folder.avatar_url) {
+    const image = el("img", `v-folder-symbol v-folder-symbol--image ${className}`.trim());
+    image.src = folder.avatar_url;
+    image.alt = "";
+    return image;
+  }
+  if (folder.icon_emoji) return el("span", `v-folder-symbol v-folder-symbol--emoji ${className}`.trim(), folder.icon_emoji);
+  return workspaceIcon("folder", `v-folder-symbol ${className}`.trim());
 }
 function btn(label, className = "ap-btn ap-btn--secondary") {
   const node = el("button", className, label);
@@ -365,7 +376,7 @@ export async function renderFolderOverview(container, context, folderId = contex
     if(context.canShare||context.canCreate||context.canUpload){const actions=el("div","ap-invoice-global-actions");if(context.canShare){const share=btn("Share","ap-btn ap-btn--secondary ap-btn--sm");share.addEventListener("click",()=>openFolderSharing(folderId).catch(error=>AppCore.ui.toast(AppCore.ui.describeError(error),"error")));actions.append(share);}if(context.canUpload||context.canCreate){const upload=btn("Upload","ap-btn ap-btn--secondary ap-btn--sm"),picker=folderUploadPicker(folderId,context,upload);upload.addEventListener("click",picker.open);actions.append(upload,picker.fileInput,picker.folderInput);}if(context.canCreate){const create=btn("+ Create","ap-btn ap-btn--primary ap-btn--sm");create.addEventListener("click",()=>openFolderCreateMenu(context,folderId,create));actions.append(create);}heading.append(actions);}
     folderCover(root,folder,heading.querySelector(".ap-invoice-global-actions"));
     const children=AppCore.getFolders().filter(f=>f.parent_id===folderId&&!f.archived_at&&!f.trashed_at);
-    if(children.length){const childList=el("div","v-home-table");for(const child of children){const b=el("div","v-home-row");b.setAttribute("role","button");b.tabIndex=0;b.append(workspaceIcon("folder","v-folder-symbol"),el("span","",child.name));b.style.setProperty("--folder-color",child.color||"#ffbd0a");b.addEventListener("click",event=>{if(!event.target.closest("button"))selectFolder(child.id);});b.addEventListener("keydown",event=>{if(event.target===b&&(event.key==="Enter"||event.key===" ")){event.preventDefault();selectFolder(child.id);}});if(context.canCreate){b.draggable=true;b.addEventListener("dragstart",event=>startWorkspaceDrag(event,{type:"folder",id:child.id}));const menu=btn("","ap-icon-button v-folder-item-menu");menu.append(workspaceIcon("more"));menu.setAttribute("aria-label",`Actions for ${child.name}`);menu.addEventListener("click",event=>{event.stopPropagation();openWorkspaceItemActions(menu,{...child,type:"folder",title:child.name},context,()=>renderFolderOverview(document.getElementById("module-content"),context,folderId));});b.append(menu);}b.style.gridTemplateColumns="28px minmax(0,1fr) 34px";makeFolderDropTarget(b,child.id,context);childList.append(b);}root.append(childList);}
+    if(children.length){const childList=el("div","v-home-table");for(const child of children){const b=el("div","v-home-row");b.setAttribute("role","button");b.tabIndex=0;b.append(folderMark(child),el("span","",child.name));b.style.setProperty("--folder-color",child.color||"#ffbd0a");b.addEventListener("click",event=>{if(!event.target.closest("button"))selectFolder(child.id);});b.addEventListener("keydown",event=>{if(event.target===b&&(event.key==="Enter"||event.key===" ")){event.preventDefault();selectFolder(child.id);}});if(context.canCreate){b.draggable=true;b.addEventListener("dragstart",event=>startWorkspaceDrag(event,{type:"folder",id:child.id}));const menu=btn("","ap-icon-button v-folder-item-menu");menu.append(workspaceIcon("more"));menu.setAttribute("aria-label",`Actions for ${child.name}`);menu.addEventListener("click",event=>{event.stopPropagation();openWorkspaceItemActions(menu,{...child,type:"folder",title:child.name},context,()=>renderFolderOverview(document.getElementById("module-content"),context,folderId));});b.append(menu);}b.style.gridTemplateColumns="28px minmax(0,1fr) 34px";makeFolderDropTarget(b,child.id,context);childList.append(b);}root.append(childList);}
     let filtered=items;const host=el("div");
       const apply=(q,controls)=>{const text=q.trim().toLowerCase();const vis=controls.visibility?.value||"";filtered=items.filter(item=>(!text||`${item.title} ${item.subtitle||""}`.toLowerCase().includes(text))&&matchesVisibility(item,vis));filtered=sortCollection(filtered,controls.sort?.value||"newest");if(!filtered.length){host.replaceChildren();if(!items.length&&!children.length&&!text&&!vis){host.append(buildFolderEmptyState(folderId,context));}else{const empty=el("div","ap-centered-empty");const emptyMessage=text&&vis?"No items match your search and filters.":text?"Try another search.":vis?"No items match this visibility filter.":"This folder is empty.";empty.append(icon("folder"),el("h3","","No matching items"),el("p","",emptyMessage));host.append(empty);}}else renderFolderTable(host,filtered,context);};
     const {bar,search,controls}=buildFilterBar({placeholder:"Search this folder…",visibility:true,onInput:apply});

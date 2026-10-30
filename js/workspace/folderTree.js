@@ -6,7 +6,7 @@ import { getState } from "../core/state.js";
 import { selectFolder, createFolder, updateFolder, archiveFolder, trashFolder, moveFolder, reorderFolderRelative } from "./folders.js";
 import { AppCore } from "../core/appCore.js";
 import { hasWorkspaceDrag, readWorkspaceDrag, startWorkspaceDrag, moveWorkspaceItem } from "./dragDrop.js";
-import { openWorkspaceItemActions } from "./itemActions.js";
+import { openWorkspaceItemActions } from "./itemActions.js?v=folder-icons-1";
 
 const expanded = new Set();
 const initializedSelections = new Set();
@@ -42,7 +42,7 @@ export function renderNode(folder) {
   toggle.setAttribute("aria-label", `${isExpanded ? "Collapse" : "Expand"} ${folder.name}`);
   toggle.setAttribute("aria-expanded", String(isExpanded));
   toggle.addEventListener("click", () => { isExpanded ? expanded.delete(folder.id) : expanded.add(folder.id); renderFolderTree(); });
-  const folderIcon = document.createElement("span"); folderIcon.className = "ap-folder-mini"; if (folder.icon_emoji) { folderIcon.classList.add("ap-folder-mini--emoji"); folderIcon.textContent = folder.icon_emoji; } folderIcon.style.setProperty("--folder-color", folder.color || "#F4B400");
+  const folderIcon = document.createElement("span"); folderIcon.className = "ap-folder-mini"; if (folder.avatar_url) { folderIcon.classList.add("ap-folder-mini--image"); const image=document.createElement("img"); image.src=folder.avatar_url; image.alt=""; folderIcon.append(image); } else if (folder.icon_emoji) { folderIcon.classList.add("ap-folder-mini--emoji"); folderIcon.textContent = folder.icon_emoji; } folderIcon.style.setProperty("--folder-color", folder.color || "#F4B400");
   const label = button(folder.name, "ap-folder-tree__label"); label.addEventListener("click", () => { expanded.add(folder.id); selectFolder(folder.id).then(renderFolderTree); }); row.append(toggle, folderIcon, label);
   if (canCreate(getState().role)) {
     row.draggable = true;

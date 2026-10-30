@@ -22,7 +22,7 @@ import {
 
 import {
   renderFolderTree
-} from "./workspace/folderTree.js";
+} from "./workspace/folderTree.js?v=folder-icons-1";
 
 import {
   renderBreadcrumb,
@@ -50,7 +50,7 @@ import {
   renderInbox,
   renderFolderOverview,
   renderProfileView
-} from "./views/portalViews.js?v=folder-upload-1";
+} from "./views/portalViews.js?v=folder-icons-1";
 
 import {
   workspaceIcon
@@ -876,7 +876,7 @@ async function boot() {
       );
 
     if (!memberships.length) {
-      location.replace("workspace.html"+location.hash);
+      location.replace("index.html"+location.hash);
       return;
     }
 
@@ -893,7 +893,7 @@ async function boot() {
     await loadResources();
 
     if (!isClientRole(getState().role)) {
-      location.replace("workspace.html"+location.hash);
+      location.replace("index.html"+location.hash);
       return;
     }
 

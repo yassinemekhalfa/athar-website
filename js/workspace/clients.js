@@ -9,7 +9,7 @@ import { loadResources, openResource } from "./resources.js";
 import { openWorkspaceActionMenu } from "./actionMenu.js";
 import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js";
 import { openFolderSharing } from "./folderPermissions.js";
-import { openWorkspaceItemActions } from "./itemActions.js";
+import { openWorkspaceItemActions } from "./itemActions.js?v=folder-icons-1";
 
 export async function listClients(){const s=getState();const {data,error}=await db.from("clients").select("*").eq("agency_id",s.agency.id).is("archived_at",null).order("created_at",{ascending:false});if(error)throw error;return data||[];}
 export async function createClientCompany({name,email,notes,title,language='en-US',password}){
@@ -33,6 +33,7 @@ async function openClientWorkspace(client){try{const folder=await ensureClientWo
 
 const expandedClients=new Set();
 function clientMark(client){if(client.avatar_url){const img=el('img','k-client-space-avatar');img.src=client.avatar_url;img.alt='';return img;}return el('span','k-client-space-emoji',client.icon_emoji||'👤');}
+function folderMark(folder){if(folder.avatar_url){const img=el('img','k-client-space-folder-image');img.src=folder.avatar_url;img.alt='';return img;}if(folder.icon_emoji)return el('span','k-client-space-folder-emoji',folder.icon_emoji);return workspaceIcon('folder');}
 export async function renderClientSpaces(){
  const host=document.getElementById('client-space-tree');if(!host)return;host.replaceChildren();
  try{const clients=await listClients();if(!clients.length){host.append(el('p','ap-sidebar-empty','No clients yet.'));return;}
@@ -66,7 +67,7 @@ export async function renderClientSpaces(){
     const list=el('div','k-client-space-children');
     for(const folder of folders.filter(f=>f.parent_id===root.id&&!f.archived_at&&!f.trashed_at)){
      const childRow=el('div','k-client-space-child-row'),item=button('','k-client-space-child');
-     item.append(workspaceIcon('folder'),el('span','',folder.name));
+      item.append(folderMark(folder),el('span','',folder.name));
      item.addEventListener('click',()=>selectFolder(folder.id,{force:true}));
      if(canCreate(getState().role)){item.draggable=true;item.addEventListener('dragstart',event=>startWorkspaceDrag(event,{type:'folder',id:folder.id}));attachWorkspaceDropTarget(item,folder.id,{onDrop:()=>renderClientSpaces()});}
      childRow.append(item);

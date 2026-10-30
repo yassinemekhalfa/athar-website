@@ -123,6 +123,7 @@ function openIconPicker(item, onDone) {
     { name: "file", emoji: "📁" },
     { name: "embed", emoji: "🔗" }
   ];
+  const wrap = el("div", "ap-stack ap-item-icon-editor");
   const grid = el("div", "ap-item-icon-picker");
   for (const { name: iconName, emoji } of choices) {
     const choice = el("button", "ap-item-icon-picker__choice");
@@ -132,7 +133,7 @@ function openIconPicker(item, onDone) {
     choice.append(item.type === "folder" ? document.createTextNode(emoji) : workspaceIcon(iconName));
     choice.addEventListener("click", async () => {
       try {
-        if (item.type === "folder") await updateFolder(item.id, { icon_emoji: emoji });
+        if (item.type === "folder") await updateFolder(item.id, { icon_emoji: emoji, avatar_url: null });
         else {
           const data = await fetchResource(item);
           const customization = { ...(data.customization || {}), icon: iconName, emoji: "" };
@@ -148,7 +149,89 @@ function openIconPicker(item, onDone) {
     });
     grid.append(choice);
   }
-  AppCore.ui.openModal({ title: "Customize Icon", content: grid, actions: [] });
+  wrap.append(grid);
+
+  if (item.type === "folder") {
+    const folder = getState().folders.find(entry => entry.id === item.id) || item;
+    const custom = el("div", "ap-item-icon-custom");
+    custom.append(el("strong", "ap-item-icon-custom__title", "Use your own icon"));
+
+    const preview = el("span", "ap-item-icon-custom__preview");
+    const showPreview = (imageUrl, symbol) => {
+      preview.replaceChildren();
+      if (imageUrl) {
+        const image = el("img");
+        image.src = imageUrl;
+        image.alt = "Folder icon preview";
+        preview.append(image);
+      } else preview.textContent = symbol || "📁";
+    };
+    showPreview(folder.avatar_url, folder.icon_emoji);
+
+    const symbolLabel = el("label", "ap-field");
+    symbolLabel.append(el("span", "ap-field__label", "Emoji or symbol"));
+    const symbol = el("input", "ap-input");
+    symbol.type = "text";
+    symbol.maxLength = 12;
+    symbol.placeholder = "Example: ⭐ or A";
+    symbol.value = folder.icon_emoji || "";
+    symbol.addEventListener("input", () => showPreview(null, symbol.value.trim()));
+    symbolLabel.append(symbol);
+
+    const imageLabel = el("label", "ap-field");
+    imageLabel.append(el("span", "ap-field__label", "Icon image"));
+    const imageInput = el("input", "ap-input");
+    imageInput.type = "file";
+    imageInput.accept = "image/png,image/jpeg,image/webp,image/gif,image/svg+xml";
+    let previewUrl = "";
+    imageInput.addEventListener("change", () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = imageInput.files?.[0] ? URL.createObjectURL(imageInput.files[0]) : "";
+      showPreview(previewUrl || folder.avatar_url, symbol.value.trim());
+    });
+    imageLabel.append(imageInput);
+
+    const fields = el("div", "ap-item-icon-custom__fields");
+    fields.append(symbolLabel, imageLabel);
+    const buttons = el("div", "ap-item-icon-custom__actions");
+    const save = el("button", "ap-btn ap-btn--primary", "Save icon");
+    save.type = "button";
+    save.addEventListener("click", async () => {
+      save.disabled = true;
+      try {
+        const file = imageInput.files?.[0];
+        const patch = file
+          ? { avatar_url: await uploadBrandAsset(file, "folder-icons"), icon_emoji: null }
+          : { avatar_url: null, icon_emoji: symbol.value.trim() || null };
+        await updateFolder(item.id, patch);
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        AppCore.ui.closeModal();
+        await onDone?.();
+      } catch (error) {
+        AppCore.ui.toast(AppCore.ui.describeError(error), "error");
+        save.disabled = false;
+      }
+    });
+    const reset = el("button", "ap-btn ap-btn--secondary", "Use default folder icon");
+    reset.type = "button";
+    reset.addEventListener("click", async () => {
+      reset.disabled = true;
+      try {
+        await updateFolder(item.id, { avatar_url: null, icon_emoji: null });
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        AppCore.ui.closeModal();
+        await onDone?.();
+      } catch (error) {
+        AppCore.ui.toast(AppCore.ui.describeError(error), "error");
+        reset.disabled = false;
+      }
+    });
+    buttons.append(save, reset);
+    custom.append(preview, fields, buttons);
+    wrap.append(custom);
+  }
+
+  AppCore.ui.openModal({ title: "Customize Icon", content: wrap, actions: [] });
 }
 
 export function openFolderCoverSettings(item, onDone) {
@@ -309,7 +392,7 @@ async function duplicateItem(item, onDone) {
 
 async function copyItemLink(item) {
   const path=item.type==='folder'?'#/folder/'+item.id:'#/resource/'+item.type+'/'+item.id;
-  await navigator.clipboard.writeText(new URL('workspace.html'+path,location.href).href);
+  await navigator.clipboard.writeText(new URL('index.html'+path,location.href).href);
   AppCore.ui.toast("Link copied.", "success");
 }
 

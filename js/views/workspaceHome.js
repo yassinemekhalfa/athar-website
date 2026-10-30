@@ -1,10 +1,10 @@
 import { AppCore } from '../core/appCore.js';
 import { getState } from '../core/state.js';
 import { selectFolder, ensureUnfiledFolder } from '../workspace/folders.js';
-import { openCreateFolder } from '../workspace/folderTree.js';
+import { openCreateFolder } from '../workspace/folderTree.js?v=folder-icons-1';
 import { selectModule } from '../core/moduleRegistry.js';
 import { workspaceIcon } from './workspaceIcons.js';
-import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js';
+import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js?v=folder-icons-1';
 import { attachWorkspaceDropTarget, startWorkspaceDrag } from '../workspace/dragDrop.js';
 import { canCreate } from '../core/permissions.js';
 
@@ -47,7 +47,7 @@ function buildFolderCard(folder, allFolders, context, onDone) {
   card.style.setProperty('--folder-color', folder.color || '#f0bd2f');
 
   const tile = el('span', 'ap-folder-card__tile');
-  if (folder.client_id && folder.avatar_url) {
+  if (folder.avatar_url) {
     const image = el('img', 'k-home-folder-client-photo');
     image.src = folder.avatar_url;
     image.alt = `${folder.name} photo`;
