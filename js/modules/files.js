@@ -48,6 +48,7 @@ function isAllowedFile(file, maxBytes = MAX_UPLOAD_BYTES) {
   if (!file || file.size <= 0 || file.size > maxBytes) return false;
   if (BLOCKED_EXTENSIONS.has(extension(file.name))) return false;
   if (BLOCKED_MIME.has(file.type)) return false;
+  if (isSupabaseMode) return true;
   return file.type.startsWith("image/") || file.type.startsWith("text/") || ALLOWED_EXACT_MIME.has(file.type) || file.type.startsWith("application/vnd.openxmlformats-officedocument.");
 }
 
@@ -156,7 +157,7 @@ export function openUploadModal() {
   const fileInput = el("input", "ap-input");
   fileInput.type = "file";
   fileInput.multiple = true;
-  fileInput.accept = "image/*,application/pdf,text/*,application/zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx";
+  fileInput.accept = isSupabaseMode ? "" : "image/*,application/pdf,text/*,application/zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx";
   const chooser = el("label", "ap-field");
   chooser.append(el("span", "ap-field__label", "Choose files"), fileInput, el("span", "ap-field__hint", isSupabaseMode ? "Select one or many files. They will be stored in your connected Google Drive." : "Select one or many files. Each file can be up to 25 MiB."));
   const folderInput = el("input", "ap-input");
@@ -309,10 +310,11 @@ async function uploadGoogleDriveFile(file, clientVisible, context, folderId, ori
   return record.id;
 }
 
-export async function uploadFileToFolder(context, folderId, file, clientVisible = false) {
+export async function uploadFileToFolder(context, folderId, file, clientVisible = false, originalName = file?.webkitRelativePath || file?.name) {
   if (!context?.isStaff) throw new Error("Only workspace members can upload files here.");
-  if (!isAllowedFile(file)) throw new Error(file?.size > MAX_UPLOAD_BYTES ? "That file is larger than 25 MiB." : "That file type is not allowed.");
-  return uploadFile(file, clientVisible, context, folderId);
+  const limit = isSupabaseMode ? MAX_DRIVE_UPLOAD_BYTES : MAX_UPLOAD_BYTES;
+  if (!isAllowedFile(file, limit)) throw new Error(file?.size > limit ? `That file is larger than ${isSupabaseMode ? "the Google Drive upload limit" : "25 MiB"}.` : "That file type is not allowed.");
+  return uploadFile(file, clientVisible, context, folderId, originalName);
 }
 
 async function openFile(file) {

@@ -50,7 +50,7 @@ import {
   renderInbox,
   renderFolderOverview,
   renderProfileView
-} from "./views/portalViews.js?v=client-conversation-1";
+} from "./views/portalViews.js?v=folder-upload-1";
 
 import {
   workspaceIcon

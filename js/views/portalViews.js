@@ -12,7 +12,7 @@ import { emit, on } from "../core/events.js";
 import {getState} from '../core/state.js';
 import {openItemSharing} from '../workspace/itemSharing.js';
 import {canManageRole} from '../core/permissions.js';
-import { uploadFileToFolder } from "../modules/files.js";
+import { uploadFileToFolder } from "../modules/files.js?v=folder-upload-1";
 import { openUploadMenu } from "../workspace/cloudIntegrations.js";
 import { createAccessControl } from "../workspace/accessControl.js";
 import { openWorkspaceItemActions } from "../workspace/itemActions.js";
@@ -283,17 +283,43 @@ function renderFolderTable(host,items,context){
   }host.append(table);
 }
 
-async function uploadDroppedFiles(files,folderId,context){
-  for(const file of files)await uploadFileToFolder(context,folderId,file,false);
-  AppCore.ui.toast(files.length===1?'File uploaded.':`${files.length} files uploaded.`,'success');
+async function uploadDroppedFiles(entries,folderId,context){
+  for(const entry of entries){const file=entry.file||entry,path=entry.path||file.webkitRelativePath||file.name;await uploadFileToFolder(context,folderId,file,false,path);}
+  AppCore.ui.toast(entries.length===1?'File uploaded.':`${entries.length} files uploaded.`,'success');
   await renderFolderOverview(document.getElementById('module-content'),context,context.folderId);
+}
+
+async function filesFromEntry(entry,prefix=''){
+  if(entry.isFile)return new Promise((resolve,reject)=>entry.file(file=>resolve([{file,path:`${prefix}${file.name}`}]),reject));
+  if(!entry.isDirectory)return[];
+  const reader=entry.createReader(),children=[];let batch=[];
+  do{batch=await new Promise((resolve,reject)=>reader.readEntries(resolve,reject));children.push(...batch);}while(batch.length);
+  const nested=await Promise.all(children.map(child=>filesFromEntry(child,`${prefix}${entry.name}/`)));
+  return nested.flat();
+}
+
+async function filesFromDrop(dataTransfer){
+  const entries=[...(dataTransfer.items||[])].map(item=>item.webkitGetAsEntry?.()).filter(Boolean);
+  if(entries.length)return(await Promise.all(entries.map(entry=>filesFromEntry(entry)))).flat();
+  return[...(dataTransfer.files||[])].map(file=>({file,path:file.webkitRelativePath||file.name}));
+}
+const hasExternalFiles=dataTransfer=>Boolean(dataTransfer?.files?.length||[...(dataTransfer?.items||[])].some(item=>item.kind==='file'));
+
+function folderUploadPicker(folderId,context,button){
+  const fileInput=el('input'),folderInput=el('input');
+  for(const input of [fileInput,folderInput]){input.type='file';input.multiple=true;input.hidden=true;}
+  folderInput.setAttribute('webkitdirectory','');folderInput.setAttribute('directory','');
+  const changed=async input=>{const files=[...(input.files||[])];if(!files.length)return;button.disabled=true;try{await uploadDroppedFiles(files,folderId,context);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{button.disabled=false;input.value='';}};
+  fileInput.addEventListener('change',()=>changed(fileInput));folderInput.addEventListener('change',()=>changed(folderInput));
+  const open=()=>openUploadMenu(context,folderId,()=>fileInput.click(),()=>renderFolderOverview(document.getElementById('module-content'),context,folderId),()=>folderInput.click());
+  return{fileInput,folderInput,open};
 }
 
 function makeFolderDropTarget(target,folderId,context){
   if(!context.canCreate&&!context.canUpload)return;
-  target.addEventListener('dragover',event=>{if(hasWorkspaceDrag(event.dataTransfer)||event.dataTransfer.files?.length){event.preventDefault();event.dataTransfer.dropEffect=hasWorkspaceDrag(event.dataTransfer)?'move':'copy';target.classList.add('is-drop-target');}});
+  target.addEventListener('dragover',event=>{if(hasWorkspaceDrag(event.dataTransfer)||hasExternalFiles(event.dataTransfer)){event.preventDefault();event.dataTransfer.dropEffect=hasWorkspaceDrag(event.dataTransfer)?'move':'copy';target.classList.add('is-drop-target');}});
   target.addEventListener('dragleave',event=>{if(!target.contains(event.relatedTarget))target.classList.remove('is-drop-target');});
-  target.addEventListener('drop',async event=>{event.preventDefault();target.classList.remove('is-drop-target');try{const item=readWorkspaceDrag(event.dataTransfer);if(item){await moveWorkspaceItem(item,folderId);await renderFolderOverview(document.getElementById('module-content'),context,context.folderId);}else if(event.dataTransfer.files?.length){await uploadDroppedFiles([...event.dataTransfer.files],folderId,context);}}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}});
+  target.addEventListener('drop',async event=>{event.preventDefault();target.classList.remove('is-drop-target');try{const item=readWorkspaceDrag(event.dataTransfer);if(item){await moveWorkspaceItem(item,folderId);await renderFolderOverview(document.getElementById('module-content'),context,context.folderId);}else if(hasExternalFiles(event.dataTransfer)){await uploadDroppedFiles(await filesFromDrop(event.dataTransfer),folderId,context);}}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}});
 }
 
 function buildFolderEmptyState(folderId,context){
@@ -303,13 +329,11 @@ function buildFolderEmptyState(folderId,context){
   const message=el('p','','Nothing has been added yet');
   const actions=el('div','v-folder-empty__actions');
   const create=btn('+ Create','ap-btn ap-btn--secondary');create.setAttribute('aria-haspopup','dialog');create.addEventListener('click',()=>openFolderCreateMenu(context,folderId,create));
-  const upload=btn('↑ Upload or Drag','ap-btn ap-btn--secondary');upload.addEventListener('click',()=>openUploadMenu(context,folderId,()=>fileInput.click(),()=>renderFolderOverview(document.getElementById('module-content'),context,folderId)));
-  const fileInput=el('input');fileInput.type='file';fileInput.multiple=true;fileInput.hidden=true;fileInput.accept='image/*,application/pdf,text/*,application/zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
-  fileInput.addEventListener('change',async()=>{const files=[...fileInput.files||[]];if(!files.length)return;upload.disabled=true;try{await uploadDroppedFiles(files,folderId,context);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{upload.disabled=false;fileInput.value='';}});
-  actions.append(create,upload);empty.append(icon,title,message,actions,fileInput);
-  empty.addEventListener('dragover',event=>{if(event.dataTransfer.files?.length){event.preventDefault();empty.classList.add('is-drop-target');}});
+  const upload=btn('↑ Upload or Drag','ap-btn ap-btn--secondary'),picker=folderUploadPicker(folderId,context,upload);upload.addEventListener('click',picker.open);
+  actions.append(create,upload);empty.append(icon,title,message,actions,picker.fileInput,picker.folderInput);
+  empty.addEventListener('dragover',event=>{if(hasExternalFiles(event.dataTransfer)){event.preventDefault();empty.classList.add('is-drop-target');}});
   empty.addEventListener('dragleave',event=>{if(!empty.contains(event.relatedTarget))empty.classList.remove('is-drop-target');});
-  empty.addEventListener('drop',async event=>{if(!event.dataTransfer.files?.length)return;event.preventDefault();empty.classList.remove('is-drop-target');upload.disabled=true;try{await uploadDroppedFiles([...event.dataTransfer.files],folderId,context);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{upload.disabled=false;}});
+  empty.addEventListener('drop',async event=>{if(!hasExternalFiles(event.dataTransfer))return;event.preventDefault();empty.classList.remove('is-drop-target');upload.disabled=true;try{await uploadDroppedFiles(await filesFromDrop(event.dataTransfer),folderId,context);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{upload.disabled=false;}});
   return empty;
 }
 
@@ -338,7 +362,7 @@ export async function renderFolderOverview(container, context, folderId = contex
     const heading=el("div","ap-library-heading");
     const headingText=titleBlock(folder.name,`${items.length} item${items.length===1?"":"s"}`);
     heading.append(headingText);
-    if(context.canShare||context.canCreate){const actions=el("div","ap-invoice-global-actions");if(context.canShare){const share=btn("Share","ap-btn ap-btn--secondary ap-btn--sm");share.addEventListener("click",()=>openFolderSharing(folderId).catch(error=>AppCore.ui.toast(AppCore.ui.describeError(error),"error")));actions.append(share);}if(context.canCreate){const create=btn("+ Create","ap-btn ap-btn--primary ap-btn--sm");create.addEventListener("click",()=>openFolderCreateMenu(context,folderId,create));actions.append(create);}heading.append(actions);}
+    if(context.canShare||context.canCreate||context.canUpload){const actions=el("div","ap-invoice-global-actions");if(context.canShare){const share=btn("Share","ap-btn ap-btn--secondary ap-btn--sm");share.addEventListener("click",()=>openFolderSharing(folderId).catch(error=>AppCore.ui.toast(AppCore.ui.describeError(error),"error")));actions.append(share);}if(context.canUpload||context.canCreate){const upload=btn("Upload","ap-btn ap-btn--secondary ap-btn--sm"),picker=folderUploadPicker(folderId,context,upload);upload.addEventListener("click",picker.open);actions.append(upload,picker.fileInput,picker.folderInput);}if(context.canCreate){const create=btn("+ Create","ap-btn ap-btn--primary ap-btn--sm");create.addEventListener("click",()=>openFolderCreateMenu(context,folderId,create));actions.append(create);}heading.append(actions);}
     folderCover(root,folder,heading.querySelector(".ap-invoice-global-actions"));
     const children=AppCore.getFolders().filter(f=>f.parent_id===folderId&&!f.archived_at&&!f.trashed_at);
     if(children.length){const childList=el("div","v-home-table");for(const child of children){const b=el("div","v-home-row");b.setAttribute("role","button");b.tabIndex=0;b.append(workspaceIcon("folder","v-folder-symbol"),el("span","",child.name));b.style.setProperty("--folder-color",child.color||"#ffbd0a");b.addEventListener("click",event=>{if(!event.target.closest("button"))selectFolder(child.id);});b.addEventListener("keydown",event=>{if(event.target===b&&(event.key==="Enter"||event.key===" ")){event.preventDefault();selectFolder(child.id);}});if(context.canCreate){b.draggable=true;b.addEventListener("dragstart",event=>startWorkspaceDrag(event,{type:"folder",id:child.id}));const menu=btn("","ap-icon-button v-folder-item-menu");menu.append(workspaceIcon("more"));menu.setAttribute("aria-label",`Actions for ${child.name}`);menu.addEventListener("click",event=>{event.stopPropagation();openWorkspaceItemActions(menu,{...child,type:"folder",title:child.name},context,()=>renderFolderOverview(document.getElementById("module-content"),context,folderId));});b.append(menu);}b.style.gridTemplateColumns="28px minmax(0,1fr) 34px";makeFolderDropTarget(b,child.id,context);childList.append(b);}root.append(childList);}
@@ -363,7 +387,7 @@ export function openFolderCreateMenu(context,folderId=null,anchorElement=null){
   wrap.append(makeItem({title:"Embed",subtitle:"Add third-party apps",icon:"embed",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openEmbedForm({...context,folderId:id}));}}));
   wrap.append(makeItem({title:"Link",subtitle:"Share external resources",icon:"link",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openLinkForm({...context,folderId:id}));}}));
   wrap.append(createResource("Document","Curate content","document","docs",async()=>{await(await import("../modules/docs.js")).createDocument();}));
-  wrap.append(createResource("File","Upload and share files","file","files",async()=>{(await import("../modules/files.js")).openUploadModal();}));
+  wrap.append(createResource("File","Upload and share files","file","files",async()=>{(await import("../modules/files.js?v=folder-upload-1")).openUploadModal();}));
   wrap.append(makeItem({title:"Proposal or Contract",subtitle:"Prepare offers for clients",icon:"proposal",action:async()=>{AppCore.ui.closeModal();document.dispatchEvent(new CustomEvent("athar:create-proposal",{detail:{folderId}}));}}));
   if(context.isAdmin)wrap.append(makeItem({title:"Client",subtitle:"Invite clients to your workspace",icon:"user",action:async()=>{AppCore.ui.closeModal();openCreateClient();}}));
   const more=document.createElement("details");more.className="ap-create-menu__more";more.open=true;const summary=document.createElement("summary");summary.append(el("span","","More"),workspaceIcon("chevronDown","ap-create-menu__chevron"));const moreContent=el("div","ap-create-menu__more-content");moreContent.append(makeItem({title:"Milestone",subtitle:"Break projects into phases",icon:"milestone",action:async()=>{AppCore.ui.closeModal();await withFolder(async id=>{await selectFolder(id,{skipOverview:true});await selectModule("boards");AppCore.ui.toast("Open a board to manage project milestones.","info");});}}));more.append(summary,moreContent);wrap.append(more);

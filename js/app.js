@@ -15,7 +15,7 @@ import { selectModule, unmountActiveModule, hasActiveModule } from "./core/modul
 import { mountGlobalSearch } from "./modules/search.js";
 import { AppCore } from "./core/appCore.js";
 import { db } from "./dataClient.js";
-import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=client-conversation-1";
+import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=folder-upload-1";
 import { renderSettingsHub } from "./views/kitchenSettings.js?v=member-password-1";
 import { renderProfilePage, changePassword } from "./views/profilePage.js?v=password-library-1";
 import { applyTheme } from "./workspace/preferences.js";
