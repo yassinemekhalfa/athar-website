@@ -1,4 +1,4 @@
-import {openResourceRoute} from './workspace/resourceRoute.js';
+﻿import {openResourceRoute} from './workspace/resourceRoute.js';
 import {renderProfilePage} from './views/profilePage.js?v=password-library-1';
 import {isClientRole,roleBadge} from './core/permissions.js';
 import './core/adaptive.js';
@@ -32,7 +32,7 @@ import {
 import {
   selectModule,
   unmountActiveModule
-} from "./core/moduleRegistry.js";
+} from "./core/moduleRegistry.js?v=file-browser-2";
 
 import {
   mountGlobalSearch
@@ -876,7 +876,7 @@ async function boot() {
       );
 
     if (!memberships.length) {
-      location.replace("index.html"+location.hash);
+      location.replace("workspace.html"+location.hash);
       return;
     }
 
@@ -893,7 +893,7 @@ async function boot() {
     await loadResources();
 
     if (!isClientRole(getState().role)) {
-      location.replace("index.html"+location.hash);
+      location.replace("workspace.html"+location.hash);
       return;
     }
 

@@ -23,7 +23,8 @@ const state = {
   context: null,
   files: [],
   canUpload: false,
-  offEvents: []
+  offEvents: [],
+  filter: ""
 };
 
 function el(tag, className, text) {
@@ -42,6 +43,20 @@ function button(label, variant = "secondary") {
 function extension(name) {
   const dot = String(name || "").lastIndexOf(".");
   return dot >= 0 ? String(name).slice(dot + 1).toLowerCase() : "";
+}
+
+function fileKind(file) {
+  const mime = String(file.mime_type || "");
+  const ext = extension(file.original_name);
+  if (mime === "application/pdf" || ext === "pdf") return { label: "PDF", className: "pdf" };
+  if (mime.startsWith("image/")) return { label: ext || "IMG", className: "image" };
+  if (mime.startsWith("video/")) return { label: ext || "VIDEO", className: "video" };
+  if (mime.startsWith("audio/")) return { label: ext || "AUDIO", className: "audio" };
+  if (/word|document/.test(mime) || ["doc", "docx"].includes(ext)) return { label: "DOC", className: "document" };
+  if (/sheet|excel/.test(mime) || ["xls", "xlsx", "csv"].includes(ext)) return { label: "XLS", className: "sheet" };
+  if (/presentation|powerpoint/.test(mime) || ["ppt", "pptx"].includes(ext)) return { label: "PPT", className: "presentation" };
+  if (mime.includes("zip") || ext === "zip") return { label: "ZIP", className: "archive" };
+  return { label: (ext || "FILE").slice(0, 5).toUpperCase(), className: "generic" };
 }
 
 function isAllowedFile(file, maxBytes = MAX_UPLOAD_BYTES) {
@@ -95,7 +110,7 @@ function render() {
   heading.append(el("h2", "ap-files__title", "Files"), el("p", "ap-files__subtitle", state.context.isClient ? "Files shared with you in this folder." : "Upload and share files for this folder."));
   header.append(heading);
   if (state.canUpload) {
-    const upload = button("Upload file", "primary");
+    const upload = button("Upload files", "primary");
     upload.addEventListener("click", openUploadModal);
     header.append(upload);
   }
@@ -105,7 +120,7 @@ function render() {
     const empty = el("div", "ap-files__empty");
     empty.append(el("h3", "ap-files__empty-title", state.context.isClient ? "No files have been shared with you yet" : "No files yet"));
     if (state.canUpload) {
-      const upload = button("Upload file", "primary");
+      const upload = button("Upload files", "primary");
       upload.addEventListener("click", openUploadModal);
       empty.append(upload);
     }
@@ -114,24 +129,48 @@ function render() {
     return;
   }
 
+  const tools = el("div", "ap-files__tools");
+  const count = el("span", "ap-files__count", `${state.files.length} file${state.files.length === 1 ? "" : "s"}`);
+  const search = el("input", "ap-input ap-files__search");
+  search.type = "search";
+  search.placeholder = "Search files…";
+  search.setAttribute("aria-label", "Search files");
+  search.value = state.filter;
+  tools.append(count, search);
   const list = el("div", "ap-files__list");
-  for (const file of state.files) list.append(renderFile(file));
-  root.append(list);
+  const showFiles = () => {
+    const query = search.value.trim().toLowerCase();
+    state.filter = search.value;
+    const files = state.files.filter(file => !query || String(file.original_name || "").toLowerCase().includes(query));
+    list.replaceChildren(...files.map(renderFile));
+    count.textContent = files.length === state.files.length
+      ? `${state.files.length} file${state.files.length === 1 ? "" : "s"}`
+      : `${files.length} of ${state.files.length} files`;
+    if (!files.length) list.append(el("p", "ap-files__no-results", "No files match your search."));
+  };
+  search.addEventListener("input", showFiles);
+  root.append(tools, list);
+  showFiles();
   state.container.replaceChildren(root);
 }
 
 function renderFile(file) {
   const row = el("article", "ap-file");
   row.dataset.fileId = file.id;
-  const icon = el("div", "ap-file__icon", file.mime_type === "application/pdf" ? "PDF" : (file.mime_type||'').startsWith("image/") ? "IMG" : "FILE");
+  row.tabIndex = 0;
+  row.setAttribute("role", "button");
+  row.setAttribute("aria-label", `Preview ${file.original_name}`);
+  const kind = fileKind(file);
+  const icon = el("div", `ap-file__icon ap-file__icon--${kind.className}`, kind.label);
   const info = el("div", "ap-file__info");
   info.append(el("h3", "ap-file__name", file.original_name));
   const meta = el("div", "ap-file__meta");
   meta.append(el("span", "ap-file__meta-item", AppCore.utils.formatBytes(file.size_bytes)), el("span", "ap-file__meta-item", AppCore.utils.formatDate(file.created_at, "relative")));
+  if (file.storage_provider === "google_drive") meta.append(el("span", "ap-file__meta-item ap-file__provider", "Google Drive"));
   if (file.client_visible && state.context.isStaff) meta.append(el("span", "ap-badge ap-badge--info", "Client visible"));
   info.append(meta);
   const actions = el("div", "ap-file__actions");
-  const open = button("Open", "secondary");
+  const open = button(kind.className === "pdf" ? "Preview PDF" : "Preview", "secondary");
   open.classList.add("ap-btn--sm");
   open.addEventListener("click", () => openFile(file));
   actions.append(open);
@@ -148,6 +187,8 @@ function renderFile(file) {
     remove.addEventListener("click", () => deleteFile(file));
     actions.append(remove);
   }
+  row.addEventListener("click", event => { if (!event.target.closest("button")) openFile(file); });
+  row.addEventListener("keydown", event => { if (event.target === row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); openFile(file); } });
   row.append(icon, info, actions);
   return row;
 }
@@ -331,6 +372,8 @@ async function openFile(file) {
     }
     const wrap = el("div", "ap-file-preview");
     const mime = String(file.mime_type || "");
+    const isPdf = mime === "application/pdf" || extension(file.original_name) === "pdf";
+    const loading = el("div", "ap-file-preview__loading", isPdf ? "Loading PDF…" : "Loading preview…");
     let viewer;
     if (file.storage_provider === "google_drive") {
       viewer = el("iframe", "ap-file-preview__frame");
@@ -352,15 +395,42 @@ async function openFile(file) {
       viewer.controls = true;
     } else {
       viewer = el("iframe", "ap-file-preview__frame");
-      viewer.src = previewUrl;
+      viewer.src = isPdf && !previewUrl.includes("#") ? `${previewUrl}#view=FitH&toolbar=1&navpanes=0` : previewUrl;
       viewer.title = `Preview of ${file.original_name || "file"}`;
       viewer.allow = "autoplay; fullscreen";
     }
-    wrap.append(viewer);
+    viewer.addEventListener?.("load", () => loading.remove(), { once: true });
+    wrap.append(loading, viewer);
     const openFull = button(file.storage_provider === "google_drive" ? "Open in Google Drive" : "Open in new tab", "primary");
     openFull.addEventListener("click", () => window.open(externalUrl, "_blank", "noopener,noreferrer"));
-    AppCore.ui.openModal({ title: file.original_name || "File preview", content: wrap, actions: [openFull] });
-    document.querySelector("#modal-root .ap-modal")?.classList.add("ap-file-preview-modal");
+    const download = button("Download", "secondary");
+    download.addEventListener("click", async () => {
+      try {
+        const downloadUrl = file.storage_provider === "google_drive" && file.external_file_id
+          ? `https://drive.google.com/uc?export=download&id=${encodeURIComponent(file.external_file_id)}`
+          : externalUrl;
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = file.original_name || "download";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.append(link);
+        link.click();
+        link.remove();
+      } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), "error"); }
+    });
+    const fullScreen = button("Full screen", "secondary");
+    AppCore.ui.openModal({ title: file.original_name || "File preview", content: wrap, actions: [download, fullScreen, openFull] });
+    const modal = document.querySelector("#modal-root .ap-modal");
+    modal?.classList.add("ap-file-preview-modal", isPdf ? "ap-file-preview-modal--pdf" : "ap-file-preview-modal--media");
+    fullScreen.addEventListener("click", async () => {
+      if (!modal) return;
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else if (modal.requestFullscreen) await modal.requestFullscreen();
+        else modal.classList.toggle("is-fullscreen");
+      } catch { modal.classList.toggle("is-fullscreen"); }
+    });
   } catch (error) {
     AppCore.ui.toast(AppCore.ui.describeError(error), "error");
   }
@@ -404,6 +474,7 @@ const filesModule = {
     state.context = null;
     state.files = [];
     state.canUpload = false;
+    state.filter = "";
   },
   async refresh(context) {
     state.context = context;

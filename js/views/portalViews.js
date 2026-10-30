@@ -12,7 +12,7 @@ import { emit, on } from "../core/events.js";
 import {getState} from '../core/state.js';
 import {openItemSharing} from '../workspace/itemSharing.js';
 import {canManageRole} from '../core/permissions.js';
-import { uploadFileToFolder } from "../modules/files.js?v=folder-upload-1";
+import { uploadFileToFolder } from "../modules/files.js?v=file-browser-2";
 import { openUploadMenu } from "../workspace/cloudIntegrations.js";
 import { createAccessControl } from "../workspace/accessControl.js";
 import { openWorkspaceItemActions } from "../workspace/itemActions.js?v=folder-icons-1";
@@ -398,7 +398,7 @@ export function openFolderCreateMenu(context,folderId=null,anchorElement=null){
   wrap.append(makeItem({title:"Embed",subtitle:"Add third-party apps",icon:"embed",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openEmbedForm({...context,folderId:id}));}}));
   wrap.append(makeItem({title:"Link",subtitle:"Share external resources",icon:"link",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openLinkForm({...context,folderId:id}));}}));
   wrap.append(createResource("Document","Curate content","document","docs",async()=>{await(await import("../modules/docs.js")).createDocument();}));
-  wrap.append(createResource("File","Upload and share files","file","files",async()=>{(await import("../modules/files.js?v=folder-upload-1")).openUploadModal();}));
+  wrap.append(createResource("File","Upload and share files","file","files",async()=>{(await import("../modules/files.js?v=file-browser-2")).openUploadModal();}));
   wrap.append(makeItem({title:"Proposal or Contract",subtitle:"Prepare offers for clients",icon:"proposal",action:async()=>{AppCore.ui.closeModal();document.dispatchEvent(new CustomEvent("athar:create-proposal",{detail:{folderId}}));}}));
   if(context.isAdmin)wrap.append(makeItem({title:"Client",subtitle:"Invite clients to your workspace",icon:"user",action:async()=>{AppCore.ui.closeModal();openCreateClient();}}));
   const more=document.createElement("details");more.className="ap-create-menu__more";more.open=true;const summary=document.createElement("summary");summary.append(el("span","","More"),workspaceIcon("chevronDown","ap-create-menu__chevron"));const moreContent=el("div","ap-create-menu__more-content");moreContent.append(makeItem({title:"Milestone",subtitle:"Break projects into phases",icon:"milestone",action:async()=>{AppCore.ui.closeModal();await withFolder(async id=>{await selectFolder(id,{skipOverview:true});await selectModule("boards");AppCore.ui.toast("Open a board to manage project milestones.","info");});}}));more.append(summary,moreContent);wrap.append(more);

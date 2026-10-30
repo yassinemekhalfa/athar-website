@@ -7,7 +7,7 @@ const MODULE_LOADERS = {
   conversation:()=>import("../modules/conversation.js?v=client-conversation-1"),
   boards:()=>import("../modules/boards.js?v=subtasks-2"),
   docs:()=>import("../modules/docs.js"),
-  files:()=>import("../modules/files.js"),
+  files:()=>import("../modules/files.js?v=file-browser-2"),
   invoices:()=>import("../modules/invoices.js")
 };
 let activeModule=null;let activeFolderId=null;let navigationVersion=0;

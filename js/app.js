@@ -11,7 +11,7 @@ import { renderFolderTree, openCreateFolder } from "./workspace/folderTree.js?v=
 import { renderBreadcrumb, selectFolder } from "./workspace/folders.js";
 import { openFolderSharing } from "./workspace/folderPermissions.js";
 import { renderClientsView, renderClientSpaces } from "./workspace/clients.js?v=folder-icons-1";
-import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js";
+import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js?v=file-browser-2";
 import { mountGlobalSearch } from "./modules/search.js";
 import { AppCore } from "./core/appCore.js";
 import { db } from "./dataClient.js";
