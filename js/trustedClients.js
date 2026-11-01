@@ -1,5 +1,6 @@
 import {db} from './dataClient.js';
 import {googleDriveImage} from './drive-video.js';
+import {mirrorMediaUrl} from './mediaMirror.js?v=egress-2';
 
 const track=document.getElementById('trusted-client-track');
 const section=document.getElementById('trusted-clients');
@@ -8,7 +9,7 @@ function clientItem(client){
   const content=document.createElement(client.website_url?'a':'span');
   content.className='trusted-client';
   if(client.website_url){content.href=client.website_url;content.target='_blank';content.rel='noopener';}
-  const logo=googleDriveImage(client.logo_url)||client.logo_url;
+  const logo=googleDriveImage(client.logo_url)||mirrorMediaUrl(client.logo_url);
   if(logo){const image=document.createElement('img');image.src=logo;image.alt=client.name;image.loading='lazy';image.decoding='async';image.addEventListener('error',()=>{image.remove();const name=document.createElement('strong');name.textContent=client.name;content.append(name);},{once:true});content.append(image);}
   else{const name=document.createElement('strong');name.textContent=client.name;content.append(name);}
   return content;
