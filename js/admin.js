@@ -79,7 +79,7 @@ async function refreshTrustedClients(){
 }
 async function uploadPublicFile(file){
  if(file.size>25*1024*1024)throw new Error('The file must be 25 MB or smaller.');
- if(isSupabaseMode){const {membership}=await getOwnerContext(),safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'-'),path=`${membership.agency_id}/${globalThis.ATHAR_UUID()}-${safe}`;const {error}=await db.storage.from('website-media').upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});if(error)throw error;const {data}=db.storage.from('website-media').getPublicUrl(path);return{src:data.publicUrl,type:file.type||'application/octet-stream'};}
+ if(isSupabaseMode){const {membership}=await getOwnerContext(),safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'-'),path=`${membership.agency_id}/${globalThis.ATHAR_UUID()}-${safe}`;const {error}=await db.storage.from('website-media').upload(path,file,{contentType:file.type||'application/octet-stream',cacheControl:'31536000',upsert:false});if(error)throw error;const {data}=db.storage.from('website-media').getPublicUrl(path);return{src:data.publicUrl,type:file.type||'application/octet-stream'};}
  return api('/api/website/media',{method:'POST',headers:{'Content-Type':file.type||'application/octet-stream'},body:file});
 }
 function renderTrustedClients(){

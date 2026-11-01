@@ -1,4 +1,5 @@
 import { db } from './dataClient.js';
+import {mirrorMediaUrl} from './mediaMirror.js?v=egress-1';
 
 const photo=document.getElementById('profile-photo');
 const heading=document.getElementById('profile-heading');
@@ -24,7 +25,7 @@ function applyProfile(){
  const lang=document.documentElement.lang==='en'?'en':'ar';
  const localized=(key)=>profile[`${key}_${lang}`]||profile[`${key}_${lang==='en'?'ar':'en'}`]||'';
  const profileName=localized('name'),profileRole=localized('role'),profileBio=localized('bio');
- if(profile.photo_url){photo.src=profile.photo_url;photo.alt=profileName||'Athar';photo.style.width='100%';photo.style.height='100%';photo.style.objectFit='cover';}
+ if(profile.photo_url){photo.src=mirrorMediaUrl(profile.photo_url);photo.alt=profileName||'Athar';photo.style.width='100%';photo.style.height='100%';photo.style.objectFit='cover';}
  heading.hidden=Boolean(profileName);name.textContent=profileName;name.hidden=!profileName;role.textContent=profileRole;role.hidden=!profileRole;if(profileBio)bio.textContent=profileBio;
  let visible=false;
  for(const platform of ['tiktok','facebook','instagram','linkedin']){const link=socials.querySelector(`[data-social="${platform}"]`),url=profile[`${platform}_url`];let safeUrl='';try{const parsed=new URL(url);if(['http:','https:'].includes(parsed.protocol))safeUrl=parsed.href;}catch{}link.hidden=!safeUrl;if(safeUrl){link.href=safeUrl;visible=true;}else link.removeAttribute('href');}

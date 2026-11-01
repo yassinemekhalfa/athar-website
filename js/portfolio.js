@@ -2,6 +2,7 @@ import {getLanguage,translate as t} from './landingI18n.js';
 import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js';
 import {db,isSupabaseMode} from './dataClient.js';
 import {googleDriveDownload} from './drive-video.js?v=20261029-1';
+import {mirrorMediaUrl} from './mediaMirror.js?v=egress-1';
 let portfolioProjects=[];
 
 const grid=document.getElementById('portfolio-grid');
@@ -24,6 +25,7 @@ const cropFor=(project,kind)=>({ratio:'landscape',x:50,y:50,zoom:1,...(project.p
 const cropRatio=value=>value==='portrait'?'4 / 5':value==='square'?'1 / 1':'16 / 10';
 function applyCrop(host,item,crop,{useRatio=true}={}){if(useRatio)host.style.aspectRatio=cropRatio(crop.ratio);item.style.setProperty('--media-x',`${crop.x}%`);item.style.setProperty('--media-y',`${crop.y}%`);item.style.setProperty('--media-zoom',crop.zoom);}
 const videoFrame=project=>{const saved=project.presentation?.video||{};return saved.x!==undefined||saved.y!==undefined||saved.zoom!==undefined?{ratio:'auto'}:{ratio:'auto',...saved};};
+const mirrorProjectMedia=project=>({...project,cover:mirrorMediaUrl(project.cover),images:(project.images||[]).map(mirrorMediaUrl),video:project.video?{...project.video,src:project.video.type==='video/google-drive'?project.video.src:mirrorMediaUrl(project.video.src),poster:mirrorMediaUrl(project.video.poster)}:project.video});
 function frameAspect(frame){if(frame.ratio==='auto'&&Number(frame.aspect)>0)return Number(frame.aspect);return{vertical:9/16,portrait:4/5,square:1,standard:4/3,landscape:16/9}[frame.ratio]||16/9;}
 function applyVideoFrame(host,project){const aspect=frameAspect(videoFrame(project));host.style.aspectRatio=String(aspect);host.style.setProperty('--video-ratio',String(aspect));}
 function projectVideo(project,{autoplay=false}={}){
@@ -149,7 +151,7 @@ function renderLoadState(){
 }
 async function loadProjects(){
  loaded=false;loadError=false;refresh();
- try{let data;if(conceptMode){data=(await import('./portfolioProjects.js')).portfolioProjects;}else if(isSupabaseMode){const {data:rows,error}=await db.from('website_projects').select('published').not('published','is',null).order('published_at',{ascending:false});if(error)throw error;data=(rows||[]).map(row=>row.published);}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');if(!data.length)data=(await import('./portfolioProjects.js')).portfolioProjects;portfolioProjects=data.map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
+ try{let data;if(conceptMode){data=(await import('./portfolioProjects.js')).portfolioProjects;}else if(isSupabaseMode){const {data:rows,error}=await db.from('website_projects').select('published').not('published','is',null).order('published_at',{ascending:false});if(error)throw error;data=(rows||[]).map(row=>row.published);}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');if(!data.length)data=(await import('./portfolioProjects.js')).portfolioProjects;portfolioProjects=data.map(mirrorProjectMedia).map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
 if(dialog){const requested=new URL(location.href).searchParams.get('project');const project=portfolioProjects.find(item=>item.id===requested);if(project)openProject(project,{updateUrl:false});else if(requested){const notice=element('p','project-disclaimer',`${t('مشروع غير موجود')}. ${t('يمكنك استكشاف المشاريع الأخرى في المعرض.')}`);grid.before(notice);}}
 
  }catch{loaded=false;loadError=true;renderLoadState();}

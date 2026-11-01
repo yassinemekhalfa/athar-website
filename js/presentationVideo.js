@@ -1,5 +1,6 @@
 import {db} from './dataClient.js';
 import {googleDriveDownload} from './drive-video.js?v=20261029-1';
+import {mirrorMediaUrl} from './mediaMirror.js?v=egress-1';
 
 const host=document.getElementById('hero-showreel');
 const media=document.getElementById('hero-showreel-media');
@@ -7,7 +8,7 @@ if(host&&media){
   const {data}=await db.from('website_settings').select('presentation_video_url,presentation_video_type').eq('presentation_video_published',true).limit(1).maybeSingle();
   if(data?.presentation_video_url){
     {
-      const driveVideo=data.presentation_video_type==='video/google-drive',video=document.createElement('video');video.src=driveVideo?googleDriveDownload(data.presentation_video_url):data.presentation_video_url;video.playsInline=true;video.preload='auto';video.autoplay=true;video.muted=true;video.loop=true;video.setAttribute('muted','');video.setAttribute('autoplay','');
+      const driveVideo=data.presentation_video_type==='video/google-drive',video=document.createElement('video');video.src=driveVideo?googleDriveDownload(data.presentation_video_url):mirrorMediaUrl(data.presentation_video_url);video.playsInline=true;video.preload='metadata';video.autoplay=true;video.muted=true;video.loop=true;video.setAttribute('muted','');video.setAttribute('autoplay','');
       const controls=document.createElement('div');controls.className='hero-video-controls';
       const control=(label,icon)=>{const button=document.createElement('button');button.type='button';button.className='hero-video-button';button.setAttribute('aria-label',label);button.innerHTML=icon;return button;};
       const playIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7 8 5-8 5Z"/></svg>',pauseIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7v10M15 7v10"/></svg>';
