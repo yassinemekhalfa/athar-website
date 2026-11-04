@@ -1,14 +1,14 @@
-import { getState, setState } from "./state.js?v=20261104-9";
-import { emit } from "./events.js?v=20261104-9";
-import { AppCore } from "./appCore.js?v=20261104-9";
+import { getState, setState } from "./state.js?v=20261104-10";
+import { emit } from "./events.js?v=20261104-10";
+import { AppCore } from "./appCore.js?v=20261104-10";
 
 const MODULE_LOADERS = {
-  embeds:()=>import("../modules/embeds.js?v=20261104-9"),
-  conversation:()=>import("../modules/conversation.js?v=20261104-9"),
-  boards:()=>import("../modules/boards.js?v=20261104-9"),
-  docs:()=>import("../modules/docs.js?v=20261104-9"),
-  files:()=>import("../modules/files.js?v=20261104-9"),
-  invoices:()=>import("../modules/invoices.js?v=20261104-9")
+  embeds:()=>import("../modules/embeds.js?v=20261104-10"),
+  conversation:()=>import("../modules/conversation.js?v=20261104-10"),
+  boards:()=>import("../modules/boards.js?v=20261104-10"),
+  docs:()=>import("../modules/docs.js?v=20261104-10"),
+  files:()=>import("../modules/files.js?v=20261104-10"),
+  invoices:()=>import("../modules/invoices.js?v=20261104-10")
 };
 let activeModule=null;let activeFolderId=null;let navigationVersion=0;
 export const MODULE_NAMES=Object.freeze(Object.keys(MODULE_LOADERS));
