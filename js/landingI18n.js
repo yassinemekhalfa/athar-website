@@ -1,6 +1,6 @@
-import { englishCopy } from './landingTranslations.js';
-import { portfolioCopy } from './portfolioCopy.js';
-import './publicTheme.js';
+import { englishCopy } from './landingTranslations.js?v=20261104-1';
+import { portfolioCopy } from './portfolioCopy.js?v=20261104-1';
+import './publicTheme.js?v=20261104-1';
 const copy={...englishCopy,...portfolioCopy};
 
 const preferenceKey='athar.landing.language';

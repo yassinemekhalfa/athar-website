@@ -1,6 +1,6 @@
-import {db} from '../dataClient.js';
-import {selectFolder} from './folders.js';
-import {selectModule} from '../core/moduleRegistry.js';
+import {db} from '../dataClient.js?v=20261104-1';
+import {selectFolder} from './folders.js?v=20261104-1';
+import {selectModule} from '../core/moduleRegistry.js?v=20261104-1';
 
 export async function openResourceRoute(hash){
   const match=hash.match(/^#\/resource\/(board|conversation|doc|embed|file)\/([0-9a-f-]+)$/i);

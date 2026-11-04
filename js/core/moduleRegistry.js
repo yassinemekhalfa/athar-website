@@ -1,6 +1,6 @@
-import { getState, setState } from "./state.js";
-import { emit } from "./events.js";
-import { AppCore } from "./appCore.js";
+import { getState, setState } from "./state.js?v=20261104-1";
+import { emit } from "./events.js?v=20261104-1";
+import { AppCore } from "./appCore.js?v=20261104-1";
 
 const MODULE_LOADERS = {
   embeds:()=>import("../modules/embeds.js?v=home-create-1"),

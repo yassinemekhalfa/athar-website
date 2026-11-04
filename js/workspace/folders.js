@@ -1,6 +1,6 @@
-import { db } from "../dataClient.js";
-import { getState, setState } from "../core/state.js";
-import { emit } from "../core/events.js";
+import { db } from "../dataClient.js?v=20261104-1";
+import { getState, setState } from "../core/state.js?v=20261104-1";
+import { emit } from "../core/events.js?v=20261104-1";
 
 export async function loadFolders() {
   const s = getState();

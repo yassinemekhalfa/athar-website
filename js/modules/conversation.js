@@ -1,14 +1,14 @@
-import {roleBadge} from '../core/permissions.js';
-import {db} from '../dataClient.js';
-import { AppCore } from "../core/appCore.js";
-import { on, emit } from "../core/events.js";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js";
-import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js";
-import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js";
-import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js";
-import { workspaceIcon } from "../views/workspaceIcons.js";
-import { createAccessControl } from "../workspace/accessControl.js";
-import { openItemSharing } from "../workspace/itemSharing.js";
+import {roleBadge} from '../core/permissions.js?v=20261104-1';
+import {db} from '../dataClient.js?v=20261104-1';
+import { AppCore } from "../core/appCore.js?v=20261104-1";
+import { on, emit } from "../core/events.js?v=20261104-1";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261104-1";
+import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261104-1";
+import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261104-1";
+import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261104-1";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-1";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261104-1";
+import { openItemSharing } from "../workspace/itemSharing.js?v=20261104-1";
 
 const state = { container:null, context:null, conversations:[], activeId:null, messages:[], off:[], replyTo:null, timer:null,tab:"messages",filter:"all",customizing:false,iconPicker:false,actionMenu:false,requestVersion:0,sending:false };
 const drafts=new Map();

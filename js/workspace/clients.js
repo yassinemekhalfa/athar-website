@@ -1,15 +1,15 @@
-import {canCreate,canManageRole} from '../core/permissions.js';
-import { db } from "../dataClient.js";
-import { getState } from "../core/state.js";
-import { AppCore } from "../core/appCore.js";
-import { inviteMember } from "../auth/invitations.js?v=emailjs-2";
-import { workspaceIcon } from "../views/workspaceIcons.js";
-import { loadFolders, selectFolder, moveFolder } from "./folders.js";
-import { loadResources, openResource } from "./resources.js";
-import { openWorkspaceActionMenu } from "./actionMenu.js";
-import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js";
-import { openFolderSharing } from "./folderPermissions.js";
-import { openWorkspaceItemActions } from "./itemActions.js?v=folder-icons-1";
+import {canCreate,canManageRole} from '../core/permissions.js?v=20261104-1';
+import { db } from "../dataClient.js?v=20261104-1";
+import { getState } from "../core/state.js?v=20261104-1";
+import { AppCore } from "../core/appCore.js?v=20261104-1";
+import { inviteMember } from "../auth/invitations.js?v=20261104-1";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-1";
+import { loadFolders, selectFolder, moveFolder } from "./folders.js?v=20261104-1";
+import { loadResources, openResource } from "./resources.js?v=20261104-1";
+import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261104-1";
+import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js?v=20261104-1";
+import { openFolderSharing } from "./folderPermissions.js?v=20261104-1";
+import { openWorkspaceItemActions } from "./itemActions.js?v=20261104-1";
 
 export async function listClients(){const s=getState();const {data,error}=await db.from("clients").select("*").eq("agency_id",s.agency.id).is("archived_at",null).order("created_at",{ascending:false});if(error)throw error;return data||[];}
 export async function createClientCompany({name,email,notes,title,language='en-US',password}){

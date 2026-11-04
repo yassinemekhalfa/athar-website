@@ -1,12 +1,12 @@
-import { AppCore } from '../core/appCore.js';
-import { getState } from '../core/state.js';
-import { selectFolder, ensureUnfiledFolder } from '../workspace/folders.js';
-import { openCreateFolder } from '../workspace/folderTree.js?v=folder-icons-1';
-import { selectModule } from '../core/moduleRegistry.js';
-import { workspaceIcon } from './workspaceIcons.js';
-import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js?v=folder-icons-1';
-import { attachWorkspaceDropTarget, startWorkspaceDrag } from '../workspace/dragDrop.js';
-import { canCreate } from '../core/permissions.js';
+import { AppCore } from '../core/appCore.js?v=20261104-1';
+import { getState } from '../core/state.js?v=20261104-1';
+import { selectFolder, ensureUnfiledFolder } from '../workspace/folders.js?v=20261104-1';
+import { openCreateFolder } from '../workspace/folderTree.js?v=20261104-1';
+import { selectModule } from '../core/moduleRegistry.js?v=20261104-1';
+import { workspaceIcon } from './workspaceIcons.js?v=20261104-1';
+import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js?v=20261104-1';
+import { attachWorkspaceDropTarget, startWorkspaceDrag } from '../workspace/dragDrop.js?v=20261104-1';
+import { canCreate } from '../core/permissions.js?v=20261104-1';
 
 function el(tag, cls = '', text = null) {
   const node = document.createElement(tag);

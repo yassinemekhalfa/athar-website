@@ -1,10 +1,10 @@
-import {isStaffRole,isClientRole,canManageRole,hasCapability,normalizeRole} from './permissions.js';
-import { db } from "../dataClient.js";
-import { getState, subscribe } from "./state.js";
-import * as ui from "./ui.js?v=invite-email-4";
-import * as utils from "./utils.js";
-import { selectFolder as selectFolderImpl } from "../workspace/folders.js";
-import { selectModule as selectModuleImpl } from "./moduleRegistry.js";
+import {isStaffRole,isClientRole,canManageRole,hasCapability,normalizeRole} from './permissions.js?v=20261104-1';
+import { db } from "../dataClient.js?v=20261104-1";
+import { getState, subscribe } from "./state.js?v=20261104-1";
+import * as ui from "./ui.js?v=20261104-1";
+import * as utils from "./utils.js?v=20261104-1";
+import { selectFolder as selectFolderImpl } from "../workspace/folders.js?v=20261104-1";
+import { selectModule as selectModuleImpl } from "./moduleRegistry.js?v=20261104-1";
 
 export const AppCore = {
   db,

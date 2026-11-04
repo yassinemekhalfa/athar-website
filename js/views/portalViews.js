@@ -1,23 +1,23 @@
-import {createTaskColorControl,applyTaskColor} from '../modules/taskAppearance.js';
-import { renderWorkspaceHome, folderCover } from "./workspaceHome.js?v=folder-icons-1";
-import { workspaceIcon } from "./workspaceIcons.js?v=library-reference-5";
-import { db } from "../dataClient.js";
-import { AppCore } from "../core/appCore.js";
-import { selectFolder, loadFolders, createFolder, ensureUnfiledFolder } from "../workspace/folders.js";
-import { openFolderSharing } from "../workspace/folderPermissions.js";
-import { openCreateFolder } from "../workspace/folderTree.js?v=folder-icons-1";
-import { openCreateClient } from "../workspace/clients.js?v=folder-icons-1";
-import { selectModule } from "../core/moduleRegistry.js";
-import { emit, on } from "../core/events.js";
-import {getState} from '../core/state.js';
-import {openItemSharing} from '../workspace/itemSharing.js';
-import {canManageRole} from '../core/permissions.js';
-import { uploadFileToFolder } from "../modules/files.js?v=file-browser-2";
-import { openUploadMenu } from "../workspace/cloudIntegrations.js";
-import { createAccessControl } from "../workspace/accessControl.js";
-import { openWorkspaceItemActions } from "../workspace/itemActions.js?v=folder-icons-1";
-import { hasWorkspaceDrag, moveWorkspaceItem, readWorkspaceDrag, startWorkspaceDrag } from "../workspace/dragDrop.js";
-import { fetchAssignableProfiles, profileLabel } from "../modules/tasks.js";
+import {createTaskColorControl,applyTaskColor} from '../modules/taskAppearance.js?v=20261104-1';
+import { renderWorkspaceHome, folderCover } from "./workspaceHome.js?v=20261104-1";
+import { workspaceIcon } from "./workspaceIcons.js?v=20261104-1";
+import { db } from "../dataClient.js?v=20261104-1";
+import { AppCore } from "../core/appCore.js?v=20261104-1";
+import { selectFolder, loadFolders, createFolder, ensureUnfiledFolder } from "../workspace/folders.js?v=20261104-1";
+import { openFolderSharing } from "../workspace/folderPermissions.js?v=20261104-1";
+import { openCreateFolder } from "../workspace/folderTree.js?v=20261104-1";
+import { openCreateClient } from "../workspace/clients.js?v=20261104-1";
+import { selectModule } from "../core/moduleRegistry.js?v=20261104-1";
+import { emit, on } from "../core/events.js?v=20261104-1";
+import {getState} from '../core/state.js?v=20261104-1';
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-1';
+import {canManageRole} from '../core/permissions.js?v=20261104-1';
+import { uploadFileToFolder } from "../modules/files.js?v=20261104-1";
+import { openUploadMenu } from "../workspace/cloudIntegrations.js?v=20261104-1";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261104-1";
+import { openWorkspaceItemActions } from "../workspace/itemActions.js?v=20261104-1";
+import { hasWorkspaceDrag, moveWorkspaceItem, readWorkspaceDrag, startWorkspaceDrag } from "../workspace/dragDrop.js?v=20261104-1";
+import { fetchAssignableProfiles, profileLabel } from "../modules/tasks.js?v=20261104-1";
 
 const TYPE_META = {
   folder: { label: "Folder", module: "conversation", icon: "folder" },

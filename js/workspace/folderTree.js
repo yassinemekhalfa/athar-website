@@ -1,12 +1,12 @@
-import {canCreate} from '../core/permissions.js';
-import { openResource } from "./resources.js";
-import { workspaceIcon } from "../views/workspaceIcons.js";
-import { createAccessControl } from "./accessControl.js";
-import { getState } from "../core/state.js";
-import { selectFolder, createFolder, updateFolder, archiveFolder, trashFolder, moveFolder, reorderFolderRelative } from "./folders.js";
-import { AppCore } from "../core/appCore.js";
-import { hasWorkspaceDrag, readWorkspaceDrag, startWorkspaceDrag, moveWorkspaceItem } from "./dragDrop.js";
-import { openWorkspaceItemActions } from "./itemActions.js?v=folder-icons-1";
+import {canCreate} from '../core/permissions.js?v=20261104-1';
+import { openResource } from "./resources.js?v=20261104-1";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-1";
+import { createAccessControl } from "./accessControl.js?v=20261104-1";
+import { getState } from "../core/state.js?v=20261104-1";
+import { selectFolder, createFolder, updateFolder, archiveFolder, trashFolder, moveFolder, reorderFolderRelative } from "./folders.js?v=20261104-1";
+import { AppCore } from "../core/appCore.js?v=20261104-1";
+import { hasWorkspaceDrag, readWorkspaceDrag, startWorkspaceDrag, moveWorkspaceItem } from "./dragDrop.js?v=20261104-1";
+import { openWorkspaceItemActions } from "./itemActions.js?v=20261104-1";
 
 const expanded = new Set();
 const initializedSelections = new Set();
