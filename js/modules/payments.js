@@ -1,5 +1,5 @@
-import { db } from "../dataClient.js?v=20261104-3";
-import { AppCore } from "../core/appCore.js?v=20261104-3";
+import { db } from "../dataClient.js?v=20261104-4";
+import { AppCore } from "../core/appCore.js?v=20261104-4";
 
 async function functionMessage(error, data) {
   if (typeof data?.error === "string" && data.error.trim()) return data.error.trim();

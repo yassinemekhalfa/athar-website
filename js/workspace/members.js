@@ -1,8 +1,8 @@
-import {db} from '../dataClient.js?v=20261104-3';
-import {getState} from '../core/state.js?v=20261104-3';
-import {AppCore} from '../core/appCore.js?v=20261104-3';
-import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261104-3';
-import {ROLES,ALL_CAPABILITIES,CAPABILITY_LABELS,normalizeRole,roleLabel,roleDescription,roleCapabilities,roleBadge,canAdministerMembers} from '../core/permissions.js?v=20261104-3';
+import {db} from '../dataClient.js?v=20261104-4';
+import {getState} from '../core/state.js?v=20261104-4';
+import {AppCore} from '../core/appCore.js?v=20261104-4';
+import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261104-4';
+import {ROLES,ALL_CAPABILITIES,CAPABILITY_LABELS,normalizeRole,roleLabel,roleDescription,roleCapabilities,roleBadge,canAdministerMembers} from '../core/permissions.js?v=20261104-4';
 const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const button=(text,fn)=>{const b=el('button','ap-btn ap-btn--secondary',text);b.type='button';b.addEventListener('click',fn);return b;};
 function openPermissionEditor(member,profile,done){

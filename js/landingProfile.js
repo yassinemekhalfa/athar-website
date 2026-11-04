@@ -1,5 +1,5 @@
-import { db } from './dataClient.js?v=20261104-3';
-import {mirrorMediaUrl} from './mediaMirror.js?v=20261104-3';
+import { db } from './dataClient.js?v=20261104-4';
+import {mirrorMediaUrl} from './mediaMirror.js?v=20261104-4';
 
 const photo=document.getElementById('profile-photo');
 const heading=document.getElementById('profile-heading');
