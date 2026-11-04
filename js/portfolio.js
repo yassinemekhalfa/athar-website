@@ -1,8 +1,8 @@
-import {getLanguage,translate as t} from './landingI18n.js?v=20261104-10';
-import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js?v=20261104-10';
-import {db,isSupabaseMode} from './dataClient.js?v=20261104-10';
-import {googleDriveDownload} from './drive-video.js?v=20261104-10';
-import {mirrorMediaUrl} from './mediaMirror.js?v=20261104-10';
+import {getLanguage,translate as t} from './landingI18n.js?v=20261104-11';
+import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js?v=20261104-11';
+import {db,isSupabaseMode} from './dataClient.js?v=20261104-11';
+import {googleDriveDownload} from './drive-video.js?v=20261104-11';
+import {mirrorMediaUrl} from './mediaMirror.js?v=20261104-11';
 let portfolioProjects=[];
 
 const grid=document.getElementById('portfolio-grid');
@@ -151,7 +151,7 @@ function renderLoadState(){
 }
 async function loadProjects(){
  loaded=false;loadError=false;refresh();
- try{let data;if(conceptMode){data=(await import('./portfolioProjects.js?v=20261104-10')).portfolioProjects;}else if(isSupabaseMode){const {data:rows,error}=await db.from('website_projects').select('published').not('published','is',null).order('published_at',{ascending:false});if(error)throw error;data=(rows||[]).map(row=>row.published);}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');if(!data.length)data=(await import('./portfolioProjects.js?v=20261104-10')).portfolioProjects;portfolioProjects=data.map(mirrorProjectMedia).map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
+ try{let data;if(conceptMode){data=(await import('./portfolioProjects.js?v=20261104-11')).portfolioProjects;}else if(isSupabaseMode){const {data:rows,error}=await db.from('website_projects').select('published').not('published','is',null).order('published_at',{ascending:false});if(error)throw error;data=(rows||[]).map(row=>row.published);}else{const response=await fetch(new URL('/api/website/projects',portalOrigin),{credentials:'omit'});if(!response.ok)throw new Error('Projects unavailable');const result=await response.json();data=result.data;}if(!Array.isArray(data))throw new Error('Invalid project response');if(!data.length)data=(await import('./portfolioProjects.js?v=20261104-11')).portfolioProjects;portfolioProjects=data.map(mirrorProjectMedia).map(publishedProject);loaded=true;(grid||preview)?.setAttribute('aria-busy','false');refresh();
 if(dialog){const requested=new URL(location.href).searchParams.get('project');const project=portfolioProjects.find(item=>item.id===requested);if(project)openProject(project,{updateUrl:false});else if(requested){const notice=element('p','project-disclaimer',`${t('مشروع غير موجود')}. ${t('يمكنك استكشاف المشاريع الأخرى في المعرض.')}`);grid.before(notice);}}
 
  }catch{loaded=false;loadError=true;renderLoadState();}

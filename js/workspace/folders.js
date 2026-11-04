@@ -1,6 +1,6 @@
-import { db } from "../dataClient.js?v=20261104-10";
-import { getState, setState } from "../core/state.js?v=20261104-10";
-import { emit } from "../core/events.js?v=20261104-10";
+import { db } from "../dataClient.js?v=20261104-11";
+import { getState, setState } from "../core/state.js?v=20261104-11";
+import { emit } from "../core/events.js?v=20261104-11";
 
 export async function loadFolders() {
   const s = getState();
@@ -22,7 +22,7 @@ export async function selectFolder(folderId, options = {}) {
   emit("folder:selected", { folderId, agencyId: s.agency?.id || null, skipOverview: Boolean(options.skipOverview) });
   const current = getState().selectedModule;
   if (current && options.skipOverview && options.refreshModule !== false) {
-    const { refreshActiveModule } = await import("../core/moduleRegistry.js?v=20261104-10");
+    const { refreshActiveModule } = await import("../core/moduleRegistry.js?v=20261104-11");
     await refreshActiveModule();
   }
   renderBreadcrumb();

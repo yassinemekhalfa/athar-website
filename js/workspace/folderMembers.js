@@ -1,5 +1,5 @@
-import {AppCore} from '../core/appCore.js?v=20261104-10';
-import {openItemSharing} from './itemSharing.js?v=20261104-10';
+import {AppCore} from '../core/appCore.js?v=20261104-11';
+import {openItemSharing} from './itemSharing.js?v=20261104-11';
 
 export async function openFolderSharing(folderId){
   if(!folderId)return AppCore.ui.toast('Select a folder to manage access.','warning');

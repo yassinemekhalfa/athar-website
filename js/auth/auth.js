@@ -1,8 +1,8 @@
-import { db,isSupabaseMode } from "../dataClient.js?v=20261104-10";
-import { getState, setState, resetState } from "../core/state.js?v=20261104-10";
-import { emit } from "../core/events.js?v=20261104-10";
-import { unsubscribeAll } from "../core/realtime.js?v=20261104-10";
-import { unmountActiveModule } from "../core/moduleRegistry.js?v=20261104-10";
+import { db,isSupabaseMode } from "../dataClient.js?v=20261104-11";
+import { getState, setState, resetState } from "../core/state.js?v=20261104-11";
+import { emit } from "../core/events.js?v=20261104-11";
+import { unsubscribeAll } from "../core/realtime.js?v=20261104-11";
+import { unmountActiveModule } from "../core/moduleRegistry.js?v=20261104-11";
 
 let authSubscription = null;
 export async function restoreAuth(surface = null) {

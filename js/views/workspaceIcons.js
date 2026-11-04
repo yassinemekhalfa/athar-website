@@ -1,4 +1,4 @@
-import { referenceIconPaths } from "./referenceIconPaths.js?v=20261104-10";
+import { referenceIconPaths } from "./referenceIconPaths.js?v=20261104-11";
 
 const icons = {
   cover: `<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 8h18"/>`,

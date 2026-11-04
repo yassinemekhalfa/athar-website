@@ -1,9 +1,9 @@
-import {workspaceIcon} from '../views/workspaceIcons.js?v=20261104-10';
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-10';
-import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261104-10';
-import {openEmbedForm} from '../views/portalViews.js?v=20261104-10';
-import {db} from '../dataClient.js?v=20261104-10';
-import {AppCore} from '../core/appCore.js?v=20261104-10';
+import {workspaceIcon} from '../views/workspaceIcons.js?v=20261104-11';
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-11';
+import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261104-11';
+import {openEmbedForm} from '../views/portalViews.js?v=20261104-11';
+import {db} from '../dataClient.js?v=20261104-11';
+import {AppCore} from '../core/appCore.js?v=20261104-11';
 export function embedURL(value){
  const u=new URL(value);if(!['https:','http:'].includes(u.protocol))throw new Error('Use an HTTP or HTTPS URL.');
  if(u.hostname==='youtu.be')return `https://www.youtube.com/embed/${encodeURIComponent(u.pathname.slice(1))}`;

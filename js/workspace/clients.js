@@ -1,16 +1,16 @@
-import {canCreate,canManageRole} from '../core/permissions.js?v=20261104-10';
-import { db } from "../dataClient.js?v=20261104-10";
-import { getState } from "../core/state.js?v=20261104-10";
-import { AppCore } from "../core/appCore.js?v=20261104-10";
-import { inviteMember } from "../auth/invitations.js?v=20261104-10";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-10";
-import { loadFolders, selectFolder, moveFolder } from "./folders.js?v=20261104-10";
-import { loadResources, openResource } from "./resources.js?v=20261104-10";
-import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261104-10";
-import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js?v=20261104-10";
-import { openFolderSharing } from "./folderPermissions.js?v=20261104-10";
-import { openWorkspaceItemActions } from "./itemActions.js?v=20261104-10";
-import { openManagedPassword } from "./accountPasswords.js?v=20261104-10";
+import {canCreate,canManageRole} from '../core/permissions.js?v=20261104-11';
+import { db } from "../dataClient.js?v=20261104-11";
+import { getState } from "../core/state.js?v=20261104-11";
+import { AppCore } from "../core/appCore.js?v=20261104-11";
+import { inviteMember } from "../auth/invitations.js?v=20261104-11";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-11";
+import { loadFolders, selectFolder, moveFolder } from "./folders.js?v=20261104-11";
+import { loadResources, openResource } from "./resources.js?v=20261104-11";
+import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261104-11";
+import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js?v=20261104-11";
+import { openFolderSharing } from "./folderPermissions.js?v=20261104-11";
+import { openWorkspaceItemActions } from "./itemActions.js?v=20261104-11";
+import { openManagedPassword } from "./accountPasswords.js?v=20261104-11";
 
 export async function listClients(){const s=getState();const {data,error}=await db.from("clients").select("*").eq("agency_id",s.agency.id).is("archived_at",null).order("created_at",{ascending:false});if(error)throw error;return data||[];}
 export async function createClientCompany({name,email,notes,title,language='en-US',password}){
