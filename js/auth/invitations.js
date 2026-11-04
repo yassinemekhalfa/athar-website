@@ -1,6 +1,6 @@
-import {ROLES,normalizeRole} from '../core/permissions.js?v=20261104-6';
-import { db,isSupabaseMode } from "../dataClient.js?v=20261104-6";
-import { getState } from "../core/state.js?v=20261104-6";
+import {ROLES,normalizeRole} from '../core/permissions.js?v=20261104-7';
+import { db,isSupabaseMode } from "../dataClient.js?v=20261104-7";
+import { getState } from "../core/state.js?v=20261104-7";
 
 
 export async function acceptInvitation(token){const {data,error}=await db.rpc("accept_invitation",{p_token:token});if(error){if(error.message)throw Object.assign(new Error(error.message),{userMessage:true,code:error.code});throw error;}return data?.[0]||null;}

@@ -1,6 +1,6 @@
-import { db } from "../dataClient.js?v=20261104-6";
-import { getState, setState } from "../core/state.js?v=20261104-6";
-import { loadIdentity } from "./auth.js?v=20261104-6";
+import { db } from "../dataClient.js?v=20261104-7";
+import { getState, setState } from "../core/state.js?v=20261104-7";
+import { loadIdentity } from "./auth.js?v=20261104-7";
 
 export function slugify(value){return String(value||"").toLowerCase().normalize("NFKD").replace(/[^a-z0-9\s-]/g,"").trim().replace(/\s+/g,"-").replace(/-+/g,"-").slice(0,50).replace(/^-|-$/g,"")||`agency-${Date.now()}`;}
 export async function completeProfile(fullName){const user=getState().user;if(!user)throw new Error("Authentication required");const {data,error}=await db.from("profiles").update({full_name:fullName.trim()}).eq("id",user.id).select().single();if(error)throw error;setState({profile:data});return data;}

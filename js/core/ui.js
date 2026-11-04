@@ -26,7 +26,7 @@ export function toast(message, variant = "info") {
 }
 let currentModal = null;
 export function closeModal() { currentModal?.close?.(); currentModal=null; }
-export function openModal({ title, content, actions = [], onClose }) {
+export function openModal({ title, content, actions = [], onClose, dismissible = true }) {
   closeModal(); const host=root("modal-root"); if (!host) return { close(){} };
   const previous=document.activeElement; const backdrop=document.createElement("div"); backdrop.className="ap-modal-backdrop";
   const dialog=document.createElement("section"); dialog.className="ap-modal"; dialog.setAttribute("role","dialog"); dialog.setAttribute("aria-modal","true");
@@ -36,8 +36,8 @@ export function openModal({ title, content, actions = [], onClose }) {
   for (const action of actions) { if (action instanceof Node) footer.append(action); else { const b=button(action.label,action.variant||"secondary"); b.addEventListener("click",()=>action.onClick?.()); footer.append(b); } }
   dialog.append(header,body); if (actions.length) dialog.append(footer); backdrop.append(dialog); host.replaceChildren(backdrop);
   const api={ close(){ if(!backdrop.isConnected) return; backdrop.remove(); document.removeEventListener("keydown",key); onClose?.(); previous?.focus?.(); if(currentModal===api) currentModal=null; } };
-  const key=(e)=>{ if(e.key==="Escape") api.close(); if(e.key==="Tab"){ const focus=[...dialog.querySelectorAll('button,input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x=>!x.disabled&&x.getClientRects().length>0); if(!focus.length)return; const first=focus[0],last=focus.at(-1); if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();} else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();} } };
-  x.addEventListener("click",api.close); backdrop.addEventListener("mousedown",e=>{ if(e.target===backdrop)api.close(); }); document.addEventListener("keydown",key); currentModal=api; queueMicrotask(()=>dialog.querySelector("input,button,select,textarea")?.focus()); return api;
+  const key=(e)=>{ if(e.key==="Escape"&&dismissible) api.close(); if(e.key==="Tab"){ const focus=[...dialog.querySelectorAll('button,input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x=>!x.disabled&&x.getClientRects().length>0); if(!focus.length)return; const first=focus[0],last=focus.at(-1); if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();} else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();} } };
+  x.addEventListener("click",api.close); backdrop.addEventListener("mousedown",e=>{ if(dismissible&&e.target===backdrop)api.close(); }); document.addEventListener("keydown",key); currentModal=api; queueMicrotask(()=>dialog.querySelector("input,button,select,textarea")?.focus()); return api;
 }
 export async function confirm({ title="Confirm", message="Are you sure?", confirmLabel="Confirm", danger=false }) {
   return new Promise((resolve)=>{ const wrap=document.createElement("div"); const p=document.createElement("p"); p.textContent=message; wrap.append(p); let settled=false; const finish=v=>{ if(settled)return; settled=true; closeModal(); resolve(v);};
