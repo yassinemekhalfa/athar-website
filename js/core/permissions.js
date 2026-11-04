@@ -32,10 +32,12 @@ export const isStaffRole = role => normalizeRole(role) !== 'client' && ROLES.inc
 export const isOwnerRole = role => normalizeRole(role) === 'owner';
 export const isClientRole = role => normalizeRole(role) === 'client';
 // Member administration is enforced by the database for leaders only.
-export const canManageRole = role => ['owner','admin'].includes(normalizeRole(role));
+export const canManageRole = role => hasCapability(role,'invite');
+export const canAdministerMembers = role => ['owner','admin'].includes(normalizeRole(role));
 export const canCreate = role => hasCapability(role,'create');
 export const canShare = role => hasCapability(role,'share');
 export const canUpload = role => hasCapability(role,'upload');
 export const canComment = role => hasCapability(role,'comment');
 export const canDownload = role => hasCapability(role,'download');
 export function roleBadge(role){const normalized=normalizeRole(role),badge=document.createElement('span');badge.className=`ap-role-badge ap-role-badge--${normalized}`;badge.textContent=roleLabel(normalized);badge.title=roleDescription(normalized);return badge;}
+
