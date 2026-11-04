@@ -1,8 +1,8 @@
-import { db } from "../dataClient.js?v=20261104-1";
-import { getState, setState } from "../core/state.js?v=20261104-1";
-import { emit } from "../core/events.js?v=20261104-1";
-import { applyBranding } from "./branding.js?v=20261104-1";
-import { loadFolders } from "./folders.js?v=20261104-1";
+import { db } from "../dataClient.js?v=20261104-2";
+import { getState, setState } from "../core/state.js?v=20261104-2";
+import { emit } from "../core/events.js?v=20261104-2";
+import { applyBranding } from "./branding.js?v=20261104-2";
+import { loadFolders } from "./folders.js?v=20261104-2";
 
 export async function activateAgency(agencyId){const membership=getState().memberships.find(m=>m.agency_id===agencyId);if(!membership)throw new Error("Workspace unavailable");const {data:agency,error}=await db.from("agencies").select("*").eq("id",agencyId).single();if(error)throw error;setState({agency,membership,role:membership.role,clientId:membership.client_id||null,selectedFolderId:null,selectedModule:null,folders:[]});applyBranding(agency);emit("agency:selected",{agencyId,role:membership.role});localStorage.setItem("ap.lastAgencyId",agencyId);await loadFolders();return agency;}
 export async function chooseInitialAgency(){const memberships=getState().memberships;if(!memberships.length)return null;const remembered=localStorage.getItem("ap.lastAgencyId");const member=memberships.find(m=>m.agency_id===remembered)||memberships[0];await activateAgency(member.agency_id);return member;}

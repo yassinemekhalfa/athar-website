@@ -1,17 +1,17 @@
-import { db } from "../dataClient.js?v=20261104-1";
-import { getState } from "../core/state.js?v=20261104-1";
+import { db } from "../dataClient.js?v=20261104-2";
+import { getState } from "../core/state.js?v=20261104-2";
 
 const BUCKET="conversation-attachments";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-export async function signedAttachmentUrl(path){const {data,error}=await db.storage.from(BUCKET).createSignedUrl(path,3600);if(error)throw error;return data.signedUrl;}
+export async function signedAttachmentUrl(attachment){if(attachment?.storage_provider==='google_drive'&&attachment.external_file_id){const base=globalThis.ATHAR_CONFIG?.supabaseUrl?.replace(/\/$/,'');return `${base}/functions/v1/drive-video?id=${encodeURIComponent(attachment.external_file_id)}`;}const path=typeof attachment==='string'?attachment:attachment?.storage_path;const {data,error}=await db.storage.from(BUCKET).createSignedUrl(path,3600);if(error)throw error;return data.signedUrl;}
 export async function listReviewComments(attachmentId){const {data,error}=await db.from("media_review_comments").select("*,author:profiles!media_review_comments_author_id_fkey(id,full_name,email,avatar_url)").eq("attachment_id",attachmentId).order("created_at",{ascending:true});if(error)throw error;return data||[];}
 export async function addReviewComment({attachmentId,body,x=null,y=null,time=null}){const s=getState();const {data,error}=await db.from("media_review_comments").insert({agency_id:s.agency.id,attachment_id:attachmentId,author_id:s.user.id,body:body.trim(),x_percent:x,y_percent:y,time_seconds:time}).select().single();if(error)throw error;return data;}
 export async function deleteReviewComment(id){const {error}=await db.from("media_review_comments").delete().eq("id",id);if(error)throw error;}
 
 export async function openImageReview(attachment,{onChanged}={}){
   let comments=[]; let pinMode=true; let pending=null;
-  const url=await signedAttachmentUrl(attachment.storage_path);
+  const url=await signedAttachmentUrl(attachment);
   const overlay=document.createElement("div"); overlay.className="k-review-overlay";
   overlay.innerHTML=`<header class="k-review-top"><div><strong>${esc(attachment.original_name)}</strong><small>Image review · ${Math.round((attachment.size_bytes||0)/1024)} KB</small></div><div class="k-review-top__actions"><a class="k-review-open" href="${esc(url)}" target="_blank" rel="noopener">Open original</a><button class="k-review-close" type="button" aria-label="Close">×</button></div></header><div class="k-review-body"><main class="k-review-stage"><div class="k-review-toolbar"><button class="k-review-pin-btn is-active" type="button">▣ Pin mode on</button><span>Click anywhere on the photo to add a pinned comment.</span></div><div class="k-review-canvas"><div class="k-review-image-wrap is-pinning"><img alt="${esc(attachment.original_name)}"></div></div></main><aside class="k-review-side"><div class="k-review-side__head"><h2>Review comments</h2><span class="k-review-count"></span></div><div class="k-review-comments"></div><form class="k-review-general"><textarea placeholder="Add a general comment…" maxlength="5000"></textarea><button type="submit">Comment</button></form></aside></div>`;
   document.body.append(overlay); document.body.classList.add("k-review-opened");
@@ -30,7 +30,7 @@ const fmtTime=value=>{const total=Math.max(0,Math.floor(Number(value)||0));const
 
 export async function openVideoReview(attachment,{onChanged}={}){
   let comments=[]; let pinMode=false;
-  const url=await signedAttachmentUrl(attachment.storage_path);
+  const url=await signedAttachmentUrl(attachment);
   const overlay=document.createElement("div"); overlay.className="k-review-overlay k-video-review-overlay";
   overlay.innerHTML=`<header class="k-review-top"><div><strong>${esc(attachment.original_name)}</strong><small>Video review · pause anywhere, then pin the exact detail</small></div><div class="k-review-top__actions"><a class="k-review-open" href="${esc(url)}" target="_blank" rel="noopener">Open original</a><button class="k-review-close" type="button" aria-label="Close">×</button></div></header><div class="k-review-body"><main class="k-review-stage"><div class="k-review-toolbar"><button class="k-review-pin-btn" type="button">▣ Add pin</button><span class="k-video-review-hint">Pause the video, choose Add pin, then click the detail you want changed.</span></div><div class="k-review-canvas"><div class="k-review-video-wrap"><video controls preload="metadata" playsinline></video></div></div></main><aside class="k-review-side"><div class="k-review-side__head"><h2>Review comments</h2><span class="k-review-count"></span></div><div class="k-review-comments"></div><form class="k-review-general"><textarea placeholder="Add a general video comment…" maxlength="5000"></textarea><button type="submit">Comment</button></form></aside></div>`;
   document.body.append(overlay); document.body.classList.add("k-review-opened");

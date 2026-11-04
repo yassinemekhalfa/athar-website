@@ -1,14 +1,14 @@
-import {roleBadge} from '../core/permissions.js?v=20261104-1';
-import {db} from '../dataClient.js?v=20261104-1';
-import { AppCore } from "../core/appCore.js?v=20261104-1";
-import { on, emit } from "../core/events.js?v=20261104-1";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261104-1";
-import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261104-1";
-import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261104-1";
-import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261104-1";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-1";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261104-1";
-import { openItemSharing } from "../workspace/itemSharing.js?v=20261104-1";
+import {roleBadge} from '../core/permissions.js?v=20261104-2';
+import {db} from '../dataClient.js?v=20261104-2';
+import { AppCore } from "../core/appCore.js?v=20261104-2";
+import { on, emit } from "../core/events.js?v=20261104-2";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261104-2";
+import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261104-2";
+import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261104-2";
+import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261104-2";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-2";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261104-2";
+import { openItemSharing } from "../workspace/itemSharing.js?v=20261104-2";
 
 const state = { container:null, context:null, conversations:[], activeId:null, messages:[], off:[], replyTo:null, timer:null,tab:"messages",filter:"all",customizing:false,iconPicker:false,actionMenu:false,requestVersion:0,sending:false };
 const drafts=new Map();
@@ -135,7 +135,7 @@ function renderFilesView() {
   files.forEach(attachment => {
     const card = el("button", "k-chat-file-card"); card.type = "button";
     card.append(workspaceIcon("file"), el("span", "", attachment.original_name || "Attachment"));
-    card.addEventListener("click", async () => { try { window.open(await signedAttachmentUrl(attachment.storage_path), "_blank", "noopener,noreferrer"); } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), "error"); } });
+    card.addEventListener("click", async () => { try { window.open(await signedAttachmentUrl(attachment), "_blank", "noopener,noreferrer"); } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), "error"); } });
     grid.append(card);
   });
   root.append(grid); return root;
@@ -192,19 +192,19 @@ function renderMessage(message) {
   (message.attachments || []).forEach(attachment => {
     const box = el("div", "k-message-attachment");
     const mime = attachment.mime_type || "";
-    if(mime.startsWith("audio/")){const audio=document.createElement("audio");audio.controls=true;signedAttachmentUrl(attachment.storage_path).then(url=>audio.src=url).catch(()=>{});box.append(audio);}
+    if(mime.startsWith("audio/")){const audio=document.createElement("audio");audio.controls=true;signedAttachmentUrl(attachment).then(url=>audio.src=url).catch(()=>{});box.append(audio);}
     if (mime.startsWith("image/")) {
       const image = document.createElement("img"); image.alt = attachment.original_name; image.loading = "lazy";
-      signedAttachmentUrl(attachment.storage_path).then(url => image.src = url).catch(() => {});
+      signedAttachmentUrl(attachment).then(url => image.src = url).catch(() => {});
       image.addEventListener("click", () => openImageReview(attachment).catch(error => AppCore.ui.toast(AppCore.ui.describeError(error), "error")));
       box.append(image);
     } else if (mime.startsWith("video/")) {
       const video = document.createElement("video"); video.controls = true; video.preload = "metadata"; video.playsInline = true;
-      signedAttachmentUrl(attachment.storage_path).then(url => video.src = url).catch(() => {});
+      signedAttachmentUrl(attachment).then(url => video.src = url).catch(() => {});
       box.append(video);
     }
     const bar = el("div", "k-message-attachment__bar");
-    const download=el("button","",attachment.original_name);download.type="button";download.addEventListener("click",async()=>{try{window.open(await signedAttachmentUrl(attachment.storage_path),"_blank","noopener");}catch(e){AppCore.ui.toast(AppCore.ui.describeError(e),"error");}});bar.append(download);
+    const download=el("button","",attachment.original_name);download.type="button";download.addEventListener("click",async()=>{try{window.open(await signedAttachmentUrl(attachment),"_blank","noopener");}catch(e){AppCore.ui.toast(AppCore.ui.describeError(e),"error");}});bar.append(download);
     if (mime.startsWith("image/") || mime.startsWith("video/")) { const review = el("button", "", mime.startsWith("video/") ? "Review video" : "Review & comment"); review.type="button"; review.addEventListener("click",()=> (mime.startsWith("video/") ? openVideoReview(attachment) : openImageReview(attachment)).catch(error=>AppCore.ui.toast(AppCore.ui.describeError(error),"error"))); bar.append(review); }
     box.append(bar); attachments.append(box);
   });
@@ -261,7 +261,7 @@ function renderComposer(current) {
   });
   const fileInput = document.createElement("input"); fileInput.type="file"; fileInput.accept="image/*,video/*,audio/*,application/pdf,.zip,.doc,.docx,.xls,.xlsx"; fileInput.hidden=true;
   const chosen=el('button','k-message-file-preview');chosen.type='button';chosen.title='Remove attachment';const showChosen=()=>{chosen.textContent=draft.value.file?'× '+draft.value.file.name:'';chosen.hidden=!draft.value.file;};chosen.addEventListener('click',()=>{draft.value.file=null;fileInput.value='';showChosen();});showChosen();
-  fileInput.setAttribute('aria-label','Attach file');fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];if(file&&file.size>26214400){AppCore.ui.toast('Choose a file smaller than 25 MB.','warning');fileInput.value='';return;}draft.value.file=file||null;showChosen();});
+  fileInput.setAttribute('aria-label','Attach file');fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];if(file&&file.size>5*1024**3){AppCore.ui.toast('Choose a file smaller than 5 GB.','warning');fileInput.value='';return;}draft.value.file=file||null;showChosen();});
   const bottom = el("div", "ap-message-composer__bottom k-message-composer__bottom");
   const details = el("div", "k-message-composer__details");
   let visible = null;

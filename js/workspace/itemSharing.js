@@ -1,9 +1,9 @@
-import {inviteMember} from '../auth/invitations.js?v=20261104-1';
-import {db} from '../dataClient.js?v=20261104-1';
-import {AppCore} from '../core/appCore.js?v=20261104-1';
-import {emit} from '../core/events.js?v=20261104-1';
-import {roleLabel,hasCapability} from '../core/permissions.js?v=20261104-1';
-import {workspaceIcon} from '../views/workspaceIcons.js?v=20261104-1';
+import {inviteMember} from '../auth/invitations.js?v=20261104-2';
+import {db} from '../dataClient.js?v=20261104-2';
+import {AppCore} from '../core/appCore.js?v=20261104-2';
+import {emit} from '../core/events.js?v=20261104-2';
+import {roleLabel,hasCapability} from '../core/permissions.js?v=20261104-2';
+import {workspaceIcon} from '../views/workspaceIcons.js?v=20261104-2';
 
 const tables={folder:'folders',board:'boards',conversation:'conversations',doc:'docs',embed:'embeds',file:'files'};
 const el=(tag,cls='',text='')=>{const n=document.createElement(tag);n.className=cls;n.textContent=text;return n;};

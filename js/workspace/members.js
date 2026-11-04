@@ -1,8 +1,8 @@
-import {db} from '../dataClient.js?v=20261104-1';
-import {getState} from '../core/state.js?v=20261104-1';
-import {AppCore} from '../core/appCore.js?v=20261104-1';
-import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261104-1';
-import {ROLES,normalizeRole,roleLabel,roleBadge,canManageRole} from '../core/permissions.js?v=20261104-1';
+import {db} from '../dataClient.js?v=20261104-2';
+import {getState} from '../core/state.js?v=20261104-2';
+import {AppCore} from '../core/appCore.js?v=20261104-2';
+import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261104-2';
+import {ROLES,normalizeRole,roleLabel,roleBadge,canManageRole} from '../core/permissions.js?v=20261104-2';
 const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const button=(text,fn)=>{const b=el('button','ap-btn ap-btn--secondary',text);b.type='button';b.addEventListener('click',fn);return b;};
 export async function renderMembersView(container){

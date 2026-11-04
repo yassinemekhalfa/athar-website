@@ -1,7 +1,7 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-1';
-import { db } from "../dataClient.js?v=20261104-1";
-import { AppCore } from "../core/appCore.js?v=20261104-1";
-import { emit, on } from "../core/events.js?v=20261104-1";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-2';
+import { db } from "../dataClient.js?v=20261104-2";
+import { AppCore } from "../core/appCore.js?v=20261104-2";
+import { emit, on } from "../core/events.js?v=20261104-2";
 
 const state = {
   container: null,
