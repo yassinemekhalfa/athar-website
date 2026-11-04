@@ -1,14 +1,14 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-7';
-import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261104-7';
-import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261104-7';
-import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261104-7';
-import { uploadBrandAsset } from "../workspace/preferences.js?v=20261104-7";
-import { db } from "../dataClient.js?v=20261104-7";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-7";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261104-7";
-import { AppCore } from "../core/appCore.js?v=20261104-7";
-import { emit, on } from "../core/events.js?v=20261104-7";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261104-7";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-8';
+import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261104-8';
+import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261104-8';
+import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261104-8';
+import { uploadBrandAsset } from "../workspace/preferences.js?v=20261104-8";
+import { db } from "../dataClient.js?v=20261104-8";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-8";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261104-8";
+import { AppCore } from "../core/appCore.js?v=20261104-8";
+import { emit, on } from "../core/events.js?v=20261104-8";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261104-8";
 import {
   POSITION_STEP,
   sortByPosition,
@@ -26,7 +26,7 @@ import {
   deleteTaskComment,
   profileLabel,
   priorityLabel
-} from "./tasks.js?v=20261104-7";
+} from "./tasks.js?v=20261104-8";
 
 const state = {
   container: null,

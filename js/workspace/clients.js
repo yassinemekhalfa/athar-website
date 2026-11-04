@@ -1,15 +1,15 @@
-import {canCreate,canManageRole} from '../core/permissions.js?v=20261104-7';
-import { db } from "../dataClient.js?v=20261104-7";
-import { getState } from "../core/state.js?v=20261104-7";
-import { AppCore } from "../core/appCore.js?v=20261104-7";
-import { inviteMember } from "../auth/invitations.js?v=20261104-7";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-7";
-import { loadFolders, selectFolder, moveFolder } from "./folders.js?v=20261104-7";
-import { loadResources, openResource } from "./resources.js?v=20261104-7";
-import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261104-7";
-import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js?v=20261104-7";
-import { openFolderSharing } from "./folderPermissions.js?v=20261104-7";
-import { openWorkspaceItemActions } from "./itemActions.js?v=20261104-7";
+import {canCreate,canManageRole} from '../core/permissions.js?v=20261104-8';
+import { db } from "../dataClient.js?v=20261104-8";
+import { getState } from "../core/state.js?v=20261104-8";
+import { AppCore } from "../core/appCore.js?v=20261104-8";
+import { inviteMember } from "../auth/invitations.js?v=20261104-8";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-8";
+import { loadFolders, selectFolder, moveFolder } from "./folders.js?v=20261104-8";
+import { loadResources, openResource } from "./resources.js?v=20261104-8";
+import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261104-8";
+import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js?v=20261104-8";
+import { openFolderSharing } from "./folderPermissions.js?v=20261104-8";
+import { openWorkspaceItemActions } from "./itemActions.js?v=20261104-8";
 
 export async function listClients(){const s=getState();const {data,error}=await db.from("clients").select("*").eq("agency_id",s.agency.id).is("archived_at",null).order("created_at",{ascending:false});if(error)throw error;return data||[];}
 export async function createClientCompany({name,email,notes,title,language='en-US',password}){

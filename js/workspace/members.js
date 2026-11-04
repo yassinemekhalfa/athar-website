@@ -1,8 +1,8 @@
-﻿import {db} from '../dataClient.js?v=20261104-7';
-import {getState} from '../core/state.js?v=20261104-7';
-import {AppCore} from '../core/appCore.js?v=20261104-7';
-import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261104-7';
-import {ROLES,ALL_CAPABILITIES,ALL_SECTIONS,CAPABILITY_LABELS,SECTION_LABELS,normalizeRole,roleLabel,roleDescription,roleCapabilities,roleBadge,canAdministerMembers} from '../core/permissions.js?v=20261104-7';
+﻿import {db} from '../dataClient.js?v=20261104-8';
+import {getState} from '../core/state.js?v=20261104-8';
+import {AppCore} from '../core/appCore.js?v=20261104-8';
+import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261104-8';
+import {ROLES,ALL_CAPABILITIES,ALL_SECTIONS,CAPABILITY_LABELS,SECTION_LABELS,normalizeRole,roleLabel,roleDescription,roleCapabilities,roleBadge,canAdministerMembers} from '../core/permissions.js?v=20261104-8';
 const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const button=(text,fn)=>{const b=el('button','ap-btn ap-btn--secondary',text);b.type='button';b.addEventListener('click',fn);return b;};
 function permissionToggle(key,label,checked){const item=el('label','ap-permission-option'),check=el('input');check.type='checkbox';check.dataset.permission=key;check.checked=checked;item.append(check,el('span','',label));return item;}
@@ -16,19 +16,19 @@ function openPermissionEditor(member,profile,done){
  const save=el('button','ap-btn ap-btn--primary','Save permissions');save.type='submit';form.append(intro,role,actionTitle,actions,sectionTitle,sections,save);form.addEventListener('submit',async event=>{event.preventDefault();save.disabled=true;try{const permissions=Object.fromEntries([...form.querySelectorAll('[data-permission]')].map(input=>[input.dataset.permission,input.checked]));const {error}=await db.rpc('update_member_permissions',{p_member:member.id,p_role:role.value,p_permissions:permissions});if(error)throw error;AppCore.ui.closeModal();AppCore.ui.toast('Member permissions and visible sections updated.','success');await done?.();}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{save.disabled=false;}});AppCore.ui.openModal({title:'Manage permissions',content:form,actions:[]});
 }
 export async function renderMembersView(container){
- const state=getState();AppCore.ui.renderLoading(container,'Loading membersâ€¦');
+ const state=getState();AppCore.ui.renderLoading(container,'Loading members…');
  try{const {data:members,error}=await db.from('agency_members').select('*').eq('agency_id',state.agency.id);if(error)throw error;
   const profiles=await db.from('profiles').select('*').in('id',members.map(m=>m.profile_id));if(profiles.error)throw profiles.error;
-  const root=el('section','k-settings-inner');root.append(el('h1','','Teammates'),el('p','','Assign each teammate the access level that matches their work. Client accounts are managed separately.'));
+  const root=el('section','k-settings-inner ap-members-view');root.append(el('h1','','Teammates'),el('p','ap-members-intro','Assign each teammate the access level that matches their work. Client accounts are managed separately.'));
   const manage=canAdministerMembers(state.role);if(manage)root.append(button('Invite member',()=>openTeamInvite(()=>renderMembersView(container))));
-  const list=el('div','ap-table-list');for(const member of members){const p=profiles.data.find(x=>x.id===member.profile_id)||{};const row=el('div','ap-table-list__row');const identity=el('div');identity.append(el('strong','',p.full_name||p.email||'Member'),el('div','',p.email||''),roleBadge(member.role));const controls=el('div','ap-member-controls');
+  const list=el('div','ap-table-list ap-members-list');for(const member of members){const p=profiles.data.find(x=>x.id===member.profile_id)||{};const row=el('div','ap-table-list__row ap-member-row');const identity=el('div','ap-member-identity');identity.append(el('strong','',p.full_name||p.email||'Member'),el('span','',p.email||''),roleBadge(member.role));const controls=el('div','ap-member-controls');
    const protectedRole=['owner','admin'].includes(member.role)&&state.role!=='owner';
    if(manage&&!protectedRole&&member.profile_id!==state.user.id){const select=el('select','ap-select');select.setAttribute('aria-label',`Role for ${p.full_name||p.email}`);const choices=ROLES.filter(r=>r!=='client'&&(state.role==='owner'||!['owner','admin'].includes(r)));if(member.role==='client')choices.push('client');for(const role of choices){const o=el('option','',roleLabel(role));o.value=role;select.append(o);}select.value=normalizeRole(member.role);
     select.addEventListener('change',async()=>{select.disabled=true;try{const {error}=state.role==='owner'&&select.value!=='client'?await db.rpc('update_member_permissions',{p_member:member.id,p_role:select.value,p_permissions:{}}):await db.from('agency_members').update({role:select.value,client_id:select.value==='client'?member.client_id:null}).eq('id',member.id);if(error)throw error;AppCore.ui.toast('Role updated.','success');await renderMembersView(container);}catch(error){select.value=normalizeRole(member.role);AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{select.disabled=false;}});controls.append(select,button('Remove',async()=>{if(!await AppCore.ui.confirm({title:'Remove member?',message:'This person will lose workspace access.',confirmLabel:'Remove',danger:true}))return;const {error}=await db.from('agency_members').delete().eq('id',member.id);if(error)return AppCore.ui.toast(AppCore.ui.describeError(error),'error');await renderMembersView(container);}));
     if(state.role==='owner'&&member.role!=='client')controls.prepend(button('Permissions',()=>openPermissionEditor(member,p,()=>renderMembersView(container))));
    }row.append(identity,controls);list.append(row);
   }root.append(list);
-  if(manage){const invitations=await listInvitations();for(const inv of invitations.filter(i=>i.status==='pending')){const row=el('div','ap-settings-item');row.append(el('span','',`${inv.email} â€” invitation pending`),roleBadge(inv.intended_role),button('Revoke',async()=>{try{await revokeInvitation(inv.id);await renderMembersView(container);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}}));root.append(row);}}
+  if(manage){const invitations=await listInvitations(),pending=invitations.filter(i=>i.status==='pending');if(pending.length){const pendingList=el('div','ap-pending-invitations');pendingList.append(el('h2','','Pending invitations'));for(const inv of pending){const row=el('div','ap-pending-invitation'),identity=el('div','ap-pending-invitation__identity');identity.append(el('strong','',inv.email),el('span','','Invitation pending'));row.append(identity,roleBadge(inv.intended_role),button('Revoke',async()=>{try{await revokeInvitation(inv.id);await renderMembersView(container);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}}));pendingList.append(row);}root.append(pendingList);}}
   container.replaceChildren(root);
  }catch(error){AppCore.ui.renderError(container,error,()=>renderMembersView(container));}
 }

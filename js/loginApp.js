@@ -1,11 +1,11 @@
-import {isStaffRole,isClientRole} from './core/permissions.js?v=20261104-7';
-import { loadLoginBranding, styleLoginCard } from "./auth/loginBranding.js?v=20261104-7";
-import { restoreAuth, signIn, signUp, signOut, updatePassword, loadIdentity } from "./auth/auth.js?v=20261104-7";
-import { getState } from "./core/state.js?v=20261104-7";
-import { completeProfile, createAgency } from "./auth/onboarding.js?v=20261104-7";
-import { acceptInvitation } from "./auth/invitations.js?v=20261104-7";
-import { db,isSupabaseMode } from "./dataClient.js?v=20261104-7";
-import { AppCore } from "./core/appCore.js?v=20261104-7";
+import {isStaffRole,isClientRole} from './core/permissions.js?v=20261104-8';
+import { loadLoginBranding, styleLoginCard } from "./auth/loginBranding.js?v=20261104-8";
+import { restoreAuth, signIn, signUp, signOut, updatePassword, loadIdentity } from "./auth/auth.js?v=20261104-8";
+import { getState } from "./core/state.js?v=20261104-8";
+import { completeProfile, createAgency } from "./auth/onboarding.js?v=20261104-8";
+import { acceptInvitation } from "./auth/invitations.js?v=20261104-8";
+import { db,isSupabaseMode } from "./dataClient.js?v=20261104-8";
+import { AppCore } from "./core/appCore.js?v=20261104-8";
 
 const root=document.getElementById("auth-root");
 function clientDestination(){const folder=new URLSearchParams(location.search).get("folder");return "client-view.html"+(/^[0-9a-f-]{36}$/i.test(folder||"")?`#/folder/${folder}`:"");}
