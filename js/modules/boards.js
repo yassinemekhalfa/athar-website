@@ -1,14 +1,14 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-4';
-import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261104-4';
-import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261104-4';
-import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261104-4';
-import { uploadBrandAsset } from "../workspace/preferences.js?v=20261104-4";
-import { db } from "../dataClient.js?v=20261104-4";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-4";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261104-4";
-import { AppCore } from "../core/appCore.js?v=20261104-4";
-import { emit, on } from "../core/events.js?v=20261104-4";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261104-4";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-5';
+import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261104-5';
+import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261104-5';
+import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261104-5';
+import { uploadBrandAsset } from "../workspace/preferences.js?v=20261104-5";
+import { db } from "../dataClient.js?v=20261104-5";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-5";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261104-5";
+import { AppCore } from "../core/appCore.js?v=20261104-5";
+import { emit, on } from "../core/events.js?v=20261104-5";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261104-5";
 import {
   POSITION_STEP,
   sortByPosition,
@@ -26,7 +26,7 @@ import {
   deleteTaskComment,
   profileLabel,
   priorityLabel
-} from "./tasks.js?v=20261104-4";
+} from "./tasks.js?v=20261104-5";
 
 const state = {
   container: null,
@@ -1279,6 +1279,7 @@ async function openTaskMediaReview(task, attachment, canAnnotate = true) {
   closeButton.addEventListener("click", close);
   if (canAnnotate) {
     pinMode.addEventListener("click", () => {
+      if (media instanceof HTMLVideoElement && !media.paused) media.pause();
       pinning = !pinning;
       pinMode.textContent = pinning ? "▣ Pin mode on" : "▣ Pin mode off";
       pinMode.classList.toggle("is-active", pinning);
@@ -1303,6 +1304,10 @@ async function openTaskMediaReview(task, attachment, canAnnotate = true) {
       marker.setAttribute("aria-label", `Pinned comment ${index + 1}: ${pin.body}`);
       marker.addEventListener("click", event => {
         event.stopPropagation();
+        if (media instanceof HTMLVideoElement && pin.time != null) {
+          media.pause();
+          media.currentTime = Number(pin.time);
+        }
         document.getElementById(`task-media-pin-${pin.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       });
       mediaWrap.append(marker);
@@ -1311,7 +1316,9 @@ async function openTaskMediaReview(task, attachment, canAnnotate = true) {
       card.id = `task-media-pin-${pin.id}`;
       const meta = el("div", "k-review-comment__meta");
       meta.append(el("strong", "", pin.author_name || "Member"), el("span", "", AppCore.utils.formatDate(pin.created_at, "short")));
-      card.append(meta, el("div", "k-review-comment__pinlabel", pin.time == null ? `Pin ${index + 1}` : `At ${marker.textContent}`), el("p", "", pin.body));
+      const pinLabel = el(pin.time == null ? "div" : "button", "k-review-comment__pinlabel", pin.time == null ? `Pin ${index + 1}` : `At ${marker.textContent} · go to video`);
+      if (pin.time != null) { pinLabel.type = "button"; pinLabel.addEventListener("click", () => { media.pause(); media.currentTime = Number(pin.time); media.scrollIntoView({ behavior: "smooth", block: "center" }); }); }
+      card.append(meta, pinLabel, el("p", "", pin.body));
       if (pin.author_id === state.context.user.id || state.context.isOwner || state.context.canManageAll) {
         const remove = el("button", "k-review-delete", "Delete");
         remove.type = "button";
