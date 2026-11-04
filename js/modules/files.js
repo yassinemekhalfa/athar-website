@@ -1,7 +1,7 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-2';
-import { db, isSupabaseMode } from "../dataClient.js?v=20261104-2";
-import { AppCore } from "../core/appCore.js?v=20261104-2";
-import { emit, on } from "../core/events.js?v=20261104-2";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261104-3';
+import { db, isSupabaseMode } from "../dataClient.js?v=20261104-3";
+import { AppCore } from "../core/appCore.js?v=20261104-3";
+import { emit, on } from "../core/events.js?v=20261104-3";
 
 const MAX_UPLOAD_BYTES = 26214400;
 const MAX_DRIVE_UPLOAD_BYTES = 5 * 1024 ** 4;

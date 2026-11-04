@@ -1,6 +1,6 @@
-import {db} from '../dataClient.js?v=20261104-2';
-import {AppCore} from '../core/appCore.js?v=20261104-2';
-import {updateTask} from './tasks.js?v=20261104-2';
+import {db} from '../dataClient.js?v=20261104-3';
+import {AppCore} from '../core/appCore.js?v=20261104-3';
+import {updateTask} from './tasks.js?v=20261104-3';
 export function taskExtras(task,context){
  const root=document.createElement('section');root.className='k-task-extras';let details=structuredClone(task.details||{});details.subtasks??=[];details.attachments??=[];
  const el=(t,c='',text)=>{const n=document.createElement(t);n.className=c;if(text!==undefined)n.textContent=text;return n;};

@@ -1,10 +1,17 @@
-import {db} from '../dataClient.js?v=20261104-2';
-import {getState} from '../core/state.js?v=20261104-2';
-import {AppCore} from '../core/appCore.js?v=20261104-2';
-import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261104-2';
-import {ROLES,normalizeRole,roleLabel,roleBadge,canManageRole} from '../core/permissions.js?v=20261104-2';
+import {db} from '../dataClient.js?v=20261104-3';
+import {getState} from '../core/state.js?v=20261104-3';
+import {AppCore} from '../core/appCore.js?v=20261104-3';
+import {inviteMember,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261104-3';
+import {ROLES,ALL_CAPABILITIES,CAPABILITY_LABELS,normalizeRole,roleLabel,roleDescription,roleCapabilities,roleBadge,canManageRole} from '../core/permissions.js?v=20261104-3';
 const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const button=(text,fn)=>{const b=el('button','ap-btn ap-btn--secondary',text);b.type='button';b.addEventListener('click',fn);return b;};
+function openPermissionEditor(member,profile,done){
+ const state=getState();if(state.role!=='owner'||member.role==='owner')return;
+ const form=el('form','ap-stack'),intro=el('p','ap-muted-text',`Choose what ${profile.full_name||profile.email||'this member'} can do. Each access level is a secure permission preset.`),role=el('select','ap-select');
+ role.setAttribute('aria-label','Member access level');for(const value of ROLES.filter(value=>value!=='owner'&&value!=='client')){const option=el('option','',`${roleLabel(value)} — ${roleDescription(value)}`);option.value=value;role.append(option);}role.value=normalizeRole(member.role);
+ const permissions=el('div','ap-permission-grid');const draw=()=>{const enabled=new Set(roleCapabilities(role.value));permissions.replaceChildren(...ALL_CAPABILITIES.map(capability=>{const item=el('label','ap-settings-item'),check=el('input');check.type='checkbox';check.checked=enabled.has(capability);check.disabled=true;item.append(check,el('span','',CAPABILITY_LABELS[capability]));return item;}));};role.addEventListener('change',draw);draw();
+ const save=el('button','ap-btn ap-btn--primary','Save permissions');save.type='submit';form.append(intro,role,permissions,save);form.addEventListener('submit',async event=>{event.preventDefault();save.disabled=true;try{const {error}=await db.from('agency_members').update({role:role.value,client_id:null}).eq('id',member.id);if(error)throw error;AppCore.ui.closeModal();AppCore.ui.toast('Member permissions updated.','success');await done?.();}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{save.disabled=false;}});AppCore.ui.openModal({title:'Manage permissions',content:form,actions:[]});
+}
 export async function renderMembersView(container){
  const state=getState();AppCore.ui.renderLoading(container,'Loading members…');
  try{const {data:members,error}=await db.from('agency_members').select('*').eq('agency_id',state.agency.id);if(error)throw error;
@@ -15,6 +22,7 @@ export async function renderMembersView(container){
    const protectedRole=['owner','admin'].includes(member.role)&&state.role!=='owner';
    if(manage&&!protectedRole&&member.profile_id!==state.user.id){const select=el('select','ap-select');select.setAttribute('aria-label',`Role for ${p.full_name||p.email}`);const choices=ROLES.filter(r=>r!=='client'&&(state.role==='owner'||!['owner','admin'].includes(r)));if(member.role==='client')choices.push('client');for(const role of choices){const o=el('option','',roleLabel(role));o.value=role;select.append(o);}select.value=normalizeRole(member.role);
     select.addEventListener('change',async()=>{select.disabled=true;try{const {error}=await db.from('agency_members').update({role:select.value,client_id:select.value==='client'?member.client_id:null}).eq('id',member.id);if(error)throw error;AppCore.ui.toast('Role updated.','success');await renderMembersView(container);}catch(error){select.value=normalizeRole(member.role);AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{select.disabled=false;}});controls.append(select,button('Remove',async()=>{if(!await AppCore.ui.confirm({title:'Remove member?',message:'This person will lose workspace access.',confirmLabel:'Remove',danger:true}))return;const {error}=await db.from('agency_members').delete().eq('id',member.id);if(error)return AppCore.ui.toast(AppCore.ui.describeError(error),'error');await renderMembersView(container);}));
+    if(state.role==='owner'&&member.role!=='client')controls.prepend(button('Permissions',()=>openPermissionEditor(member,p,()=>renderMembersView(container))));
    }row.append(identity,controls);list.append(row);
   }root.append(list);
   if(manage){const invitations=await listInvitations();for(const inv of invitations.filter(i=>i.status==='pending')){const row=el('div','ap-settings-item');row.append(el('span','',`${inv.email} — invitation pending`),roleBadge(inv.intended_role),button('Revoke',async()=>{try{await revokeInvitation(inv.id);await renderMembersView(container);}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}}));root.append(row);}}
