@@ -1,46 +1,46 @@
-import {openResourceRoute} from './workspace/resourceRoute.js?v=20261104-8';
-import {renderProfilePage} from './views/profilePage.js?v=20261104-8';
-import {isClientRole,roleBadge} from './core/permissions.js?v=20261104-8';
-import './core/adaptive.js?v=20261104-8';
-import { loadResources } from "./workspace/resources.js?v=20261104-8";
+import {openResourceRoute} from './workspace/resourceRoute.js?v=20261104-9';
+import {renderProfilePage} from './views/profilePage.js?v=20261104-9';
+import {isClientRole,roleBadge} from './core/permissions.js?v=20261104-9';
+import './core/adaptive.js?v=20261104-9';
+import { loadResources } from "./workspace/resources.js?v=20261104-9";
 
 import {
   restoreAuth,
   signOut
-} from "./auth/auth.js?v=20261104-8";
+} from "./auth/auth.js?v=20261104-9";
 
 import {
   getState,
   setState
-} from "./core/state.js?v=20261104-8";
+} from "./core/state.js?v=20261104-9";
 
-import { emit } from "./core/events.js?v=20261104-8";
+import { emit } from "./core/events.js?v=20261104-9";
 
 import {
   activateAgency
-} from "./workspace/agencies.js?v=20261104-8";
+} from "./workspace/agencies.js?v=20261104-9";
 
 import {
   renderFolderTree
-} from "./workspace/folderTree.js?v=20261104-8";
+} from "./workspace/folderTree.js?v=20261104-9";
 
 import {
   renderBreadcrumb,
   selectFolder
-} from "./workspace/folders.js?v=20261104-8";
+} from "./workspace/folders.js?v=20261104-9";
 
 import {
   selectModule,
   unmountActiveModule
-} from "./core/moduleRegistry.js?v=20261104-8";
+} from "./core/moduleRegistry.js?v=20261104-9";
 
 import {
   mountGlobalSearch
-} from "./modules/search.js?v=20261104-8";
+} from "./modules/search.js?v=20261104-9";
 
 import {
   AppCore
-} from "./core/appCore.js?v=20261104-8";
+} from "./core/appCore.js?v=20261104-9";
 
 import {
   renderHome,
@@ -50,11 +50,11 @@ import {
   renderInbox,
   renderFolderOverview,
   renderProfileView
-} from "./views/portalViews.js?v=20261104-8";
+} from "./views/portalViews.js?v=20261104-9";
 
 import {
   workspaceIcon
-} from "./views/workspaceIcons.js?v=20261104-8";
+} from "./views/workspaceIcons.js?v=20261104-9";
 
 let currentView = "home";
 

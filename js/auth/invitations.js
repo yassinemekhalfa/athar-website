@@ -1,11 +1,12 @@
-import {ROLES,normalizeRole} from '../core/permissions.js?v=20261104-8';
-import { db,isSupabaseMode } from "../dataClient.js?v=20261104-8";
-import { getState } from "../core/state.js?v=20261104-8";
+import {ROLES,normalizeRole} from '../core/permissions.js?v=20261104-9';
+import { db,isSupabaseMode } from "../dataClient.js?v=20261104-9";
+import { getState } from "../core/state.js?v=20261104-9";
 
 
 export async function acceptInvitation(token){const {data,error}=await db.rpc("accept_invitation",{p_token:token});if(error){if(error.message)throw Object.assign(new Error(error.message),{userMessage:true,code:error.code});throw error;}return data?.[0]||null;}
+export async function completeInvitedAccount({token,name,password}){const result=await db.functions.invoke('complete-invited-account',{body:{token,name,password}});if(result.error||result.data?.error){let detail=result.data?.error||result.error?.message||'Could not finish the invited account.';try{if(result.error?.context&&typeof result.error.context.json==='function')detail=(await result.error.context.json())?.error||detail;}catch{}throw Object.assign(new Error(detail),{userMessage:true});}return result.data;}
 
-function invitationLink(token,email,folderId){const url=new URL("login.html",window.location.href);url.searchParams.set("invite",token);url.searchParams.set("email",email);if(folderId)url.searchParams.set("folder",folderId);if(getState().agency?.slug)url.searchParams.set("workspace",getState().agency.slug);return url.toString();}
+export function invitationLink(token,email,folderId){const url=new URL("login.html",window.location.href);url.searchParams.set("invite",token);url.searchParams.set("email",email);if(folderId)url.searchParams.set("folder",folderId);if(getState().agency?.slug)url.searchParams.set("workspace",getState().agency.slug);return url.toString();}
 async function deliverInvitation({link,invitationId}){if(isSupabaseMode){const {data,error}=await db.functions.invoke('send-invitation-email',{body:{invitation_id:invitationId}});if(error)throw error;if(data?.error)throw new Error(data.error);return data;}const token=new URL(link).searchParams.get('invite');const response=await fetch('/api/outbox',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,link})});const result=await response.json();if(result.error)throw new Error(result.error.message);return result.data;}
 async function createInvitation(payload){
   let {data,error}=await db.from("invitations").insert(payload).select().single();
@@ -32,8 +33,7 @@ export async function inviteMember({email,role="team",clientId=null,folderId=nul
   const link=invitationLink(data.token,normalizedEmail,folderId);
   let delivery;
   try{delivery=await deliverInvitation({link,invitationId:data.id});}catch(emailError){delivery={action_link:link,email_sent:false,password_required:false,delivery_error:emailError?.message||"Email delivery is unavailable."};}
-  const accessLink=isSupabaseMode&&delivery?.action_link?delivery.action_link:link;
-  return {...data,link:accessLink,emailSent:isSupabaseMode?Boolean(delivery?.email_sent):false,localOnly:!isSupabaseMode||!delivery?.email_sent,passwordRequired:Boolean(delivery?.password_required),deliveryError:delivery?.delivery_error||null,resent};
+  return {...data,link,emailSent:isSupabaseMode?Boolean(delivery?.email_sent):false,localOnly:!isSupabaseMode||!delivery?.email_sent,passwordRequired:Boolean(delivery?.password_required),deliveryError:delivery?.delivery_error||null,resent};
 }
 export async function startClientAccess(token,folderId=null){const {data,error}=await db.functions.invoke("start-client-access",{body:{token,folderId}});if(error)throw error;if(!data?.action_link)throw Object.assign(new Error(data?.error||"Could not start client access."),{userMessage:true});location.replace(data.action_link);}
 export async function listInvitations(){const agencyId=getState().agency?.id;if(!agencyId)return[];const {data,error}=await db.from("invitations").select("*").eq("agency_id",agencyId).order("created_at",{ascending:false});if(error)throw error;return data||[];}
