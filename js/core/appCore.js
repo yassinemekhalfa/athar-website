@@ -1,10 +1,10 @@
-import {isStaffRole,isClientRole,canManageRole,canAdministerMembers,hasCapability,normalizeRole} from './permissions.js?v=20261104-5';
-import { db } from "../dataClient.js?v=20261104-5";
-import { getState, subscribe } from "./state.js?v=20261104-5";
-import * as ui from "./ui.js?v=20261104-5";
-import * as utils from "./utils.js?v=20261104-5";
-import { selectFolder as selectFolderImpl } from "../workspace/folders.js?v=20261104-5";
-import { selectModule as selectModuleImpl } from "./moduleRegistry.js?v=20261104-5";
+import {isStaffRole,isClientRole,canManageRole,canAdministerMembers,hasCapability,normalizeRole} from './permissions.js?v=20261104-6';
+import { db } from "../dataClient.js?v=20261104-6";
+import { getState, subscribe } from "./state.js?v=20261104-6";
+import * as ui from "./ui.js?v=20261104-6";
+import * as utils from "./utils.js?v=20261104-6";
+import { selectFolder as selectFolderImpl } from "../workspace/folders.js?v=20261104-6";
+import { selectModule as selectModuleImpl } from "./moduleRegistry.js?v=20261104-6";
 
 export const AppCore = {
   db,
@@ -25,7 +25,7 @@ export const AppCore = {
   selectFolder:selectFolderImpl,
   getSelectedModule:()=>getState().selectedModule,
   selectModule:selectModuleImpl,
-  getModuleContext(){ const s=getState(),role=normalizeRole(s.role); return {db,agencyId:s.agency?.id||null,agency:s.agency,resourceId:s.selectedResourceId||null,folderId:s.selectedFolderId,folder:s.folders.find(f=>f.id===s.selectedFolderId)||null,role,membership:s.membership,clientId:s.clientId,user:s.user,profile:s.profile,isStaff:isStaffRole(role),isOwner:role==="owner",isClient:isClientRole(role),isAdmin:canManageRole(role),canManageMembers:canAdministerMembers(role),canManageBilling:hasCapability(role,'billing'),canManageAll:hasCapability(role,'manageAll'),canCreate:hasCapability(role,'create'),canShare:hasCapability(role,'share'),canUpload:hasCapability(role,'upload'),canComment:hasCapability(role,'comment'),canDownload:hasCapability(role,'download'),surface:s.surface,AppCore}; },
+  getModuleContext(){ const s=getState(),role=normalizeRole(s.role),permissions=s.membership?.permissions||{}; return {db,agencyId:s.agency?.id||null,agency:s.agency,resourceId:s.selectedResourceId||null,folderId:s.selectedFolderId,folder:s.folders.find(f=>f.id===s.selectedFolderId)||null,role,permissions,membership:s.membership,clientId:s.clientId,user:s.user,profile:s.profile,isStaff:isStaffRole(role),isOwner:role==="owner",isClient:isClientRole(role),isAdmin:canManageRole(role),canManageMembers:canAdministerMembers(role)&&hasCapability(role,'invite',permissions),canManageBilling:hasCapability(role,'billing',permissions),canManageAll:hasCapability(role,'manageAll',permissions),canCreate:hasCapability(role,'create',permissions),canShare:hasCapability(role,'share',permissions),canUpload:hasCapability(role,'upload',permissions),canComment:hasCapability(role,'comment',permissions),canDownload:hasCapability(role,'download',permissions),surface:s.surface,AppCore}; },
   getState,
   subscribe,
   ui,

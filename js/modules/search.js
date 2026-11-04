@@ -1,7 +1,7 @@
-import { db } from "../dataClient.js?v=20261104-5";
-import { AppCore } from "../core/appCore.js?v=20261104-5";
-import { on } from "../core/events.js?v=20261104-5";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-5";
+import { db } from "../dataClient.js?v=20261104-6";
+import { AppCore } from "../core/appCore.js?v=20261104-6";
+import { on } from "../core/events.js?v=20261104-6";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-6";
 
 const MODULE_BY_ENTITY = Object.freeze({
   folder: null,

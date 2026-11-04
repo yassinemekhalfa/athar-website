@@ -1,6 +1,6 @@
-import { db } from "../dataClient.js?v=20261104-5";
-import { AppCore } from "../core/appCore.js?v=20261104-5";
-import { emit } from "../core/events.js?v=20261104-5";
+import { db } from "../dataClient.js?v=20261104-6";
+import { AppCore } from "../core/appCore.js?v=20261104-6";
+import { emit } from "../core/events.js?v=20261104-6";
 
 export const POSITION_STEP = 100;
 

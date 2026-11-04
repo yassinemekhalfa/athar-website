@@ -1,5 +1,5 @@
-import { db, isSupabaseMode } from "../dataClient.js?v=20261104-5";
-import { getState } from "../core/state.js?v=20261104-5";
+import { db, isSupabaseMode } from "../dataClient.js?v=20261104-6";
+import { getState } from "../core/state.js?v=20261104-6";
 
 const ATTACHMENT_BUCKET="conversation-attachments";
 export async function listMessages(conversationId){if(!conversationId)return [];const {data,error}=await db.from("messages").select("*").eq("conversation_id",conversationId).order("created_at",{ascending:true});if(error)throw error;const rows=data||[],ids=[...new Set(rows.map(m=>m.sender_id).filter(Boolean))],messageIds=rows.map(m=>m.id);let profiles=[],attachments=[];if(ids.length){const result=await db.from("profiles").select("id,full_name,email,avatar_url").in("id",ids);if(!result.error)profiles=result.data||[];else console.warn("Conversation profiles unavailable:",result.error);}if(messageIds.length){const result=await db.from("message_attachments").select("*").in("message_id",messageIds).order("created_at",{ascending:true});if(!result.error)attachments=result.data||[];else if(result.error.code!=="42P01")console.warn("Conversation attachments unavailable:",result.error);}const map=new Map(profiles.map(p=>[p.id,p]));const byMessage=new Map();attachments.forEach(a=>{if(!byMessage.has(a.message_id))byMessage.set(a.message_id,[]);byMessage.get(a.message_id).push(a);});return rows.map(m=>({...m,sender:map.get(m.sender_id)||null,attachments:byMessage.get(m.id)||[]}));}

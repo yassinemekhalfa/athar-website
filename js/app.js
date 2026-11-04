@@ -1,27 +1,37 @@
-import {openResourceRoute} from './workspace/resourceRoute.js?v=20261104-5';
-import {isStaffRole,roleBadge,canManageRole,canCreate} from './core/permissions.js?v=20261104-5';
-import './core/adaptive.js?v=20261104-5';
-import { loadResources } from "./workspace/resources.js?v=20261104-5";
-import { workspaceIcon } from "./views/workspaceIcons.js?v=20261104-5";
-import { restoreAuth, signOut } from "./auth/auth.js?v=20261104-5";
-import { getState, setState } from "./core/state.js?v=20261104-5";
-import { emit } from "./core/events.js?v=20261104-5";
-import { activateAgency } from "./workspace/agencies.js?v=20261104-5";
-import { renderFolderTree, openCreateFolder } from "./workspace/folderTree.js?v=20261104-5";
-import { renderBreadcrumb, selectFolder } from "./workspace/folders.js?v=20261104-5";
-import { openFolderSharing } from "./workspace/folderPermissions.js?v=20261104-5";
-import { renderClientsView, renderClientSpaces } from "./workspace/clients.js?v=20261104-5";
-import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js?v=20261104-5";
-import { mountGlobalSearch } from "./modules/search.js?v=20261104-5";
-import { AppCore } from "./core/appCore.js?v=20261104-5";
-import { db } from "./dataClient.js?v=20261104-5";
-import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=20261104-5";
-import { renderSettingsHub } from "./views/kitchenSettings.js?v=20261104-5";
-import { renderProfilePage, changePassword } from "./views/profilePage.js?v=20261104-5";
-import { applyTheme } from "./workspace/preferences.js?v=20261104-5";
+import {openResourceRoute} from './workspace/resourceRoute.js?v=20261104-6';
+import {isStaffRole,roleBadge,canManageRole,canCreate,isSectionVisible} from './core/permissions.js?v=20261104-6';
+import './core/adaptive.js?v=20261104-6';
+import { loadResources } from "./workspace/resources.js?v=20261104-6";
+import { workspaceIcon } from "./views/workspaceIcons.js?v=20261104-6";
+import { restoreAuth, signOut } from "./auth/auth.js?v=20261104-6";
+import { getState, setState } from "./core/state.js?v=20261104-6";
+import { emit } from "./core/events.js?v=20261104-6";
+import { activateAgency } from "./workspace/agencies.js?v=20261104-6";
+import { renderFolderTree, openCreateFolder } from "./workspace/folderTree.js?v=20261104-6";
+import { renderBreadcrumb, selectFolder } from "./workspace/folders.js?v=20261104-6";
+import { openFolderSharing } from "./workspace/folderPermissions.js?v=20261104-6";
+import { renderClientsView, renderClientSpaces } from "./workspace/clients.js?v=20261104-6";
+import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js?v=20261104-6";
+import { mountGlobalSearch } from "./modules/search.js?v=20261104-6";
+import { AppCore } from "./core/appCore.js?v=20261104-6";
+import { db } from "./dataClient.js?v=20261104-6";
+import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=20261104-6";
+import { renderSettingsHub } from "./views/kitchenSettings.js?v=20261104-6";
+import { renderProfilePage, changePassword } from "./views/profilePage.js?v=20261104-6";
+import { applyTheme } from "./workspace/preferences.js?v=20261104-6";
 
 let currentView = "home";
 let currentLibraryView = "everything";
+const VIEW_SECTIONS={home:'showHome',inbox:'showInbox',tasks:'showTasks','my-tasks':'showTasks',folder:'showLibrary',clients:'showClients',invoices:'showInvoices',proposals:'showProposals',settings:'showSettings'};
+function sectionForView(view){return view.startsWith('library-')?'showLibrary':VIEW_SECTIONS[view]||null;}
+function canSeeView(view){const s=getState(),section=sectionForView(view);return !section||isSectionVisible(s.role,section,s.membership?.permissions||{});}
+function applyMemberVisibility(){
+ const map={home:'showHome',inbox:'showInbox',tasks:'showTasks',invoices:'showInvoices','library-everything':'showLibrary',settings:'showSettings'};
+ document.querySelectorAll('[data-global-view]').forEach(node=>{const section=map[node.dataset.globalView];if(section)node.hidden=!canSeeView(node.dataset.globalView);});
+ document.querySelectorAll('[data-workspace-view="home"]').forEach(node=>node.hidden=!canSeeView('home'));
+ document.querySelectorAll('[data-workspace-view="my-tasks"]').forEach(node=>node.hidden=!canSeeView('my-tasks'));
+ document.querySelectorAll('.ap-library-toggle,.ap-library-nav').forEach(node=>node.hidden=!canSeeView('library-everything'));
+}
 
 function bindTabs() {
   document.querySelectorAll("#module-tabs [data-module]").forEach((btn) => btn.addEventListener("click", () => selectModule(btn.dataset.module)));
@@ -186,6 +196,9 @@ function renderSidebarAdmin() {
   const host = document.getElementById("sidebar-admin"); host.replaceChildren();
   for (const [label, handler, ownerOnly] of [["Clients", () => openAdmin("clients"), false], ["Team", () => openAdmin("team"), false], ["Website Admin", () => openAdmin("website"), true], ["Settings", () => openAdmin("settings"), true]]) {
     if (ownerOnly && getState().role !== "owner") continue;
+    if(label==='Clients'&&!canSeeView('clients'))continue;
+    if((label==='Team'||label==='Settings')&&!canSeeView('settings'))continue;
+    if(label==='Team'&&!AppCore.getModuleContext().canManageMembers)continue;
     const b = document.createElement("button"); b.type = "button"; b.className = "ap-sidebar-admin-link"; b.append(workspaceIcon(label==="Website Admin"?"demo":label==="Clients"?"clients":label==="Team"?"user":"settings"),document.createTextNode(label)); b.addEventListener("click", handler); host.append(b);
   }
 }
@@ -573,6 +586,7 @@ function markNavigation(view) {
 }
 
 async function showView(view, options = {}) {
+  if(!canSeeView(view)){const fallback=['home','inbox','tasks','library-everything','clients','invoices','proposals','settings'].find(canSeeView)||'profile';if(view!==fallback)return showView(fallback,options);}
   applyTheme(getState().agency?.settings||{});
   currentView = view; await unmountActiveModule(); setState({ selectedModule: null, selectedResourceId: null, selectedFolderId: null }); renderFolderTree(); hideFolderChrome(); markNavigation(view);
   const content = document.getElementById("module-content"); content.className = "ap-module-content"; const context = AppCore.getModuleContext();
@@ -593,6 +607,7 @@ async function showView(view, options = {}) {
 }
 
 async function showFolderOverview(folderId) {
+  if(!canSeeView('folder'))return showView(['home','inbox','tasks','clients','invoices'].find(canSeeView)||'profile');
   currentView = "folder"; await unmountActiveModule(); setState({ selectedModule: null, selectedResourceId: null, selectedFolderId: folderId }); hideFolderChrome(); markNavigation("folder"); renderFolderTree();
   const content = document.getElementById("module-content"); content.className = "ap-module-content";
   await renderFolderOverview(content, AppCore.getModuleContext(), folderId);
@@ -621,6 +636,8 @@ function openMoreMenu() {
   ];
   items.forEach(([label, iconName, handler, ownerOnly]) => {
     if (ownerOnly && getState().role !== "owner") return;
+    const itemView={Work:'home',Inbox:'inbox',Tasks:'tasks',Clients:'clients',Proposals:'proposals',Library:'library-everything',Settings:'settings',Archive:'library-archive'}[label];
+    if(itemView&&!canSeeView(itemView))return;
     const item = document.createElement("button"); item.type = "button"; item.className = "ap-more-menu__item";
     const icon = document.createElement("span"); icon.className = "ap-more-menu__icon"; icon.append(workspaceIcon(iconName));
     const text = document.createElement("span"); text.className = "ap-more-menu__label"; text.textContent = label;
@@ -768,7 +785,7 @@ function bindShell() {
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { document.body.classList.remove("ap-sidebar-open"); document.getElementById("inbox-panel").classList.remove("ap-inbox-panel--open"); document.getElementById("more-menu").hidden = true; } });
 }
 
-function renderShell() { renderAgencyIdentity(); renderUserMenu(); renderFolderTree(); renderClientSpaces(); renderBreadcrumb(); renderFolderActions(); renderSidebarAdmin(); paintWorkspaceNavigationIcons(); renderWorkspaceSidebarIcons(); bindWorkspaceNavigation(); const newFolder=document.getElementById('new-folder');if(newFolder)newFolder.hidden=!canCreate(getState().role);const input=document.querySelector("#global-search input"); if (input) {
+function renderShell() { renderAgencyIdentity(); renderUserMenu(); renderFolderTree(); renderClientSpaces(); renderBreadcrumb(); renderFolderActions(); renderSidebarAdmin(); paintWorkspaceNavigationIcons(); renderWorkspaceSidebarIcons(); bindWorkspaceNavigation(); applyMemberVisibility(); const newFolder=document.getElementById('new-folder');if(newFolder)newFolder.hidden=!canCreate(getState().role,getState().membership?.permissions||{})||!canSeeView('folder');const input=document.querySelector("#global-search input"); if (input) {
   input.placeholder = `Search ${getState().agency?.name || ""}...`;
 } }
 

@@ -1,5 +1,5 @@
-import {googleDrivePreview,googleDriveImage} from './drive-video.js?v=20261104-5';
-import {db,isSupabaseMode} from './dataClient.js?v=20261104-5';
+import {googleDrivePreview,googleDriveImage} from './drive-video.js?v=20261104-6';
+import {db,isSupabaseMode} from './dataClient.js?v=20261104-6';
 const $=id=>document.getElementById(id);
 const form=$('project-form'),status=$('status');
 let projects=[],current=null,dirty=false,busy=false,trustedClients=[],presentationSettings=null,profileSettings=null,uploadedTrustedLogo='';
