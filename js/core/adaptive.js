@@ -1,6 +1,6 @@
-import {workspaceIcon} from '../views/workspaceIcons.js?v=20261104-11';
-import {getState} from './state.js?v=20261104-11';
-import {roleBadge,canManageRole} from './permissions.js?v=20261104-11';
+import {workspaceIcon} from '../views/workspaceIcons.js?v=20261105-1';
+import {getState} from './state.js?v=20261105-1';
+import {roleBadge,canManageRole} from './permissions.js?v=20261105-1';
 
 const header=document.querySelector('.ap-header');
 if(header){

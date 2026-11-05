@@ -1,12 +1,12 @@
-import {canCreate} from '../core/permissions.js?v=20261104-11';
-import { openResource } from "./resources.js?v=20261104-11";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-11";
-import { createAccessControl } from "./accessControl.js?v=20261104-11";
-import { getState } from "../core/state.js?v=20261104-11";
-import { selectFolder, createFolder, updateFolder, archiveFolder, trashFolder, moveFolder, reorderFolderRelative } from "./folders.js?v=20261104-11";
-import { AppCore } from "../core/appCore.js?v=20261104-11";
-import { hasWorkspaceDrag, readWorkspaceDrag, startWorkspaceDrag, moveWorkspaceItem } from "./dragDrop.js?v=20261104-11";
-import { openWorkspaceItemActions } from "./itemActions.js?v=20261104-11";
+import {canCreate} from '../core/permissions.js?v=20261105-1';
+import { openResource } from "./resources.js?v=20261105-1";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261105-1";
+import { createAccessControl } from "./accessControl.js?v=20261105-1";
+import { getState } from "../core/state.js?v=20261105-1";
+import { selectFolder, createFolder, updateFolder, archiveFolder, trashFolder, moveFolder, reorderFolderRelative } from "./folders.js?v=20261105-1";
+import { AppCore } from "../core/appCore.js?v=20261105-1";
+import { hasWorkspaceDrag, readWorkspaceDrag, startWorkspaceDrag, moveWorkspaceItem } from "./dragDrop.js?v=20261105-1";
+import { openWorkspaceItemActions } from "./itemActions.js?v=20261105-1";
 
 const expanded = new Set();
 const initializedSelections = new Set();

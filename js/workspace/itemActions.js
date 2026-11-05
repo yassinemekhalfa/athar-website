@@ -1,14 +1,14 @@
-import { db } from "../dataClient.js?v=20261104-11";
-import { getState } from "../core/state.js?v=20261104-11";
-import { AppCore } from "../core/appCore.js?v=20261104-11";
-import { emit } from "../core/events.js?v=20261104-11";
-import { archiveFolder, createFolder, moveFolder, selectFolder, trashFolder, updateFolder } from "./folders.js?v=20261104-11";
-import { openFolderSharing } from "./folderPermissions.js?v=20261104-11";
-import { openItemSharing } from "./itemSharing.js?v=20261104-11";
-import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261104-11";
-import { moveWorkspaceItem } from "./dragDrop.js?v=20261104-11";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261104-11";
-import { uploadBrandAsset } from "./preferences.js?v=20261104-11";
+import { db } from "../dataClient.js?v=20261105-1";
+import { getState } from "../core/state.js?v=20261105-1";
+import { AppCore } from "../core/appCore.js?v=20261105-1";
+import { emit } from "../core/events.js?v=20261105-1";
+import { archiveFolder, createFolder, moveFolder, selectFolder, trashFolder, updateFolder } from "./folders.js?v=20261105-1";
+import { openFolderSharing } from "./folderPermissions.js?v=20261105-1";
+import { openItemSharing } from "./itemSharing.js?v=20261105-1";
+import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261105-1";
+import { moveWorkspaceItem } from "./dragDrop.js?v=20261105-1";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261105-1";
+import { uploadBrandAsset } from "./preferences.js?v=20261105-1";
 
 const TABLES = {
   board: "boards",
@@ -392,7 +392,7 @@ async function duplicateItem(item, onDone) {
 
 async function copyItemLink(item) {
   const path=item.type==='folder'?'#/folder/'+item.id:'#/resource/'+item.type+'/'+item.id;
-  await navigator.clipboard.writeText(new URL('index.html'+path,location.href).href);
+  await navigator.clipboard.writeText(new URL('workspace.html'+path,location.href).href);
   AppCore.ui.toast("Link copied.", "success");
 }
 

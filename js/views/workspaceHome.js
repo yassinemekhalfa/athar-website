@@ -1,12 +1,12 @@
-import { AppCore } from '../core/appCore.js?v=20261104-11';
-import { getState } from '../core/state.js?v=20261104-11';
-import { selectFolder, ensureUnfiledFolder } from '../workspace/folders.js?v=20261104-11';
-import { openCreateFolder } from '../workspace/folderTree.js?v=20261104-11';
-import { selectModule } from '../core/moduleRegistry.js?v=20261104-11';
-import { workspaceIcon } from './workspaceIcons.js?v=20261104-11';
-import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js?v=20261104-11';
-import { attachWorkspaceDropTarget, startWorkspaceDrag } from '../workspace/dragDrop.js?v=20261104-11';
-import { canCreate } from '../core/permissions.js?v=20261104-11';
+import { AppCore } from '../core/appCore.js?v=20261105-1';
+import { getState } from '../core/state.js?v=20261105-1';
+import { selectFolder, ensureUnfiledFolder } from '../workspace/folders.js?v=20261105-1';
+import { openCreateFolder } from '../workspace/folderTree.js?v=20261105-1';
+import { selectModule } from '../core/moduleRegistry.js?v=20261105-1';
+import { workspaceIcon } from './workspaceIcons.js?v=20261105-1';
+import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js?v=20261105-1';
+import { attachWorkspaceDropTarget, startWorkspaceDrag } from '../workspace/dragDrop.js?v=20261105-1';
+import { canCreate } from '../core/permissions.js?v=20261105-1';
 
 function el(tag, cls = '', text = null) {
   const node = document.createElement(tag);
@@ -232,10 +232,10 @@ async function createResource(_title, moduleName) {
       await selectFolder(resource.folder_id || folder.id, { skipOverview: true, refreshModule: false });
       await selectModule(moduleName, resource.id);
     };
-    if (moduleName === 'boards') (await import('../modules/boards.js?v=20261104-11')).openBoardForm(null, { context, onDone: openCreatedResource });
-    else if (moduleName === 'conversation') (await import('../modules/conversation.js?v=20261104-11')).openCreateConversation({ context, onDone: openCreatedResource });
-    else if (moduleName === 'embeds') (await import('../modules/embeds.js?v=20261104-11')).openEmbedCreation(context, openCreatedResource);
-    else if (moduleName === 'docs') await (await import('../modules/docs.js?v=20261104-11')).createDocument();
+    if (moduleName === 'boards') (await import('../modules/boards.js?v=20261105-1')).openBoardForm(null, { context, onDone: openCreatedResource });
+    else if (moduleName === 'conversation') (await import('../modules/conversation.js?v=20261105-1')).openCreateConversation({ context, onDone: openCreatedResource });
+    else if (moduleName === 'embeds') (await import('../modules/embeds.js?v=20261105-1')).openEmbedCreation(context, openCreatedResource);
+    else if (moduleName === 'docs') await (await import('../modules/docs.js?v=20261105-1')).createDocument();
   } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), 'error'); }
 }
 

@@ -1,5 +1,5 @@
-import { db } from "../dataClient.js?v=20261104-11";
-import { getState } from "../core/state.js?v=20261104-11";
+import { db } from "../dataClient.js?v=20261105-1";
+import { getState } from "../core/state.js?v=20261105-1";
 
 const BUCKET="conversation-attachments";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));

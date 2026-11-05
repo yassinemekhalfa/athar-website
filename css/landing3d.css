@@ -3,7 +3,9 @@ html{scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
 .menu-toggle{display:none;font:inherit;color:var(--ink);border:1px solid var(--line);background:var(--bg);border-radius:12px;width:44px;height:44px;cursor:pointer}
 .ring-ctrl button:disabled{opacity:.35;cursor:default}
 .ring-ctrl{position:relative;z-index:2}
-.ring-stage{z-index:1}
+.ring-stage{z-index:1;cursor:grab;user-select:none;-webkit-user-select:none;overscroll-behavior-inline:contain}
+.ring-stage.is-dragging{cursor:grabbing}
+.ring-stage:focus-visible{outline:2px solid var(--violet);outline-offset:6px;border-radius:18px}
 .card:not(.active){pointer-events:none}
 .card{overflow:auto;scrollbar-width:thin}
 .card ul{padding-top:12px;flex-shrink:0}

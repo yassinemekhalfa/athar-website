@@ -1,1 +1,1 @@
-﻿globalThis.ATHAR_CONFIG={"mode":"supabase","supabaseUrl":"https://naczzmdccodzioadhdol.supabase.co","supabasePublishableKey":"sb_publishable_7NWBzhdJ4_TkrWQ1xqR9BQ_OU1CszHB","appUrl":"https://atharmarketing.agency"};
+globalThis.ATHAR_CONFIG={"mode":"supabase","supabaseUrl":"https://naczzmdccodzioadhdol.supabase.co","supabasePublishableKey":"sb_publishable_7NWBzhdJ4_TkrWQ1xqR9BQ_OU1CszHB","appUrl":"https://atharmarketing.agency"};

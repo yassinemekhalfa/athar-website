@@ -1,7 +1,7 @@
-import { db } from "../dataClient.js?v=20261104-11";
-import { AppCore } from "../core/appCore.js?v=20261104-11";
-import { emit, on } from "../core/events.js?v=20261104-11";
-import { payInvoice } from "./payments.js?v=20261104-11";
+import { db } from "../dataClient.js?v=20261105-1";
+import { AppCore } from "../core/appCore.js?v=20261105-1";
+import { emit, on } from "../core/events.js?v=20261105-1";
+import { payInvoice } from "./payments.js?v=20261105-1";
 
 const state = {
   container: null,

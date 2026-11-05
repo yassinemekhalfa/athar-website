@@ -1,9 +1,9 @@
-import {inviteMember} from '../auth/invitations.js?v=20261104-11';
-import {db} from '../dataClient.js?v=20261104-11';
-import {AppCore} from '../core/appCore.js?v=20261104-11';
-import {emit} from '../core/events.js?v=20261104-11';
-import {roleLabel,hasCapability} from '../core/permissions.js?v=20261104-11';
-import {workspaceIcon} from '../views/workspaceIcons.js?v=20261104-11';
+import {inviteMember} from '../auth/invitations.js?v=20261105-1';
+import {db} from '../dataClient.js?v=20261105-1';
+import {AppCore} from '../core/appCore.js?v=20261105-1';
+import {emit} from '../core/events.js?v=20261105-1';
+import {roleLabel,hasCapability} from '../core/permissions.js?v=20261105-1';
+import {workspaceIcon} from '../views/workspaceIcons.js?v=20261105-1';
 
 const tables={folder:'folders',board:'boards',conversation:'conversations',doc:'docs',embed:'embeds',file:'files'};
 const el=(tag,cls='',text='')=>{const n=document.createElement(tag);n.className=cls;n.textContent=text;return n;};
@@ -43,10 +43,11 @@ export async function openItemSharing(item,context,onSaved){
         for(const person of filtered){
           const row=el('div','ap-sharing-person'),label=el('label','ap-item-sharing__row'),check=el('input');check.type='checkbox';check.checked=grants.has(person.id);check.dataset.accessKind=person.kind;check.value=person.id;
           const avatar=el('span','ap-sharing-avatar',person.name.slice(0,1).toUpperCase()),copy=el('span','ap-item-sharing__copy');copy.append(el('strong','',person.name),el('small','',person.detail));label.append(check,avatar,copy);row.append(label);
-          check.addEventListener('change',()=>{if(check.checked)grants.set(person.id,{[person.kind+'_id']:person.id,can_comment:true,can_upload:false});else grants.delete(person.id);draw();});
-          if(person.kind==='client'&&grants.has(person.id)){
+          check.addEventListener('change',()=>{if(check.checked)grants.set(person.id,{[person.kind+'_id']:person.id,can_view:true,can_create:false,can_edit:false,can_upload:false,can_comment:true,can_download:true});else grants.delete(person.id);draw();});
+          if(grants.has(person.id)){
             const options=el('div','ap-sharing-options');
-            for(const [key,text] of [['can_comment','Allow comments'],...(type==='folders'?[['can_upload','Allow uploads']]:[])]){const option=el('label',''),toggle=el('input');toggle.type='checkbox';toggle.checked=key==='can_comment'?grants.get(person.id)[key]!==false:grants.get(person.id)[key]===true;toggle.addEventListener('change',()=>{grants.get(person.id)[key]=toggle.checked;});option.append(toggle,document.createTextNode(text));options.append(option);}row.append(options);
+            const controls=[...(type==='folders'?[['can_create','Add items inside']]:[]),['can_edit','Modify'],['can_upload','Upload files'],['can_comment','Comment and review'],['can_download','Download']];
+            for(const [key,text] of controls){const option=el('label',''),toggle=el('input');toggle.type='checkbox';toggle.checked=['can_comment','can_download'].includes(key)?grants.get(person.id)[key]!==false:grants.get(person.id)[key]===true;toggle.addEventListener('change',()=>{grants.get(person.id)[key]=toggle.checked;});option.append(toggle,document.createTextNode(text));options.append(option);}row.append(options);
           }
           list.append(row);
         }
