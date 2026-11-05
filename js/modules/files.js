@@ -1,7 +1,7 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261105-1';
-import { db, isSupabaseMode } from "../dataClient.js?v=20261105-1";
-import { AppCore } from "../core/appCore.js?v=20261105-1";
-import { emit, on } from "../core/events.js?v=20261105-1";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261105-2';
+import { db, isSupabaseMode } from "../dataClient.js?v=20261105-2";
+import { AppCore } from "../core/appCore.js?v=20261105-2";
+import { emit, on } from "../core/events.js?v=20261105-2";
 
 const MAX_UPLOAD_BYTES = 26214400;
 const MAX_DRIVE_UPLOAD_BYTES = 5 * 1024 ** 4;
@@ -109,6 +109,11 @@ function render() {
   const heading = el("div", "ap-files__heading");
   heading.append(el("h2", "ap-files__title", "Files"), el("p", "ap-files__subtitle", state.context.isClient ? "Files shared with you in this folder." : "Upload and share files for this folder."));
   header.append(heading);
+  if (isSupabaseMode && (state.context.isOwner || state.context.role === "admin")) {
+    const changeDrive = button("Change Google Drive", "secondary");
+    changeDrive.addEventListener("click", changeDriveAccount);
+    header.append(changeDrive);
+  }
   if (state.canUpload) {
     const upload = button("Upload files", "primary");
     upload.addEventListener("click", openUploadModal);
@@ -318,20 +323,39 @@ async function driveAction(action, payload = {}, agencyId = state.context?.agenc
 }
 
 let driveConnected = false;
+async function authorizeDrive(context = state.context, changeAccount = false) {
+  const connection = await driveAction("connect", { change_account: changeAccount }, context.agencyId);
+  const popup = window.open(connection.authorization_url, "athar-google-drive", "popup,width=620,height=760");
+  if (!popup) throw Object.assign(new Error("Allow popups so Athar can connect Google Drive."), { userMessage: true });
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { cleanup(); reject(new Error("Google Drive connection timed out.")); }, 10 * 60_000);
+    const receive = event => { if (event.source !== popup || event.data?.type !== "athar-google-drive") return; cleanup(); event.data.ok ? resolve() : reject(new Error("Google Drive connection was not completed.")); };
+    const cleanup = () => { clearTimeout(timer); window.removeEventListener("message", receive); };
+    window.addEventListener("message", receive);
+  });
+  const status = await driveAction("status", {}, context.agencyId);
+  if (!status?.connected) throw new Error("Google Drive is not connected.");
+  driveConnected = true;
+  return status;
+}
+
+async function changeDriveAccount() {
+  const current = await driveAction("status", {}, state.context.agencyId);
+  const label = current?.email ? ` (${current.email})` : "";
+  const proceed = await AppCore.ui.confirm({title:"Change Google Drive account?",message:`The current Drive${label} will remain connected until the new account is approved. Existing files stay in the old Drive; future uploads use the new account.`,confirmLabel:"Choose new account"});
+  if (!proceed) return;
+  try {
+    const next = await authorizeDrive(state.context, true);
+    AppCore.ui.toast(`Google Drive changed${next.email ? ` to ${next.email}` : ""}.`, "success");
+    await loadAndRender();
+  } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), "error"); }
+}
+
 async function ensureDriveConnection(context = state.context) {
   if (driveConnected) return;
   let status = await driveAction("status", {}, context.agencyId);
   if (!status?.connected) {
-    const connection = await driveAction("connect", {}, context.agencyId);
-    const popup = window.open(connection.authorization_url, "athar-google-drive", "popup,width=620,height=760");
-    if (!popup) throw Object.assign(new Error("Allow popups so Athar can connect Google Drive."), { userMessage: true });
-    await new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { cleanup(); reject(new Error("Google Drive connection timed out.")); }, 10 * 60_000);
-      const receive = event => { if (event.source !== popup || event.data?.type !== "athar-google-drive") return; cleanup(); event.data.ok ? resolve() : reject(new Error("Google Drive connection was not completed.")); };
-      const cleanup = () => { clearTimeout(timer); window.removeEventListener("message", receive); };
-      window.addEventListener("message", receive);
-    });
-    status = await driveAction("status", {}, context.agencyId);
+    status = await authorizeDrive(context);
   }
   if (!status?.connected) throw new Error("Google Drive is not connected.");
   driveConnected = true;
