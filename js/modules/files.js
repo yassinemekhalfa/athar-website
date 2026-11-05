@@ -1,7 +1,7 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261105-2';
-import { db, isSupabaseMode } from "../dataClient.js?v=20261105-2";
-import { AppCore } from "../core/appCore.js?v=20261105-2";
-import { emit, on } from "../core/events.js?v=20261105-2";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261105-3';
+import { db, isSupabaseMode } from "../dataClient.js?v=20261105-3";
+import { AppCore } from "../core/appCore.js?v=20261105-3";
+import { emit, on } from "../core/events.js?v=20261105-3";
 
 const MAX_UPLOAD_BYTES = 26214400;
 const MAX_DRIVE_UPLOAD_BYTES = 5 * 1024 ** 4;
@@ -380,6 +380,24 @@ export async function uploadFileToFolder(context, folderId, file, clientVisible 
   const limit = isSupabaseMode ? MAX_DRIVE_UPLOAD_BYTES : MAX_UPLOAD_BYTES;
   if (!isAllowedFile(file, limit)) throw new Error(file?.size > limit ? `That file is larger than ${isSupabaseMode ? "the Google Drive upload limit" : "25 MiB"}.` : "That file type is not allowed.");
   return uploadFile(file, clientVisible, context, folderId, originalName);
+}
+
+export async function storedFileUrl(file, expiresIn = 3600) {
+  if (file?.storage_provider === "google_drive" && file.external_file_id) {
+    const base = globalThis.ATHAR_CONFIG?.supabaseUrl?.replace(/\/$/, "");
+    return `${base}/functions/v1/drive-video?id=${encodeURIComponent(file.external_file_id)}`;
+  }
+  const { data, error } = await db.storage.from(file?.bucket_name || "project-files").createSignedUrl(file?.storage_path || file?.path, expiresIn);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function deleteUploadedFile(file, context = state.context) {
+  if (file?.storage_provider === "google_drive") return driveAction("delete", { file_id: file.id }, context.agencyId);
+  const { error: storageError } = await db.storage.from(file?.bucket_name || "project-files").remove([file?.storage_path || file?.path]);
+  if (storageError) throw storageError;
+  const { error } = await db.from("files").delete().eq("id", file.id);
+  if (error) throw error;
 }
 
 async function openFile(file) {

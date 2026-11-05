@@ -1,14 +1,14 @@
-import {roleBadge} from '../core/permissions.js?v=20261105-2';
-import {db} from '../dataClient.js?v=20261105-2';
-import { AppCore } from "../core/appCore.js?v=20261105-2";
-import { on, emit } from "../core/events.js?v=20261105-2";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261105-2";
-import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261105-2";
-import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261105-2";
-import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261105-2";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261105-2";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261105-2";
-import { openItemSharing } from "../workspace/itemSharing.js?v=20261105-2";
+import {roleBadge} from '../core/permissions.js?v=20261105-3';
+import {db} from '../dataClient.js?v=20261105-3';
+import { AppCore } from "../core/appCore.js?v=20261105-3";
+import { on, emit } from "../core/events.js?v=20261105-3";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261105-3";
+import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261105-3";
+import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261105-3";
+import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261105-3";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261105-3";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261105-3";
+import { openItemSharing } from "../workspace/itemSharing.js?v=20261105-3";
 
 const state = { container:null, context:null, conversations:[], activeId:null, messages:[], off:[], replyTo:null, timer:null,tab:"messages",filter:"all",customizing:false,iconPicker:false,actionMenu:false,requestVersion:0,sending:false };
 const drafts=new Map();

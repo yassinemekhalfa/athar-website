@@ -1,6 +1,6 @@
-import {db} from '../dataClient.js?v=20261105-2';
-import {AppCore} from '../core/appCore.js?v=20261105-2';
-import {createTask} from '../modules/tasks.js?v=20261105-2';
+import {db} from '../dataClient.js?v=20261105-3';
+import {AppCore} from '../core/appCore.js?v=20261105-3';
+import {createTask} from '../modules/tasks.js?v=20261105-3';
 const el=(t,c='',text='')=>{const n=document.createElement(t);n.className=c;n.textContent=text;return n;};
 export function openMessageTask(message,context){
  const form=el('form','ap-stack'),board=el('select','ap-input'),title=el('input','ap-input'),description=el('textarea','ap-textarea');title.value=message.body.slice(0,100);title.required=true;description.value=message.body;

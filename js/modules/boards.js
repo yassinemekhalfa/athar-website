@@ -1,14 +1,15 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261105-2';
-import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261105-2';
-import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261105-2';
-import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261105-2';
-import { uploadBrandAsset } from "../workspace/preferences.js?v=20261105-2";
-import { db } from "../dataClient.js?v=20261105-2";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261105-2";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261105-2";
-import { AppCore } from "../core/appCore.js?v=20261105-2";
-import { emit, on } from "../core/events.js?v=20261105-2";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261105-2";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261105-3';
+import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261105-3';
+import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261105-3';
+import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261105-3';
+import { uploadBrandAsset } from "../workspace/preferences.js?v=20261105-3";
+import { uploadFileToFolder, storedFileUrl, deleteUploadedFile } from "./files.js?v=20261105-3";
+import { db } from "../dataClient.js?v=20261105-3";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261105-3";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261105-3";
+import { AppCore } from "../core/appCore.js?v=20261105-3";
+import { emit, on } from "../core/events.js?v=20261105-3";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261105-3";
 import {
   POSITION_STEP,
   sortByPosition,
@@ -26,7 +27,7 @@ import {
   deleteTaskComment,
   profileLabel,
   priorityLabel
-} from "./tasks.js?v=20261105-2";
+} from "./tasks.js?v=20261105-3";
 
 const state = {
   container: null,
@@ -1201,10 +1202,15 @@ function validationStatus(task){
   badge.dataset.approvalDue=task.validation?.due_at||'';badge.title=task.validation?.due_at?'Approval due '+new Date(task.validation.due_at).toLocaleString():'';return badge;
 }
 
+async function uploadTaskAttachment(file,task,clientVisible){
+  const id=await uploadFileToFolder(state.context,state.context.folderId,file,clientVisible,file.name||'attachment');
+  const {error:updateError}=await db.from('files').update({task_id:task.id}).eq('id',id);if(updateError)throw updateError;
+  const {data:record,error}=await db.from('files').select('*').eq('id',id).single();if(error)throw error;
+  return {id:record.id,name:record.original_name,path:record.storage_path,type:record.mime_type,size:record.size_bytes,storage_provider:record.storage_provider,external_file_id:record.external_file_id,external_url:record.external_url,bucket_name:record.bucket_name};
+}
+
 async function openTaskMediaReview(task, attachment, canAnnotate = true) {
-  const { data, error } = await db.storage.from("project-files").createSignedUrl(attachment.path, 3600);
-  if (error) throw error;
-  const url = data.signedUrl;
+  const url = await storedFileUrl(attachment, 3600);
   const details = taskDetailData(task);
   const overlay = el("div", "k-review-overlay");
   overlay.setAttribute("role", "dialog");
@@ -1438,14 +1444,8 @@ async function openTaskDetail(task, initialTab = "comments") {
     const file = upload.files?.[0];
     if (!file) return;
     try {
-      if (file.size > 26214400) throw new Error("Choose a file smaller than 25 MB.");
-      const id = globalThis.ATHAR_UUID();
-      const path = `${state.context.agencyId}/${state.context.folderId}/${id}/${(file.name || "file").replace(/[^a-zA-Z0-9._-]/g, "-")}`;
-      const { error: metadataError } = await db.from("files").insert({ id, agency_id: state.context.agencyId, folder_id: state.context.folderId, task_id:task.id, storage_path: path, original_name: file.name || "attachment", mime_type: file.type || "application/octet-stream", size_bytes: file.size, client_visible: task.client_visible, uploaded_by: state.context.user.id });
-      if (metadataError) throw metadataError;
-      const { error: uploadError } = await db.storage.from("project-files").upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
-      if (uploadError) throw uploadError;
-      await saveDetails({ ...details, attachments: [...details.attachments, { id, name: file.name || "Attachment", path, type: file.type || "application/octet-stream", size: file.size }] });
+      const attachment=await uploadTaskAttachment(file,task,task.client_visible);
+      await saveDetails({ ...details, attachments: [...details.attachments, attachment] });
       upload.value = "";
       await renderCurrentTab();
       AppCore.ui.toast("Attachment uploaded.", "success");
@@ -1604,12 +1604,10 @@ async function openTaskDetail(task, initialTab = "comments") {
           attachmentCard.append(name);
           if (attachment.type?.startsWith("audio/")) {
             try {
-              const { data, error } = await db.storage.from("project-files").createSignedUrl(attachment.path, 3600);
-              if (error) throw error;
               const player = document.createElement("audio");
               player.controls = true;
               player.preload = "none";
-              player.src = data.signedUrl;
+              player.src = await storedFileUrl(attachment,3600);
               attachmentCard.append(player);
             } catch (error) {
               attachmentCard.append(el("span", "k-task-comment-media-error", AppCore.ui.describeError(error)));
@@ -1645,10 +1643,7 @@ async function openTaskDetail(task, initialTab = "comments") {
             if (media?.attachments?.length) {
               const failures = [];
               for (const attachment of media.attachments) {
-                const { error: storageError } = await db.storage.from("project-files").remove([attachment.path]);
-                if (storageError) failures.push(storageError);
-                const { error: rowError } = await db.from("files").delete().eq("id", attachment.id);
-                if (rowError) failures.push(rowError);
+                try{await deleteUploadedFile(attachment,state.context);}catch(error){failures.push(error);}
               }
               if (failures.length) throw new Error(`Attachment cleanup failed: ${failures.map(error => AppCore.ui.describeError(error)).join("; ")}`);
             }
@@ -1674,7 +1669,7 @@ async function openTaskDetail(task, initialTab = "comments") {
     }
     panel.replaceChildren(list);
   }
-  function renderFilesTab() { panel.replaceChildren(); const grid = el("div", "k-task-files-grid"); if (!details.attachments.length) { grid.append(el("div", "k-task-files-empty", "No files yet")); } details.attachments.forEach(file => { const card = button("", "ghost"); card.className = "k-task-file-card";card.disabled=!state.context.canDownload&&!state.context.isClient; card.append(workspaceIcon(file.type?.startsWith("image/") ? "image" : "file"), el("span", "k-task-file-copy", file.name || "Attachment")); card.addEventListener("click", async () => { const { data, error } = await db.storage.from("project-files").createSignedUrl(file.path, 300); if (error) AppCore.ui.toast(AppCore.ui.describeError(error), "error"); else window.open(data.signedUrl, "_blank", "noopener,noreferrer"); }); grid.append(card); }); panel.append(grid); }
+  function renderFilesTab() { panel.replaceChildren(); const grid = el("div", "k-task-files-grid"); if (!details.attachments.length) { grid.append(el("div", "k-task-files-empty", "No files yet")); } details.attachments.forEach(file => { const card = button("", "ghost"); card.className = "k-task-file-card";card.disabled=!state.context.canDownload&&!state.context.isClient; card.append(workspaceIcon(file.type?.startsWith("image/") ? "image" : "file"), el("span", "k-task-file-copy", file.name || "Attachment")); card.addEventListener("click", async () => { try{window.open(await storedFileUrl(file,300), "_blank", "noopener,noreferrer");}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error), "error");} }); grid.append(card); }); panel.append(grid); }
   function renderLogTab() { panel.replaceChildren(); const log = el("div", "k-task-log"); [["plus", "Task created", task.created_at], ["edit", "Task last updated", task.updated_at], ["check", task.completed_at ? "Task completed" : "Task open", task.completed_at]].forEach(([iconName, labelText, date]) => { const row = el("div", "k-task-log-row"); const iconHost = el("span", "k-task-log-icon"); iconHost.append(workspaceIcon(iconName)); row.append(iconHost, el("span", "", `${labelText}${date ? ` · ${AppCore.utils.formatDate(date, "short")}` : ""}`)); log.append(row); }); panel.append(log); }
   function renderCommentComposer() {
     composerHost.replaceChildren();
@@ -1765,37 +1760,7 @@ async function openTaskDetail(task, initialTab = "comments") {
         const uploaded = [];
         try {
           for (const file of selectedFiles) {
-            const id = globalThis.ATHAR_UUID();
-            const safeName = (file.name || "attachment").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-160);
-            const path = `${state.context.agencyId}/${state.context.folderId}/${id}/${safeName}`;
-            const { error: metadataError } = await db.from("files").insert({
-              id,
-              agency_id: state.context.agencyId,
-              folder_id: state.context.folderId,
-              task_id: task.id,
-              uploaded_by: state.context.user.id,
-              bucket_name: "project-files",
-              storage_path: path,
-              original_name: file.name || "attachment",
-              mime_type: file.type,
-              size_bytes: file.size,
-              client_visible: state.context.isClient ? true : clientVisible,
-              privacy: state.context.isClient || clientVisible ? "shared" : "private"
-            });
-            if (metadataError) throw metadataError;
-            const { error: uploadError } = await db.storage.from("project-files").upload(path, file, {
-              cacheControl: "3600",
-              upsert: false,
-              contentType: file.type
-            });
-            if (uploadError) {
-              const { error: cleanupError } = await db.from("files").delete().eq("id", id);
-              if (cleanupError) {
-                throw new Error(`${AppCore.ui.describeError(uploadError)} Metadata cleanup also failed: ${AppCore.ui.describeError(cleanupError)}`);
-              }
-              throw uploadError;
-            }
-            uploaded.push({ id, name: file.name || "Attachment", path, type: file.type, size: file.size });
+            uploaded.push(await uploadTaskAttachment(file,task,state.context.isClient?true:clientVisible));
           }
           if (uploaded.length) {
             const nextDetails = taskDetailData(task);
@@ -1810,10 +1775,7 @@ async function openTaskDetail(task, initialTab = "comments") {
         } catch (error) {
           const cleanupErrors = [];
           for (const attachment of uploaded) {
-            const { error: storageError } = await db.storage.from("project-files").remove([attachment.path]);
-            if (storageError) cleanupErrors.push(storageError);
-            const { error: rowError } = await db.from("files").delete().eq("id", attachment.id);
-            if (rowError) cleanupErrors.push(rowError);
+            try{await deleteUploadedFile(attachment,state.context);}catch(cleanupError){cleanupErrors.push(cleanupError);}
           }
           try {
             await deleteTaskComment(comment, state.context);
