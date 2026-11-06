@@ -1,6 +1,6 @@
-import {googleDrivePreview,googleDriveImage} from './drive-video.js?v=20261106-4';
-import {db,isSupabaseMode} from './dataClient.js?v=20261106-4';
-import {uploadBlobWithProgress} from './modules/files.js?v=20261106-4';
+import {googleDrivePreview,googleDriveImage} from './drive-video.js?v=20261106-5';
+import {db,isSupabaseMode} from './dataClient.js?v=20261106-5';
+import {uploadBlobWithProgress} from './modules/files.js?v=20261106-5';
 const $=id=>document.getElementById(id);
 const form=$('project-form'),status=$('status');
 let projects=[],current=null,dirty=false,busy=false,trustedClients=[],presentationSettings=null,profileSettings=null,uploadedTrustedLogo='';

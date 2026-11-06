@@ -1,7 +1,7 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-4';
-import { db, isSupabaseMode } from "../dataClient.js?v=20261106-4";
-import { AppCore } from "../core/appCore.js?v=20261106-4";
-import { emit, on } from "../core/events.js?v=20261106-4";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-5';
+import { db, isSupabaseMode } from "../dataClient.js?v=20261106-5";
+import { AppCore } from "../core/appCore.js?v=20261106-5";
+import { emit, on } from "../core/events.js?v=20261106-5";
 
 const MAX_UPLOAD_BYTES = 26214400;
 export const MAX_DRIVE_UPLOAD_BYTES = 5_000_000_000_000;
@@ -221,10 +221,33 @@ export function openUploadModal() {
   transferProgress.max = 100;
   transferProgress.value = 0;
   transferProgress.hidden = true;
-  const showSelection = input => { const files = [...input.files || []]; selection.textContent = files.length ? `${files.length} file${files.length === 1 ? "" : "s"} selected.` : "No files selected."; };
+  const queue = el("div", "ap-file-upload__queue");
+  let queueEntries = [];
+  let retryFiles = null;
+  const renderQueue = files => {
+    queueEntries = files.map(file => {
+      const row = el("div", "ap-file-upload__queue-item");
+      const name = el("span", "ap-file-upload__queue-name", file.webkitRelativePath || file.name);
+      const status = el("span", "ap-file-upload__queue-state", "Ready");
+      const progress = document.createElement("progress");
+      progress.max = 100;
+      progress.value = 0;
+      row.append(name, status, progress);
+      return { file, row, status, progress };
+    });
+    queue.replaceChildren(...queueEntries.map(entry => entry.row));
+  };
+  const showSelection = input => {
+    const files = [...input.files || []];
+    retryFiles = null;
+    selection.textContent = files.length ? `${files.length} file${files.length === 1 ? "" : "s"} selected. Choose Upload to start.` : "No files selected.";
+    renderQueue(files);
+    transferProgress.hidden = true;
+    transferProgress.value = 0;
+  };
   fileInput.addEventListener("change", () => { if (fileInput.files?.length) folderInput.value = ""; showSelection(fileInput); });
   folderInput.addEventListener("change", () => { if (folderInput.files?.length) fileInput.value = ""; showSelection(folderInput); });
-  content.append(chooser, folderChooser, selection, transferProgress);
+  content.append(chooser, folderChooser, selection, queue, transferProgress);
 
   let visible = null;
   if (state.context.canShare) {
@@ -241,11 +264,20 @@ export function openUploadModal() {
   const upload = button("Upload", "primary");
   cancel.addEventListener("click", () => AppCore.ui.closeModal());
   upload.addEventListener("click", async () => {
-    const files = [...(folderInput.files?.length ? folderInput.files : fileInput.files || [])];
+    const selectedFiles = [...(folderInput.files?.length ? folderInput.files : fileInput.files || [])];
+    const files = retryFiles || selectedFiles;
     if (!files.length) return fileInput.focus();
     const limit = isSupabaseMode ? MAX_DRIVE_UPLOAD_BYTES : MAX_UPLOAD_BYTES;
     const accepted = files.filter(file => isAllowedFile(file, limit)), rejected = files.length - accepted.length;
     if (!accepted.length) return AppCore.ui.toast(`None of the selected files can be uploaded. Check their type and ${isSupabaseMode ? "available Google Drive storage" : "25 MiB size limit"}.`, "warning");
+    retryFiles = null;
+    const entries = new Map(queueEntries.map(entry => [entry.file, entry]));
+    files.filter(file => !isAllowedFile(file, limit)).forEach(file => {
+      const entry = entries.get(file);
+      if (!entry) return;
+      entry.row.classList.add("is-skipped");
+      entry.status.textContent = file.size > limit ? "Too large" : "Unsupported type";
+    });
     upload.disabled = true;
     cancel.disabled = true;
     let completed = 0;
@@ -254,16 +286,23 @@ export function openUploadModal() {
     transferProgress.value = 0;
     try {
       for (const file of accepted) {
+        const entry = entries.get(file);
+        if (entry) { entry.row.classList.remove("is-failed", "is-uploaded"); entry.status.textContent = "Uploading…"; entry.progress.value = 0; }
         upload.textContent = `Uploading ${completed + 1} of ${accepted.length}…`;
         selection.textContent = `Uploading ${file.webkitRelativePath || file.name}`;
         try { await uploadFile(file, state.context.isClient ? true : Boolean(visible?.checked), state.context, state.context?.folderId, file.webkitRelativePath || file.name, progress => {
           const percent = Math.round(progress * 100);
           selection.textContent = `Uploading ${file.webkitRelativePath || file.name} — ${percent}% (${completed + 1} of ${accepted.length})`;
           transferProgress.value = Math.round(((completed + progress) / accepted.length) * 100);
+          if (entry) { entry.progress.value = percent; entry.status.textContent = `Uploading — ${percent}%`; }
         }); }
-        catch (error) { failures.push({ file, error }); }
+        catch (error) {
+          failures.push({ file, error });
+          if (entry) { entry.row.classList.add("is-failed"); entry.status.textContent = `Failed: ${AppCore.ui.describeError(error)}`; }
+        }
         completed += 1;
         transferProgress.value = Math.round((completed / accepted.length) * 100);
+        if (!failures.some(item => item.file === file) && entry) { entry.row.classList.add("is-uploaded"); entry.status.textContent = "Uploaded"; entry.progress.value = 100; }
       }
       await loadAndRender();
       const succeeded = accepted.length - failures.length;
@@ -273,7 +312,8 @@ export function openUploadModal() {
       } else {
         const firstFailure = failures[0];
         const reason = firstFailure ? AppCore.ui.describeError(firstFailure.error) : `${rejected} unsupported file${rejected === 1 ? "" : "s"}`;
-        selection.textContent = `${succeeded} uploaded, ${failures.length + rejected} skipped or failed. ${firstFailure ? `${firstFailure.file.name}: ${reason}` : reason}`;
+        retryFiles = failures.map(item => item.file);
+        selection.textContent = `${succeeded} uploaded; ${failures.length} failed${rejected ? `; ${rejected} unsupported` : ""}. Retry only failed files below. ${firstFailure ? `${firstFailure.file.name}: ${reason}` : reason}`;
         AppCore.ui.toast(`${succeeded} uploaded. ${firstFailure ? reason : `${rejected} unsupported file${rejected === 1 ? "" : "s"}.`}`, "warning");
       }
     } catch (error) {
@@ -281,7 +321,7 @@ export function openUploadModal() {
     } finally {
       upload.disabled = false;
       cancel.disabled = false;
-      upload.textContent = "Upload";
+      upload.textContent = retryFiles?.length ? `Retry failed (${retryFiles.length})` : "Upload";
     }
   });
   actions.append(cancel, upload);

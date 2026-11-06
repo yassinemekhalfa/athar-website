@@ -1,6 +1,6 @@
-import {db} from './dataClient.js?v=20261106-4';
-import {googleDriveImage} from './drive-video.js?v=20261106-4';
-import {mirrorMediaUrl} from './mediaMirror.js?v=20261106-4';
+import {db} from './dataClient.js?v=20261106-5';
+import {googleDriveImage} from './drive-video.js?v=20261106-5';
+import {mirrorMediaUrl} from './mediaMirror.js?v=20261106-5';
 
 const track=document.getElementById('trusted-client-track');
 const section=document.getElementById('trusted-clients');

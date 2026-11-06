@@ -1,7 +1,7 @@
-import { applyTheme, uploadBrandAsset } from "./preferences.js?v=20261106-4";
-import { db } from "../dataClient.js?v=20261106-4";
-import { getState, setState } from "../core/state.js?v=20261106-4";
-import { emit } from "../core/events.js?v=20261106-4";
+import { applyTheme, uploadBrandAsset } from "./preferences.js?v=20261106-5";
+import { db } from "../dataClient.js?v=20261106-5";
+import { getState, setState } from "../core/state.js?v=20261106-5";
+import { emit } from "../core/events.js?v=20261106-5";
 
 function mix(hex,amount){const n=parseInt(hex.slice(1),16);const t=amount<0?0:255,p=Math.abs(amount)/100;const r=n>>16,g=n>>8&255,b=n&255;return `#${(0x1000000+(Math.round((t-r)*p)+r)*0x10000+(Math.round((t-g)*p)+g)*0x100+(Math.round((t-b)*p)+b)).toString(16).slice(1)}`;}
 export function applyBranding(agency){if(!agency)return;const root=document.documentElement;root.style.setProperty("--color-primary",agency.primary_color||"#3F5BF6");root.style.setProperty("--color-primary-hover",mix(agency.primary_color||"#3F5BF6",-12));root.style.setProperty("--color-primary-soft",mix(agency.primary_color||"#3F5BF6",92));document.querySelectorAll("[data-agency-name]").forEach(x=>x.textContent=agency.name);document.querySelectorAll("[data-agency-logo]").forEach(img=>{if(agency.logo_url){img.src=agency.logo_url;img.hidden=false;}else img.hidden=true;});applyTheme(agency.settings||{});document.querySelectorAll(".ap-rail-brand").forEach(node=>{const img=document.createElement("img");img.src=agency.logo_url||"assets/images/workspace-logo.svg";img.alt=agency.name;node.replaceChildren(img);});emit("branding:changed",{agencyId:agency.id,name:agency.name,logoUrl:agency.logo_url||null,primaryColor:agency.primary_color});}
