@@ -1,15 +1,15 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-3';
-import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261106-3';
-import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261106-3';
-import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261106-3';
-import { uploadBrandAsset } from "../workspace/preferences.js?v=20261106-3";
-import { uploadFileToFolder, storedFileUrl, deleteUploadedFile } from "./files.js?v=20261106-3";
-import { db } from "../dataClient.js?v=20261106-3";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-3";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261106-3";
-import { AppCore } from "../core/appCore.js?v=20261106-3";
-import { emit, on } from "../core/events.js?v=20261106-3";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261106-3";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-4';
+import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261106-4';
+import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261106-4';
+import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261106-4';
+import { uploadBrandAsset } from "../workspace/preferences.js?v=20261106-4";
+import { uploadFileToFolder, storedFileUrl, deleteUploadedFile, MAX_DRIVE_UPLOAD_BYTES } from "./files.js?v=20261106-4";
+import { db, isSupabaseMode } from "../dataClient.js?v=20261106-4";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-4";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261106-4";
+import { AppCore } from "../core/appCore.js?v=20261106-4";
+import { emit, on } from "../core/events.js?v=20261106-4";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261106-4";
 import {
   POSITION_STEP,
   sortByPosition,
@@ -27,7 +27,7 @@ import {
   deleteTaskComment,
   profileLabel,
   priorityLabel
-} from "./tasks.js?v=20261106-3";
+} from "./tasks.js?v=20261106-4";
 
 const state = {
   container: null,
@@ -1202,8 +1202,8 @@ function validationStatus(task){
   badge.dataset.approvalDue=task.validation?.due_at||'';badge.title=task.validation?.due_at?'Approval due '+new Date(task.validation.due_at).toLocaleString():'';return badge;
 }
 
-async function uploadTaskAttachment(file,task,clientVisible){
-  const id=await uploadFileToFolder(state.context,state.context.folderId,file,clientVisible,file.name||'attachment');
+async function uploadTaskAttachment(file,task,clientVisible,onProgress){
+  const id=await uploadFileToFolder(state.context,state.context.folderId,file,clientVisible,file.name||'attachment',onProgress);
   const {error:updateError}=await db.from('files').update({task_id:task.id}).eq('id',id);if(updateError)throw updateError;
   const {data:record,error}=await db.from('files').select('*').eq('id',id).single();if(error)throw error;
   return {id:record.id,name:record.original_name,path:record.storage_path,type:record.mime_type,size:record.size_bytes,storage_provider:record.storage_provider,external_file_id:record.external_file_id,external_url:record.external_url,bucket_name:record.bucket_name};
@@ -1708,8 +1708,8 @@ async function openTaskDetail(task, initialTab = "comments") {
           AppCore.ui.toast(`${file.name} is not an image, audio, or video file.`, "error");
           continue;
         }
-        if (file.size > 26214400) {
-          AppCore.ui.toast(`${file.name} is larger than 25 MB.`, "error");
+        if (file.size > (isSupabaseMode ? MAX_DRIVE_UPLOAD_BYTES : 26214400)) {
+          AppCore.ui.toast(`${file.name} is larger than ${isSupabaseMode ? "5 TB" : "25 MB"}.`, "error");
           continue;
         }
         const key = `${file.name}:${file.size}:${file.lastModified}`;
@@ -1743,13 +1743,21 @@ async function openTaskDetail(task, initialTab = "comments") {
     } else note.hidden = true;
     const controls = el("div", "k-task-comment-controls");
     controls.append(attach, send, note);
-    form.append(fileInput, body, preview, controls);
+    const uploadStatus = el("div", "k-task-comment-upload-status");
+    uploadStatus.setAttribute("role", "status");
+    uploadStatus.hidden = true;
+    const uploadProgress = document.createElement("progress");
+    uploadProgress.max = 100;
+    uploadProgress.value = 0;
+    uploadStatus.append(uploadProgress, el("span", "", "Preparing upload…"));
+    form.append(fileInput, body, preview, uploadStatus, controls);
     form.addEventListener("submit", async event => {
       event.preventDefault();
       const value = body.value.trim();
       if (!value && !selectedFiles.length) return;
       send.disabled = true;
       attach.disabled = true;
+      uploadStatus.hidden = selectedFiles.length === 0;
       try {
         const comment = await createTaskComment({
           context: state.context,
@@ -1760,7 +1768,13 @@ async function openTaskDetail(task, initialTab = "comments") {
         const uploaded = [];
         try {
           for (const file of selectedFiles) {
-            uploaded.push(await uploadTaskAttachment(file,task,state.context.isClient?true:clientVisible));
+            const fileIndex = uploaded.length;
+            uploadStatus.querySelector("span").textContent = `Uploading ${file.name} (${fileIndex + 1} of ${selectedFiles.length}) — 0%`;
+            uploadProgress.value = 0;
+            uploaded.push(await uploadTaskAttachment(file,task,state.context.isClient?true:clientVisible, progress => {
+              uploadProgress.value = Math.round(progress * 100);
+              uploadStatus.querySelector("span").textContent = `Uploading ${file.name} (${fileIndex + 1} of ${selectedFiles.length}) — ${uploadProgress.value}%`;
+            }));
           }
           if (uploaded.length) {
             const nextDetails = taskDetailData(task);
@@ -1789,6 +1803,7 @@ async function openTaskDetail(task, initialTab = "comments") {
         }
         body.value = "";
         selectedFiles.splice(0, selectedFiles.length);
+        uploadStatus.hidden = true;
         renderPreview();
         await renderCommentsTab();
       } catch (error) {
@@ -1796,6 +1811,7 @@ async function openTaskDetail(task, initialTab = "comments") {
       } finally {
         send.disabled = false;
         attach.disabled = false;
+        if (selectedFiles.length) uploadStatus.hidden = false;
       }
     });
     composerHost.append(form);

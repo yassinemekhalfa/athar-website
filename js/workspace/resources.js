@@ -1,7 +1,7 @@
-import {db} from '../dataClient.js?v=20261106-3';
-import {getState,setState} from '../core/state.js?v=20261106-3';
-import {selectFolder} from './folders.js?v=20261106-3';
-import {selectModule} from '../core/moduleRegistry.js?v=20261106-3';
+import {db} from '../dataClient.js?v=20261106-4';
+import {getState,setState} from '../core/state.js?v=20261106-4';
+import {selectFolder} from './folders.js?v=20261106-4';
+import {selectModule} from '../core/moduleRegistry.js?v=20261106-4';
 const TYPES={boards:'boards',conversations:'conversation',docs:'docs',embeds:'embeds',invoices:'invoices'};
 export async function loadResources(){
  const s=getState();if(!s.agency)return [];

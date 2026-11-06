@@ -1,4 +1,4 @@
-import { db } from '../dataClient.js?v=20261106-3';
+import { db } from '../dataClient.js?v=20261106-4';
 let branding=null;
 export async function loadLoginBranding(){
  const slug=new URLSearchParams(location.search).get('workspace');if(!slug)return;

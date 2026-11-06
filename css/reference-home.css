@@ -3106,7 +3106,17 @@ button.k-profile-row:hover { background: #fafafa !important; }
 .k-task-comment-composer { padding: 12px 13px 8px !important; border: 1px solid #ddd !important; border-radius: 8px !important; background: #fff !important; }
 .k-task-comment-input { width: 100% !important; min-height: 43px !important; padding: 0 !important; resize: vertical !important; border: 0 !important; outline: 0 !important; font: inherit !important; font-size: 12px !important; }
 .k-task-comment-send { min-height: 30px !important; padding: 0 11px !important; background: #0875ec !important; color: #fff !important; border: 0 !important; border-radius: 5px !important; }
-.k-task-comment-tool { width: 29px !important; height: 29px !important; display: grid !important; place-items: center !important; border: 0 !important; background: transparent !important; cursor: pointer !important; }
+.k-task-comment-tool { width: auto !important; min-width: 40px !important; min-height: 36px !important; height: auto !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 7px !important; padding: 0 12px !important; border: 1px solid #e1e4ed !important; border-radius: 8px !important; background: #fff !important; cursor: pointer !important; }
+.k-task-comment-controls { display: flex !important; align-items: center !important; gap: 10px !important; }
+.k-task-comment-controls .k-task-comment-send { margin-inline-start: auto !important; min-height: 36px !important; padding-inline: 18px !important; }
+.k-task-comment-upload-status { display: flex; align-items: center; gap: 10px; margin: 8px 0; color: #596174; font-size: 12px; }
+.k-task-comment-upload-status[hidden] { display: none; }
+.k-task-comment-upload-status progress { width: min(220px, 38vw); height: 8px; accent-color: #6e39ff; }
+.ap-file-upload__progress { display: block; width: 100%; height: 10px; margin: 12px 0 4px; accent-color: #6e39ff; }
+.ap-file-upload__progress[hidden] { display: none; }
+.k-message-upload-status { display: flex; align-items: center; gap: 10px; padding: 8px 0; color: #596174; font-size: 12px; }
+.k-message-upload-status[hidden] { display: none; }
+.k-message-upload-status progress { width: min(220px, 38vw); height: 8px; accent-color: #6e39ff; }
 .k-task-files-grid { display: grid !important; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)) !important; gap: 10px !important; }
 .k-task-file-card { min-height: 74px !important; display: flex !important; align-items: center !important; gap: 10px !important; padding: 10px !important; border: 1px solid #e2e2e2 !important; border-radius: 7px !important; background: #fff !important; text-align: left !important; cursor: pointer !important; }
 .k-task-file-copy { overflow: hidden !important; color: #444 !important; font-size: 11px !important; text-overflow: ellipsis !important; white-space: nowrap !important; }

@@ -270,12 +270,11 @@ const ringQuery=matchMedia('(min-width: 901px) and (min-height: 700px)');
 function setupRingScroll(){
  if(ringST){const animation=ringST.animation;ringST.kill(true);animation?.kill();ringST=null;}
  if(!hasGsap||reduce||!ringQuery.matches){renderRing();return;}
-  // each card holds a moment in front, then the ring turns to the next one
-  const prog = {p:0}, hold = f => { const t = Math.min(Math.max((f-.22)/.56,0),1); return t*t*(3-2*t); };
+  // Tie all eight cards directly to scroll so wheel motion never hits a staged stop.
+  const prog = {p:0};
   const tween = gsap.to(prog,{p:1, ease:'none', onUpdate:()=>{
-      const x = prog.p*(services.length-1), i = Math.min(Math.floor(x), services.length-2);
-      ringState.rot = (i + hold(x-i))*STEP; renderRing(); },
-    scrollTrigger:{trigger:'#services', start:'top top', end:()=>'+='+(innerHeight*3), pin:true, scrub:.8}});
+      ringState.rot = prog.p*(services.length-1)*STEP; renderRing(); },
+    scrollTrigger:{trigger:'#services', start:'top top', end:()=>'+='+(innerHeight*1.65), pin:true, scrub:.12}});
   ringST = tween.scrollTrigger;
 }
 setupRingScroll();ringQuery.addEventListener('change',setupRingScroll);

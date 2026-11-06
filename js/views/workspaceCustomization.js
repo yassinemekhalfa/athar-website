@@ -1,8 +1,8 @@
-import { getState } from '../core/state.js?v=20261106-3';
-import { AppCore } from '../core/appCore.js?v=20261106-3';
-import { saveBranding } from '../workspace/branding.js?v=20261106-3';
-import { preferences, savePreferences, applyTheme, THEME_DEFAULTS, uploadBrandAsset } from '../workspace/preferences.js?v=20261106-3';
-import { workspaceIcon } from './workspaceIcons.js?v=20261106-3';
+import { getState } from '../core/state.js?v=20261106-4';
+import { AppCore } from '../core/appCore.js?v=20261106-4';
+import { saveBranding } from '../workspace/branding.js?v=20261106-4';
+import { preferences, savePreferences, applyTheme, THEME_DEFAULTS, uploadBrandAsset } from '../workspace/preferences.js?v=20261106-4';
+import { workspaceIcon } from './workspaceIcons.js?v=20261106-4';
 
 function el(tag,cls='',text){const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;}
 function button(text,fn,cls='k-btn k-btn--soft'){const b=el('button',cls,text);b.type='button';if(fn)b.addEventListener('click',fn);return b;}

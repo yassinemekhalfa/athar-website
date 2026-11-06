@@ -1,10 +1,10 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-3';
-import { db, isSupabaseMode } from "../dataClient.js?v=20261106-3";
-import { AppCore } from "../core/appCore.js?v=20261106-3";
-import { emit, on } from "../core/events.js?v=20261106-3";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-4';
+import { db, isSupabaseMode } from "../dataClient.js?v=20261106-4";
+import { AppCore } from "../core/appCore.js?v=20261106-4";
+import { emit, on } from "../core/events.js?v=20261106-4";
 
 const MAX_UPLOAD_BYTES = 26214400;
-const MAX_DRIVE_UPLOAD_BYTES = 5 * 1024 ** 4;
+export const MAX_DRIVE_UPLOAD_BYTES = 5_000_000_000_000;
 const ALLOWED_EXACT_MIME = new Set([
   "application/pdf",
   "application/zip",
@@ -216,10 +216,15 @@ export function openUploadModal() {
   folderChooser.append(el("span", "ap-field__label", "Choose a folder"), folderInput, el("span", "ap-field__hint", "Uploads every supported file and keeps its relative folder path."));
   const selection = el("p", "ap-file-upload__selection", "No files selected.");
   selection.setAttribute("role", "status");
+  const transferProgress = document.createElement("progress");
+  transferProgress.className = "ap-file-upload__progress";
+  transferProgress.max = 100;
+  transferProgress.value = 0;
+  transferProgress.hidden = true;
   const showSelection = input => { const files = [...input.files || []]; selection.textContent = files.length ? `${files.length} file${files.length === 1 ? "" : "s"} selected.` : "No files selected."; };
   fileInput.addEventListener("change", () => { if (fileInput.files?.length) folderInput.value = ""; showSelection(fileInput); });
   folderInput.addEventListener("change", () => { if (folderInput.files?.length) fileInput.value = ""; showSelection(folderInput); });
-  content.append(chooser, folderChooser, selection);
+  content.append(chooser, folderChooser, selection, transferProgress);
 
   let visible = null;
   if (state.context.canShare) {
@@ -245,13 +250,20 @@ export function openUploadModal() {
     cancel.disabled = true;
     let completed = 0;
     const failures = [];
+    transferProgress.hidden = false;
+    transferProgress.value = 0;
     try {
       for (const file of accepted) {
         upload.textContent = `Uploading ${completed + 1} of ${accepted.length}…`;
         selection.textContent = `Uploading ${file.webkitRelativePath || file.name}`;
-        try { await uploadFile(file, state.context.isClient ? true : Boolean(visible?.checked), state.context, state.context?.folderId, file.webkitRelativePath || file.name); }
+        try { await uploadFile(file, state.context.isClient ? true : Boolean(visible?.checked), state.context, state.context?.folderId, file.webkitRelativePath || file.name, progress => {
+          const percent = Math.round(progress * 100);
+          selection.textContent = `Uploading ${file.webkitRelativePath || file.name} — ${percent}% (${completed + 1} of ${accepted.length})`;
+          transferProgress.value = Math.round(((completed + progress) / accepted.length) * 100);
+        }); }
         catch (error) { failures.push({ file, error }); }
         completed += 1;
+        transferProgress.value = Math.round((completed / accepted.length) * 100);
       }
       await loadAndRender();
       const succeeded = accepted.length - failures.length;
@@ -277,8 +289,8 @@ export function openUploadModal() {
   AppCore.ui.openModal({ title: "Upload files or folder", content, actions: [] });
 }
 
-async function uploadFile(file, clientVisible, context = state.context, folderId = context?.folderId, originalName = file.name) {
-  if (isSupabaseMode) return uploadGoogleDriveFile(file, clientVisible, context, folderId, originalName);
+async function uploadFile(file, clientVisible, context = state.context, folderId = context?.folderId, originalName = file.name, onProgress) {
+  if (isSupabaseMode) return uploadGoogleDriveFile(file, clientVisible, context, folderId, originalName, onProgress);
   const fileId = AppCore.utils.uuid();
   const safeName = AppCore.utils.sanitizeFilename(originalName);
   const storagePath = `${context.agencyId}/${folderId}/${fileId}/${safeName}`;
@@ -361,25 +373,37 @@ async function ensureDriveConnection(context = state.context) {
   driveConnected = true;
 }
 
-async function uploadGoogleDriveFile(file, clientVisible, context, folderId, originalName) {
+export function uploadBlobWithProgress(url, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("PUT", url);
+    request.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    request.setRequestHeader("Content-Range", `bytes 0-${file.size - 1}/${file.size}`);
+    request.upload.onprogress = event => { if (event.lengthComputable) onProgress?.(event.loaded / event.total); };
+    request.onerror = () => reject(new Error("Can't reach Google Drive. Check your connection and try again."));
+    request.onabort = () => reject(new Error("Upload cancelled."));
+    request.onload = () => {
+      if (request.status < 200 || request.status >= 300) return reject(Object.assign(new Error(`Google Drive upload failed (${request.status}).`), { userMessage: true }));
+      try { resolve(JSON.parse(request.responseText || "{}")); } catch { reject(new Error("Google Drive returned an invalid upload response.")); }
+    };
+    request.send(file);
+  });
+}
+
+async function uploadGoogleDriveFile(file, clientVisible, context, folderId, originalName, onProgress) {
   await ensureDriveConnection(context);
   const started = await driveAction("start-upload", { folder_id: folderId, name: file.name, relative_path: originalName, mime_type: file.type || "application/octet-stream", size: file.size }, context.agencyId);
-  const response = await fetch(started.session_url, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream", "Content-Range": `bytes 0-${file.size - 1}/${file.size}` }, body: file });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw Object.assign(new Error(`Google Drive upload failed (${response.status})${detail ? `: ${detail.slice(0, 240)}` : "."}`), { userMessage: true });
-  }
-  const uploaded = await response.json();
+  const uploaded = await uploadBlobWithProgress(started.session_url, file, onProgress);
   const record = await driveAction("complete-upload", { folder_id: folderId, record_id: started.record_id, relative_path: started.relative_path, mime_type: file.type || "application/octet-stream", size: file.size, client_visible: clientVisible, file: uploaded }, context.agencyId);
   emit("data:changed", { entity: "file", entityId: record.id, folderId, action: "created" });
   return record.id;
 }
 
-export async function uploadFileToFolder(context, folderId, file, clientVisible = false, originalName = file?.webkitRelativePath || file?.name) {
+export async function uploadFileToFolder(context, folderId, file, clientVisible = false, originalName = file?.webkitRelativePath || file?.name, onProgress) {
   if (!context?.isStaff) throw new Error("Only workspace members can upload files here.");
   const limit = isSupabaseMode ? MAX_DRIVE_UPLOAD_BYTES : MAX_UPLOAD_BYTES;
   if (!isAllowedFile(file, limit)) throw new Error(file?.size > limit ? `That file is larger than ${isSupabaseMode ? "the Google Drive upload limit" : "25 MiB"}.` : "That file type is not allowed.");
-  return uploadFile(file, clientVisible, context, folderId, originalName);
+  return uploadFile(file, clientVisible, context, folderId, originalName, onProgress);
 }
 
 export async function storedFileUrl(file, expiresIn = 3600) {

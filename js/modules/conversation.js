@@ -1,14 +1,14 @@
-import {roleBadge} from '../core/permissions.js?v=20261106-3';
-import {db} from '../dataClient.js?v=20261106-3';
-import { AppCore } from "../core/appCore.js?v=20261106-3";
-import { on, emit } from "../core/events.js?v=20261106-3";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261106-3";
-import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261106-3";
-import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261106-3";
-import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261106-3";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-3";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261106-3";
-import { openItemSharing } from "../workspace/itemSharing.js?v=20261106-3";
+import {roleBadge} from '../core/permissions.js?v=20261106-4';
+import {db} from '../dataClient.js?v=20261106-4';
+import { AppCore } from "../core/appCore.js?v=20261106-4";
+import { on, emit } from "../core/events.js?v=20261106-4";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261106-4";
+import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261106-4";
+import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261106-4";
+import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261106-4";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-4";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261106-4";
+import { openItemSharing } from "../workspace/itemSharing.js?v=20261106-4";
 
 const state = { container:null, context:null, conversations:[], activeId:null, messages:[], off:[], replyTo:null, timer:null,tab:"messages",filter:"all",customizing:false,iconPicker:false,actionMenu:false,requestVersion:0,sending:false };
 const drafts=new Map();
@@ -261,7 +261,7 @@ function renderComposer(current) {
   });
   const fileInput = document.createElement("input"); fileInput.type="file"; fileInput.accept="image/*,video/*,audio/*,application/pdf,.zip,.doc,.docx,.xls,.xlsx"; fileInput.hidden=true;
   const chosen=el('button','k-message-file-preview');chosen.type='button';chosen.title='Remove attachment';const showChosen=()=>{chosen.textContent=draft.value.file?'× '+draft.value.file.name:'';chosen.hidden=!draft.value.file;};chosen.addEventListener('click',()=>{draft.value.file=null;fileInput.value='';showChosen();});showChosen();
-  fileInput.setAttribute('aria-label','Attach file');fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];if(file&&file.size>5*1024**3){AppCore.ui.toast('Choose a file smaller than 5 GB.','warning');fileInput.value='';return;}draft.value.file=file||null;showChosen();});
+  fileInput.setAttribute('aria-label','Attach file');fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];if(file&&file.size>5_000_000_000_000){AppCore.ui.toast('Choose a file smaller than 5 TB.','warning');fileInput.value='';return;}draft.value.file=file||null;showChosen();});
   const bottom = el("div", "ap-message-composer__bottom k-message-composer__bottom");
   const details = el("div", "k-message-composer__details");
   let visible = null;
@@ -278,15 +278,16 @@ function renderComposer(current) {
   const emoji=el("button","k-composer-tool","☺");emoji.type="button";emoji.setAttribute("aria-label","Insert emoji");emoji.addEventListener("click",()=>{form.querySelector(".k-emoji-picker")?.remove();const picker=el("div","k-emoji-picker");for(const value of ["😀","👍","🎉","❤️","✅","🙏","👀","🚀","💬","📌","🙌","😊"]){const b=el("button","",value);b.type="button";b.addEventListener("click",()=>{textarea.setRangeText(value,textarea.selectionStart,textarea.selectionEnd,"end");draft.value.body=textarea.value;saveDraft();picker.remove();textarea.focus();});picker.append(b);}form.append(picker);});details.append(emoji);
   const send = el("button", "ap-btn ap-btn--primary k-message-send", "Send");
   send.type = "submit";
+  const uploadStatus=el('div','k-message-upload-status');uploadStatus.hidden=true;uploadStatus.setAttribute('role','status');const uploadProgress=document.createElement('progress');uploadProgress.max=100;uploadProgress.value=0;uploadStatus.append(uploadProgress,el('span','','Preparing upload…'));
   bottom.append(send, details);
-  form.append(fileInput, textarea, bottom);
+  form.append(fileInput, textarea, uploadStatus, bottom);
   form.addEventListener('submit',async event=>{
-    event.preventDefault();if(state.sending)return;const body=textarea.value.trim(),file=draft.value.file;if(!body&&!file)return;state.sending=true;send.disabled=true;textarea.disabled=true;
+    event.preventDefault();if(state.sending)return;const body=textarea.value.trim(),file=draft.value.file;if(!body&&!file)return;state.sending=true;send.disabled=true;textarea.disabled=true;uploadStatus.hidden=!file;
     try{const context=state.context;const created=await sendMessage({conversationId:current.id,body,clientVisible:context.isClient?true:draft.value.shared,replyToMessageId:state.replyTo});
-      if(file){try{await attachFileToMessage({message:created,file});}catch(error){await deleteMessage(created.id);throw error;}}
+      if(file){try{uploadStatus.querySelector('span').textContent=`Uploading ${file.name} — 0%`;await attachFileToMessage({message:created,file,onProgress:progress=>{uploadProgress.value=Math.round(progress*100);uploadStatus.querySelector('span').textContent=`Uploading ${file.name} — ${uploadProgress.value}%`;}});}catch(error){await deleteMessage(created.id);throw error;}}
       draft.value.body='';draft.value.file=null;sessionStorage.removeItem(draft.key);state.replyTo=null;
       if(state.context===context){await loadMessages();render();}emit('data:changed',{entity:'message',entityId:created.id,folderId:context.folderId,action:'created'});
-    }catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{state.sending=false;send.disabled=false;textarea.disabled=false;}
+    }catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{uploadStatus.hidden=true;state.sending=false;send.disabled=false;textarea.disabled=false;}
   });
   return form;
 }
