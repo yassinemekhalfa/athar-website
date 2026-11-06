@@ -1,9 +1,9 @@
-﻿import {db} from '../dataClient.js?v=20261106-6';
-import {getState} from '../core/state.js?v=20261106-6';
-import {AppCore} from '../core/appCore.js?v=20261106-6';
-import {inviteMember,invitationLink,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261106-6';
-import {openManagedPassword} from './accountPasswords.js?v=20261106-6';
-import {ROLES,ALL_CAPABILITIES,ALL_SECTIONS,CAPABILITY_LABELS,SECTION_LABELS,normalizeRole,roleLabel,roleDescription,roleCapabilities,roleBadge,canAdministerMembers} from '../core/permissions.js?v=20261106-6';
+﻿import {db} from '../dataClient.js?v=20261106-7';
+import {getState} from '../core/state.js?v=20261106-7';
+import {AppCore} from '../core/appCore.js?v=20261106-7';
+import {inviteMember,invitationLink,listInvitations,revokeInvitation} from '../auth/invitations.js?v=20261106-7';
+import {openManagedPassword} from './accountPasswords.js?v=20261106-7';
+import {ROLES,ALL_CAPABILITIES,ALL_SECTIONS,CAPABILITY_LABELS,SECTION_LABELS,normalizeRole,roleLabel,roleDescription,roleCapabilities,roleBadge,canAdministerMembers} from '../core/permissions.js?v=20261106-7';
 const el=(tag,cls='',text)=>{const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const button=(text,fn)=>{const b=el('button','ap-btn ap-btn--secondary',text);b.type='button';b.addEventListener('click',fn);return b;};
 function permissionToggle(key,label,checked){const item=el('label','ap-permission-option'),check=el('input');check.type='checkbox';check.dataset.permission=key;check.checked=checked;item.append(check,el('span','',label));return item;}

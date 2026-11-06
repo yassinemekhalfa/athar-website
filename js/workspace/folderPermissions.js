@@ -1,1 +1,1 @@
-export { openFolderSharing } from "./folderMembers.js?v=20261106-6";
+export { openFolderSharing } from "./folderMembers.js?v=20261106-7";

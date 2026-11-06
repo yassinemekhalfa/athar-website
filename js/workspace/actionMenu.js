@@ -1,5 +1,5 @@
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-6";
-import { AppCore } from "../core/appCore.js?v=20261106-6";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-7";
+import { AppCore } from "../core/appCore.js?v=20261106-7";
 
 let activeMenu = null;
 

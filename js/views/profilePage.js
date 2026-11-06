@@ -1,9 +1,9 @@
-import {roleBadge} from '../core/permissions.js?v=20261106-6';
-import { AppCore } from "../core/appCore.js?v=20261106-6";
-import { getState, setState } from "../core/state.js?v=20261106-6";
-import { db } from "../dataClient.js?v=20261106-6";
-import { signOut } from "../auth/auth.js?v=20261106-6";
-import { workspaceIcon } from "./workspaceIcons.js?v=20261106-6";
+import {roleBadge} from '../core/permissions.js?v=20261106-7';
+import { AppCore } from "../core/appCore.js?v=20261106-7";
+import { getState, setState } from "../core/state.js?v=20261106-7";
+import { db } from "../dataClient.js?v=20261106-7";
+import { signOut } from "../auth/auth.js?v=20261106-7";
+import { workspaceIcon } from "./workspaceIcons.js?v=20261106-7";
 
 function el(tag, className = "", text = null) {
   const node = document.createElement(tag);

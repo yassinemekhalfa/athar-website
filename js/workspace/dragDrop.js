@@ -1,8 +1,8 @@
-import { getState } from "../core/state.js?v=20261106-6";
-import { emit } from "../core/events.js?v=20261106-6";
-import { moveFolder } from "./folders.js?v=20261106-6";
-import { AppCore } from "../core/appCore.js?v=20261106-6";
-import { db } from "../dataClient.js?v=20261106-6";
+import { getState } from "../core/state.js?v=20261106-7";
+import { emit } from "../core/events.js?v=20261106-7";
+import { moveFolder } from "./folders.js?v=20261106-7";
+import { AppCore } from "../core/appCore.js?v=20261106-7";
+import { db } from "../dataClient.js?v=20261106-7";
 
 export const WORKSPACE_DRAG_TYPE = "application/x-athar-workspace-item";
 

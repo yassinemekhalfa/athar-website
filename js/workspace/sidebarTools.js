@@ -1,6 +1,6 @@
-import { openCreateFolder } from "./folderTree.js?v=20261106-6";
-import { getState } from "../core/state.js?v=20261106-6";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-6";
+import { openCreateFolder } from "./folderTree.js?v=20261106-7";
+import { getState } from "../core/state.js?v=20261106-7";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-7";
 
 function createButton({
   label,

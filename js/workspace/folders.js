@@ -1,6 +1,6 @@
-import { db } from "../dataClient.js?v=20261106-6";
-import { getState, setState } from "../core/state.js?v=20261106-6";
-import { emit } from "../core/events.js?v=20261106-6";
+import { db } from "../dataClient.js?v=20261106-7";
+import { getState, setState } from "../core/state.js?v=20261106-7";
+import { emit } from "../core/events.js?v=20261106-7";
 
 export async function loadFolders() {
   const s = getState();
@@ -22,7 +22,7 @@ export async function selectFolder(folderId, options = {}) {
   emit("folder:selected", { folderId, agencyId: s.agency?.id || null, skipOverview: Boolean(options.skipOverview) });
   const current = getState().selectedModule;
   if (current && options.skipOverview && options.refreshModule !== false) {
-    const { refreshActiveModule } = await import("../core/moduleRegistry.js?v=20261106-6");
+    const { refreshActiveModule } = await import("../core/moduleRegistry.js?v=20261106-7");
     await refreshActiveModule();
   }
   renderBreadcrumb();
@@ -35,9 +35,15 @@ export function nextPosition(parentId = null) {
 
 export async function createFolder({ name, parentId = null, color = "#F4B400", coverImage = null, description = "", privacy = "private", internalRole = "viewer", clientVisible = false }) {
   const s = getState();
-  const { data, error } = await db.from("folders").insert({ agency_id: s.agency.id, parent_id: parentId, name: name.trim(), description: description.trim() || null, privacy, internal_role:internalRole, client_visible: clientVisible, color, cover_image: coverImage, position: nextPosition(parentId), created_by: s.user.id }).select().single();
+  const id = globalThis.ATHAR_UUID?.() || crypto.randomUUID();
+  // Insert without RETURNING: folder INSERT is authorized by the write policy,
+  // while PostgREST's INSERT ... RETURNING can be rejected by the separate
+  // scoped SELECT policy even though the owner can read the created folder.
+  const { error } = await db.from("folders").insert({ id, agency_id: s.agency.id, parent_id: parentId, name: name.trim(), description: description.trim() || null, privacy, internal_role:internalRole, client_visible: clientVisible, color, cover_image: coverImage, position: nextPosition(parentId), created_by: s.user.id });
   if (error) throw error;
   await loadFolders();
+  const data = getState().folders.find(folder => folder.id === id);
+  if (!data) throw new Error("The folder was created but is not visible to your account. Refresh the workspace or check its access settings.");
   emit("folder:created", { folderId: data.id, parentId, agencyId: s.agency.id });
   return data;
 }
