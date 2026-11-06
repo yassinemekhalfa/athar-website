@@ -1,6 +1,6 @@
-import {db} from './dataClient.js?v=20261105-3';
-import {googleDriveDownload} from './drive-video.js?v=20261105-3';
-import {mirrorMediaUrl} from './mediaMirror.js?v=20261105-3';
+import {db} from './dataClient.js?v=20261106-1';
+import {googleDriveDownload} from './drive-video.js?v=20261106-1';
+import {mirrorMediaUrl} from './mediaMirror.js?v=20261106-1';
 
 const host=document.getElementById('hero-showreel');
 const media=document.getElementById('hero-showreel-media');

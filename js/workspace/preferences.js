@@ -1,5 +1,5 @@
-import { db } from '../dataClient.js?v=20261105-3';
-import { getState, setState } from '../core/state.js?v=20261105-3';
+import { db } from '../dataClient.js?v=20261106-1';
+import { getState, setState } from '../core/state.js?v=20261106-1';
 
 export const THEME_DEFAULTS = { accent:'#3078f6', navigation_bg:'#ececec', navigation_text:'#484848', navigation_accent:'#3078f6', sidebar_bg:'#f7f7f7', sidebar_text:'#555555', sidebar_accent:'#3078f6', rounded:true };
 export function preferences() { return getState().agency?.settings || {}; }

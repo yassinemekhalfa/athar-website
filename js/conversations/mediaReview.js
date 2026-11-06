@@ -1,10 +1,10 @@
-import { db } from "../dataClient.js?v=20261105-3";
-import { getState } from "../core/state.js?v=20261105-3";
+import { db } from "../dataClient.js?v=20261106-1";
+import { getState } from "../core/state.js?v=20261106-1";
 
 const BUCKET="conversation-attachments";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-export async function signedAttachmentUrl(attachment){if(attachment?.storage_provider==='google_drive'&&attachment.external_file_id){const base=globalThis.ATHAR_CONFIG?.supabaseUrl?.replace(/\/$/,'');return `${base}/functions/v1/drive-video?id=${encodeURIComponent(attachment.external_file_id)}`;}const path=typeof attachment==='string'?attachment:attachment?.storage_path;const {data,error}=await db.storage.from(BUCKET).createSignedUrl(path,3600);if(error)throw error;return data.signedUrl;}
+export async function signedAttachmentUrl(attachment){if(attachment?.storage_provider==='google_drive'&&attachment.external_file_id)return `https://drive.usercontent.google.com/download?id=${encodeURIComponent(attachment.external_file_id)}&export=download&confirm=t`;const path=typeof attachment==='string'?attachment:attachment?.storage_path;const {data,error}=await db.storage.from(BUCKET).createSignedUrl(path,3600);if(error)throw error;return data.signedUrl;}
 export async function listReviewComments(attachmentId){const {data,error}=await db.from("media_review_comments").select("*,author:profiles!media_review_comments_author_id_fkey(id,full_name,email,avatar_url)").eq("attachment_id",attachmentId).order("created_at",{ascending:true});if(error)throw error;return data||[];}
 export async function addReviewComment({attachmentId,body,x=null,y=null,time=null}){const s=getState();const {data,error}=await db.from("media_review_comments").insert({agency_id:s.agency.id,attachment_id:attachmentId,author_id:s.user.id,body:body.trim(),x_percent:x,y_percent:y,time_seconds:time}).select().single();if(error)throw error;return data;}
 export async function deleteReviewComment(id){const {error}=await db.from("media_review_comments").delete().eq("id",id);if(error)throw error;}

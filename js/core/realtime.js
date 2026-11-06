@@ -1,4 +1,4 @@
-import { db } from "../dataClient.js?v=20261105-3";
+import { db } from "../dataClient.js?v=20261106-1";
 const channels = new Map();
 export function subscribeChannel(key, builder) {
   unsubscribeChannel(key);

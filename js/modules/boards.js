@@ -1,15 +1,15 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261105-3';
-import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261105-3';
-import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261105-3';
-import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261105-3';
-import { uploadBrandAsset } from "../workspace/preferences.js?v=20261105-3";
-import { uploadFileToFolder, storedFileUrl, deleteUploadedFile } from "./files.js?v=20261105-3";
-import { db } from "../dataClient.js?v=20261105-3";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261105-3";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261105-3";
-import { AppCore } from "../core/appCore.js?v=20261105-3";
-import { emit, on } from "../core/events.js?v=20261105-3";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261105-3";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-1';
+import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261106-1';
+import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261106-1';
+import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261106-1';
+import { uploadBrandAsset } from "../workspace/preferences.js?v=20261106-1";
+import { uploadFileToFolder, storedFileUrl, deleteUploadedFile } from "./files.js?v=20261106-1";
+import { db } from "../dataClient.js?v=20261106-1";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-1";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261106-1";
+import { AppCore } from "../core/appCore.js?v=20261106-1";
+import { emit, on } from "../core/events.js?v=20261106-1";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261106-1";
 import {
   POSITION_STEP,
   sortByPosition,
@@ -27,7 +27,7 @@ import {
   deleteTaskComment,
   profileLabel,
   priorityLabel
-} from "./tasks.js?v=20261105-3";
+} from "./tasks.js?v=20261106-1";
 
 const state = {
   container: null,

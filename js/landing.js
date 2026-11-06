@@ -1,5 +1,5 @@
-import {getLanguage,translate} from './landingI18n.js?v=20261105-3';
-import './portfolio.js?v=20261105-3';
+import {getLanguage,translate} from './landingI18n.js?v=20261106-1';
+import './portfolio.js?v=20261106-1';
 
 // Preserve workspace bookmarks created when the app used the root URL.
 if(/^#\/(?:resource|folder|f|home|tasks|my-tasks|inbox|invoices|clients|proposals|library-[a-z]+|settings|profile)(?:\/|$)/.test(location.hash))location.replace('workspace.html'+location.hash);

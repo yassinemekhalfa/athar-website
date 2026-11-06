@@ -23,6 +23,5 @@ export function googleDriveImage(value){
 export function googleDriveDownload(value){
   const id=googleDriveFileId(value);
   if(!id)return null;
-  const supabaseUrl=globalThis.ATHAR_CONFIG?.supabaseUrl?.replace(/\/$/,'');
-  return supabaseUrl?`${supabaseUrl}/functions/v1/drive-video?id=${encodeURIComponent(id)}`:`https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`;
+  return `https://drive.usercontent.google.com/download?id=${encodeURIComponent(id)}&export=download&confirm=t`;
 }

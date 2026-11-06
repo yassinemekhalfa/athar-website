@@ -1,7 +1,7 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261105-3';
-import { db, isSupabaseMode } from "../dataClient.js?v=20261105-3";
-import { AppCore } from "../core/appCore.js?v=20261105-3";
-import { emit, on } from "../core/events.js?v=20261105-3";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-1';
+import { db, isSupabaseMode } from "../dataClient.js?v=20261106-1";
+import { AppCore } from "../core/appCore.js?v=20261106-1";
+import { emit, on } from "../core/events.js?v=20261106-1";
 
 const MAX_UPLOAD_BYTES = 26214400;
 const MAX_DRIVE_UPLOAD_BYTES = 5 * 1024 ** 4;
@@ -384,8 +384,7 @@ export async function uploadFileToFolder(context, folderId, file, clientVisible 
 
 export async function storedFileUrl(file, expiresIn = 3600) {
   if (file?.storage_provider === "google_drive" && file.external_file_id) {
-    const base = globalThis.ATHAR_CONFIG?.supabaseUrl?.replace(/\/$/, "");
-    return `${base}/functions/v1/drive-video?id=${encodeURIComponent(file.external_file_id)}`;
+    return `https://drive.usercontent.google.com/download?id=${encodeURIComponent(file.external_file_id)}&export=download&confirm=t`;
   }
   const { data, error } = await db.storage.from(file?.bucket_name || "project-files").createSignedUrl(file?.storage_path || file?.path, expiresIn);
   if (error) throw error;
