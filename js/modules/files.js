@@ -1,7 +1,7 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-5';
-import { db, isSupabaseMode } from "../dataClient.js?v=20261106-5";
-import { AppCore } from "../core/appCore.js?v=20261106-5";
-import { emit, on } from "../core/events.js?v=20261106-5";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-6';
+import { db, isSupabaseMode } from "../dataClient.js?v=20261106-6";
+import { AppCore } from "../core/appCore.js?v=20261106-6";
+import { emit, on } from "../core/events.js?v=20261106-6";
 
 const MAX_UPLOAD_BYTES = 26214400;
 export const MAX_DRIVE_UPLOAD_BYTES = 5_000_000_000_000;
@@ -185,7 +185,9 @@ function renderFile(file) {
     share.addEventListener('click',()=>openItemSharing({id:file.id,type:'file',title:file.original_name},state.context));actions.append(share);
   }
 
-  const canDelete = state.context.canManageAll || state.context.canUpload&&file.uploaded_by === state.context.user.id;
+  // Keep owner access explicit here: older role/permission snapshots can leave
+  // canManageAll stale even though the signed-in member is the workspace owner.
+  const canDelete = state.context.isOwner || state.context.canManageAll || state.context.canUpload&&file.uploaded_by === state.context.user.id;
   if (canDelete) {
     const remove = button("Delete", "danger");
     remove.classList.add("ap-btn--sm");

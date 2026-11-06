@@ -1,14 +1,14 @@
-import { db } from "../dataClient.js?v=20261106-5";
-import { getState } from "../core/state.js?v=20261106-5";
-import { AppCore } from "../core/appCore.js?v=20261106-5";
-import { emit } from "../core/events.js?v=20261106-5";
-import { archiveFolder, createFolder, moveFolder, selectFolder, trashFolder, updateFolder } from "./folders.js?v=20261106-5";
-import { openFolderSharing } from "./folderPermissions.js?v=20261106-5";
-import { openItemSharing } from "./itemSharing.js?v=20261106-5";
-import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261106-5";
-import { moveWorkspaceItem } from "./dragDrop.js?v=20261106-5";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-5";
-import { uploadBrandAsset } from "./preferences.js?v=20261106-5";
+import { db } from "../dataClient.js?v=20261106-6";
+import { getState } from "../core/state.js?v=20261106-6";
+import { AppCore } from "../core/appCore.js?v=20261106-6";
+import { emit } from "../core/events.js?v=20261106-6";
+import { archiveFolder, createFolder, moveFolder, selectFolder, trashFolder, updateFolder } from "./folders.js?v=20261106-6";
+import { openFolderSharing } from "./folderPermissions.js?v=20261106-6";
+import { openItemSharing } from "./itemSharing.js?v=20261106-6";
+import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261106-6";
+import { moveWorkspaceItem } from "./dragDrop.js?v=20261106-6";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-6";
+import { uploadBrandAsset } from "./preferences.js?v=20261106-6";
 
 const TABLES = {
   board: "boards",
