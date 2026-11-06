@@ -1,6 +1,6 @@
-import {db} from '../dataClient.js?v=20261106-1';
-import {getState} from '../core/state.js?v=20261106-1';
-import {AppCore} from '../core/appCore.js?v=20261106-1';
+import {db} from '../dataClient.js?v=20261106-2';
+import {getState} from '../core/state.js?v=20261106-2';
+import {AppCore} from '../core/appCore.js?v=20261106-2';
 
 const el=(tag,cls='',text)=>{const node=document.createElement(tag);node.className=cls;if(text!==undefined)node.textContent=text;return node;};
 

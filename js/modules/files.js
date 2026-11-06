@@ -1,7 +1,7 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-1';
-import { db, isSupabaseMode } from "../dataClient.js?v=20261106-1";
-import { AppCore } from "../core/appCore.js?v=20261106-1";
-import { emit, on } from "../core/events.js?v=20261106-1";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261106-2';
+import { db, isSupabaseMode } from "../dataClient.js?v=20261106-2";
+import { AppCore } from "../core/appCore.js?v=20261106-2";
+import { emit, on } from "../core/events.js?v=20261106-2";
 
 const MAX_UPLOAD_BYTES = 26214400;
 const MAX_DRIVE_UPLOAD_BYTES = 5 * 1024 ** 4;
@@ -355,7 +355,7 @@ async function ensureDriveConnection(context = state.context) {
   if (driveConnected) return;
   let status = await driveAction("status", {}, context.agencyId);
   if (!status?.connected) {
-    status = await authorizeDrive(context);
+    status = await authorizeDrive(context,Boolean(status?.reconnect_required));
   }
   if (!status?.connected) throw new Error("Google Drive is not connected.");
   driveConnected = true;

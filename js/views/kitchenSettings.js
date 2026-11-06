@@ -1,10 +1,10 @@
-import {renderCustomization} from './workspaceCustomization.js?v=20261106-1';
-import {renderMembersView} from '../workspace/members.js?v=20261106-1';
-import {savePreferences} from '../workspace/preferences.js?v=20261106-1';
-import {db} from '../dataClient.js?v=20261106-1';
-import {AppCore} from '../core/appCore.js?v=20261106-1';
-import {getState,setState} from '../core/state.js?v=20261106-1';
-import {ROLES,roleBadge,canManageRole,roleDescription} from '../core/permissions.js?v=20261106-1';
+import {renderCustomization} from './workspaceCustomization.js?v=20261106-2';
+import {renderMembersView} from '../workspace/members.js?v=20261106-2';
+import {savePreferences} from '../workspace/preferences.js?v=20261106-2';
+import {db} from '../dataClient.js?v=20261106-2';
+import {AppCore} from '../core/appCore.js?v=20261106-2';
+import {getState,setState} from '../core/state.js?v=20261106-2';
+import {ROLES,roleBadge,canManageRole,roleDescription} from '../core/permissions.js?v=20261106-2';
 const NAV=[['General','home'],['Teammates','members'],['Roles & Permissions','permissions'],['Teams','teams'],['Custom Fields','tasks'],['Quotes','quotes'],['Checkout','proposals'],['Invoices','invoices'],['Notifications','notifications'],['Services','services'],['Apps & Integrations','zapier'],['Forms','forms'],['Saved Replies','replies'],['API & Export','api'],['Storage','billing']];
 const el=(t,c='',text)=>{const n=document.createElement(t);n.className=c;if(text!==undefined)n.textContent=text;return n;};
 function button(text,fn,cls='k-btn k-btn--soft'){const b=el('button',cls,text);b.type='button';b.addEventListener('click',async()=>{try{await fn();}catch(e){AppCore.ui.toast(AppCore.ui.describeError(e),'error');}});return b;}
