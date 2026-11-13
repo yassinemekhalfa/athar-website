@@ -3,6 +3,7 @@ function button(label, variant = "secondary") { const b=document.createElement("
 export function describeError(error) {
   const code = error?.code || error?.details || ""; const message = String(error?.message || error || "");
   if (error?.userMessage && message) return message;
+  if (Number(error?.status || error?.statusCode) === 402 || /\b402\b|project.{0,40}(restricted|quota)|usage limits? exceeded/i.test(`${code} ${message}`)) return "Supabase has temporarily restricted this workspace because its usage quota was exceeded. The workspace owner must resolve the quota in the Supabase dashboard before anyone can sign in.";
   if (code === "invalid_credentials" || /invalid login credentials/i.test(message)) return "The email or password is incorrect.";
   if (code === "email_not_confirmed" || /email not confirmed/i.test(message)) return "Confirm your email address before signing in.";
   if (code === "user_already_exists" || /user already registered/i.test(message)) return "An account already exists for that email address.";

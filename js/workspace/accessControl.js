@@ -1,5 +1,5 @@
-import { ROLE_DEFINITIONS } from "../core/permissions.js?v=20261106-7";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261106-7";
+import { ROLE_DEFINITIONS } from "../core/permissions.js?v=20261113-1";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261113-1";
 
 const OPTIONS = [
   ["private", "Private", "Only invited members", "lock"],
