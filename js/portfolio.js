@@ -1,7 +1,7 @@
 import {getLanguage,translate as t} from './landingI18n.js?v=20261113-1';
 import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js?v=20261113-1';
 import {db,isSupabaseMode} from './dataClient.js?v=20261113-1';
-import {googleDriveDownload} from './drive-video.js?v=20261113-1';
+import {googleDrivePreview} from './drive-video.js?v=20261118-1';
 import {mirrorMediaUrl} from './mediaMirror.js?v=20261117-1';
 let portfolioProjects=[];
 
@@ -31,7 +31,7 @@ function applyVideoFrame(host,project){const aspect=frameAspect(videoFrame(proje
 function projectVideo(project,{autoplay=false}={}){
  const video=element('video','portfolio-video');video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');video.preload=autoplay?'auto':'metadata';video.poster=project.video.poster||project.cover;video.muted=autoplay;video.defaultMuted=autoplay;video.loop=autoplay;video.autoplay=autoplay;
  if(autoplay){video.setAttribute('muted','');video.setAttribute('autoplay','');video.setAttribute('loop','');video.setAttribute('aria-hidden','true');video.tabIndex=-1;}else video.controls=true;
- video.src=project.video.type==='video/google-drive'?(googleDriveDownload(project.video.src)||project.video.src):project.video.src;
+ video.src=project.video.src;
  video.addEventListener('loadedmetadata',()=>{const frame=videoFrame(project);if(frame.ratio==='auto'&&video.videoWidth&&video.videoHeight){const host=video.closest('.portfolio-art,.project-film-frame');if(host){const aspect=video.videoWidth/video.videoHeight;host.style.aspectRatio=String(aspect);host.style.setProperty('--video-ratio',String(aspect));}}});
  if(autoplay){const play=()=>video.play().catch(()=>{});video.addEventListener('canplay',play,{once:true});queueMicrotask(play);}
  return video;
@@ -60,13 +60,13 @@ function card(project,teaser=false){
  const article=element('article','portfolio-card');const link=element('a','portfolio-card-link');link.href=projectUrl(project);
  const art=element('div','portfolio-art');
  let durationBadge=null;
- if(teaser&&project.video){article.classList.add('portfolio-card--video');applyVideoFrame(art,project);const video=projectVideo(project,{autoplay:true});video.addEventListener('error',()=>{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});video.replaceWith(cover);});durationBadge=element('span','portfolio-duration','0:00');video.addEventListener('loadedmetadata',()=>{if(!Number.isFinite(video.duration))return;const minutes=Math.floor(video.duration/60),seconds=Math.floor(video.duration%60);durationBadge.textContent=`${minutes}:${String(seconds).padStart(2,'0')}`;});art.append(video);manageCoverPlayback(video);}else{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.append(cover);}
+ if(teaser&&project.video){article.classList.add('portfolio-card--video');applyVideoFrame(art,project);if(project.video.type==='video/google-drive'){const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.append(cover);durationBadge=element('span','portfolio-duration',t('فيديو'));}else{const video=projectVideo(project,{autoplay:true});video.addEventListener('error',()=>{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});video.replaceWith(cover);});durationBadge=element('span','portfolio-duration','0:00');video.addEventListener('loadedmetadata',()=>{if(!Number.isFinite(video.duration))return;const minutes=Math.floor(video.duration/60),seconds=Math.floor(video.duration%60);durationBadge.textContent=`${minutes}:${String(seconds).padStart(2,'0')}`;});art.append(video);manageCoverPlayback(video);}}else{const cover=media(project.cover,`${project.name} — ${localized(project.title)}`);applyCrop(art,cover,cropFor(project,'cover'),{useRatio:false});art.append(cover);}
  if(project.concept)art.append(element('span','portfolio-concept',t('تصور إبداعي')));
  if(project.video)art.append(element('span','portfolio-play',`▶ ${t('فيلم قصير')}`));
  const body=element('div','portfolio-card-body');const meta=element('div','portfolio-meta');meta.append(element('span','',t(categories[project.category])),element('span','',project.year));
  body.append(meta,element('h3','',project.name),element('p','',localized(project.title)),element('span','portfolio-card-action',`${t('افتح المشروع')} ${getLanguage()==='en'?'↗':'↖'}`));
  meta.prepend(element('span','',sectorLabel(project)));
- if(teaser&&project.video){article.classList.add('portfolio-card--portrait');const top=element('div','portfolio-card-top');top.append(durationBadge,element('span','portfolio-card-sector',sectorLabel(project)));art.append(top,element('span','portfolio-center-play','▶'),body);link.append(art);}else link.append(art,body);article.append(link);
+ if(teaser&&project.video){article.classList.add('portfolio-card--portrait');const top=element('div','portfolio-card-top');if(durationBadge)top.append(durationBadge);top.append(element('span','portfolio-card-sector',sectorLabel(project)));art.append(top,element('span','portfolio-center-play','▶'),body);link.append(art);}else link.append(art,body);article.append(link);
  if(dialog)link.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();returnFocus=link;openProject(project,{updateUrl:!teaser});});
  return article;
 }
@@ -96,7 +96,7 @@ function fillProject(project){
  if(project.video){
   const section=element('section','project-film');section.append(element('h3','',t('معاينة الفيديو')));
   const filmFrame=element('div','project-film-frame');applyVideoFrame(filmFrame,project);
-  const video=projectVideo(project,{autoplay:true});video.preload='auto';video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);filmFrame.append(video,customVideoControls(video));
+  if(project.video.type==='video/google-drive'){const frame=element('iframe');frame.src=googleDrivePreview(project.video.src)||project.video.src;frame.title=`${project.name} — ${t('معاينة الفيديو')}`;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';filmFrame.append(frame);}else{const video=projectVideo(project,{autoplay:true});video.preload='auto';video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);filmFrame.append(video,customVideoControls(video));}
   if(project.video.type!=='video/google-drive'){
    const download=element('a','small-link',t('تنزيل الفيديو'));download.href=project.video.src;download.download=project.video.src.split('/').at(-1);section.append(download);
   }
