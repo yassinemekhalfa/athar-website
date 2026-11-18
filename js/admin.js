@@ -1,6 +1,7 @@
 import {googleDrivePreview,googleDriveImage} from './drive-video.js?v=20261113-1';
 import {db,isSupabaseMode} from './dataClient.js?v=20261113-1';
 import {uploadBlobWithProgress} from './modules/files.js?v=20261113-1';
+import {mirrorMediaUrl} from './mediaMirror.js?v=20261117-1';
 const $=id=>document.getElementById(id);
 const form=$('project-form'),status=$('status');
 let projects=[],current=null,dirty=false,busy=false,trustedClients=[],presentationSettings=null,profileSettings=null,uploadedTrustedLogo='';
@@ -36,19 +37,19 @@ function renderList(){
  $('project-count').textContent=projects.length;
  $('project-list').replaceChildren(...projects.map(entry=>{
   const button=node('button');button.type='button';button.className='project-option';button.setAttribute('aria-current',String(entry.project.id===current?.id));
-  if(entry.project.cover)button.append(image(entry.project.cover));
+  if(entry.project.cover)button.append(image(mirrorMediaUrl(entry.project.cover)));
   const label=node('span');label.append(node('strong',entry.project.name),node('small',entry.published?(entry.hasChanges?'Published · draft changes':'Published'):'Draft'));button.append(label);
   button.addEventListener('click',()=>{if(!busy&&confirmLeave())select(entry.project);});return button;
  }));
 }
 function renderMedia(){
- const coverHost=$('cover-preview');coverHost.replaceChildren();if(current.cover){const cover=image(current.cover);applyCrop(coverHost,cover,cropFor('cover'));coverHost.append(cover);}else coverHost.append(node('span','Choose a cover image'));
+ const coverHost=$('cover-preview');coverHost.replaceChildren();if(current.cover){const cover=image(mirrorMediaUrl(current.cover));applyCrop(coverHost,cover,cropFor('cover'));coverHost.append(cover);}else coverHost.append(node('span','Choose a cover image'));
  const video=$('video-preview');video.replaceChildren();
- if(current.video?.type==='video/google-drive'){const frame=node('iframe'),url=new URL(current.video.src);url.searchParams.set('autoplay','1');frame.src=url.href;frame.title='Google Drive project video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';applyVideoFrame(video,frame);video.append(frame);}else if(current.video){const player=node('video');player.src=current.video.src;player.controls=true;player.preload='auto';player.playsInline=true;player.poster=current.cover||'';player.autoplay=true;player.muted=true;player.loop=true;player.setAttribute('muted','');player.setAttribute('autoplay','');applyVideoFrame(video,player);player.addEventListener('loadedmetadata',()=>{if(videoFrame().ratio==='auto'&&player.videoWidth&&player.videoHeight)video.style.aspectRatio=String(player.videoWidth/player.videoHeight);});video.append(player);}else video.append(node('span','Optional project film'));
+ if(current.video?.type==='video/google-drive'){const frame=node('iframe'),url=new URL(current.video.src);url.searchParams.set('autoplay','1');frame.src=url.href;frame.title='Google Drive project video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';applyVideoFrame(video,frame);video.append(frame);}else if(current.video){const player=node('video');player.src=mirrorMediaUrl(current.video.src);player.controls=true;player.preload='auto';player.playsInline=true;player.poster=mirrorMediaUrl(current.cover||'');player.autoplay=true;player.muted=true;player.loop=true;player.setAttribute('muted','');player.setAttribute('autoplay','');applyVideoFrame(video,player);player.addEventListener('loadedmetadata',()=>{if(videoFrame().ratio==='auto'&&player.videoWidth&&player.videoHeight)video.style.aspectRatio=String(player.videoWidth/player.videoHeight);});video.append(player);}else video.append(node('span','Optional project film'));
  const frame=videoFrame(),dimensions=$('video-dimensions');dimensions.textContent=frame.width&&frame.height?`Detected ${frame.width} × ${frame.height}px${frame.ratio==='auto'?' — using natural format':''}`:frame.ratio==='auto'?'Auto detects uploaded video dimensions.':'Selected format is used; the full video remains visible.';
  $('remove-video').hidden=!current.video;
  $('gallery-preview').replaceChildren(...current.images.map((src,index)=>{
-  const wrap=node('div');wrap.className='gallery-item';const remove=node('button','×');remove.type='button';remove.setAttribute('aria-label',`Remove gallery image ${index+1}`);remove.addEventListener('click',()=>{current.images.splice(index,1);dirty=true;renderMedia();});wrap.append(image(src),remove);return wrap;
+  const wrap=node('div');wrap.className='gallery-item';const remove=node('button','×');remove.type='button';remove.setAttribute('aria-label',`Remove gallery image ${index+1}`);remove.addEventListener('click',()=>{current.images.splice(index,1);dirty=true;renderMedia();});wrap.append(image(mirrorMediaUrl(src)),remove);return wrap;
  }));
 }
 function select(project){
@@ -86,7 +87,7 @@ async function uploadPublicFile(file,onProgress=()=>{}){
 }
 function renderTrustedClients(){
  $('trusted-client-list').replaceChildren(...trustedClients.map(client=>{
-  const row=node('article');row.className='trusted-client-admin-row';const logo=googleDriveImage(client.logo_url)||client.logo_url;
+  const row=node('article');row.className='trusted-client-admin-row';const logo=googleDriveImage(client.logo_url)||mirrorMediaUrl(client.logo_url);
   if(logo){const image=node('img');image.src=logo;image.alt='';row.append(image);}else row.append(node('span','No logo'));
   const details=node('div');details.append(node('strong',client.name),node('small',client.published?'Visible on website':'Hidden from website'));row.append(details,node('span',`Order ${client.position}`));
   const remove=node('button','Delete');remove.type='button';remove.className='danger';remove.addEventListener('click',async()=>{if(!confirm(`Delete ${client.name} from the trusted clients bar?`))return;remove.disabled=true;const {error}=await db.from('website_trusted_clients').delete().eq('id',client.id);if(error){remove.disabled=false;return notify(error.message,true);}await refreshTrustedClients();notify('Trusted client deleted.');});row.append(remove);return row;
@@ -102,7 +103,7 @@ $('trusted-client-logo-upload').addEventListener('change',async event=>{const fi
 
 function renderWebsiteProfilePhoto(){
  const profile=profileSettings||{},preview=$('website-profile-preview');preview.replaceChildren();
- if(profile.photo_url){const photo=node('img');photo.src=profile.photo_url;photo.alt='Profile preview';preview.append(photo);}else preview.append(node('span','Add your photo'));
+ if(profile.photo_url){const photo=node('img');photo.src=mirrorMediaUrl(profile.photo_url);photo.alt='Profile preview';preview.append(photo);}else preview.append(node('span','Add your photo'));
 }
 function renderWebsiteProfile(){
  const profile=profileSettings||{};renderWebsiteProfilePhoto();
@@ -123,7 +124,7 @@ $('website-profile-form').addEventListener('submit',async event=>{
  const {error}=await db.from('website_profile').upsert(values,{onConflict:'agency_id'});submit.disabled=false;if(error)return notify(error.message,true);await refreshWebsiteProfile();notify('Homepage profile and social links saved.');
 });
 
-function renderPresentationVideo(){const host=$('presentation-video-preview');host.replaceChildren();const url=presentationSettings?.presentation_video_url;if(!url){host.hidden=true;return;}host.hidden=false;if(presentationSettings.presentation_video_type==='video/google-drive'){const frame=node('iframe');frame.src=url;frame.title='Presentation video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;host.append(frame);}else{const video=node('video');video.src=url;video.controls=true;video.playsInline=true;host.append(video);}}
+function renderPresentationVideo(){const host=$('presentation-video-preview');host.replaceChildren();const url=presentationSettings?.presentation_video_url;if(!url){host.hidden=true;return;}host.hidden=false;if(presentationSettings.presentation_video_type==='video/google-drive'){const frame=node('iframe');frame.src=url;frame.title='Presentation video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;host.append(frame);}else{const video=node('video');video.src=mirrorMediaUrl(url);video.controls=true;video.playsInline=true;host.append(video);}}
 async function refreshPresentationVideo(){const {membership}=await getOwnerContext();const {data,error}=await db.from('website_settings').select('*').eq('agency_id',membership.agency_id).maybeSingle();if(error)throw error;presentationSettings=data||{agency_id:membership.agency_id,presentation_video_url:null,presentation_video_type:null,presentation_video_published:false};$('presentation-video-link').value=presentationSettings.presentation_video_type==='video/google-drive'?presentationSettings.presentation_video_url||'':'';$('presentation-video-published').checked=!!presentationSettings.presentation_video_published;renderPresentationVideo();}
 $('presentation-video-link').addEventListener('input',event=>{const value=event.target.value.trim(),preview=googleDrivePreview(value);event.target.setCustomValidity(value&&!preview?'Paste a valid Google Drive video link.':'');if(preview){presentationSettings.presentation_video_url=preview;presentationSettings.presentation_video_type='video/google-drive';renderPresentationVideo();}});
 $('presentation-video-upload').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{notify('Uploading presentation video…');const media=await uploadPublicFile(file,uploadStatus(file,'Uploading presentation video'));presentationSettings.presentation_video_url=media.src;presentationSettings.presentation_video_type=media.type;$('presentation-video-link').value='';renderPresentationVideo();notify('Video uploaded. Press Save video to publish the setting.');}catch(error){notify(error.message,true);}finally{event.target.value='';}});
@@ -180,7 +181,7 @@ for(const action of ['unpublish','delete'])$(action==='delete'?'delete-project':
 });
 $('preview-project').addEventListener('click',()=>{
  const p=readProject(),body=$('preview-content');body.replaceChildren(node('p','Private preview · not published'),node('h1',p.name));
- if(p.cover)body.append(image(p.cover));
+ if(p.cover)body.append(image(mirrorMediaUrl(p.cover)));
  for(const lang of ['en','ar'])if(p.title[lang]||p.description[lang]){const section=node('section');section.dir=lang==='ar'?'rtl':'ltr';section.append(node('h2',p.title[lang]),node('p',p.summary[lang]),node('p',p.description[lang]));const services=node('ul');for(const service of p.services[lang])services.append(node('li',service));section.append(services);body.append(section);}
  if(p.video?.type==='video/google-drive'){const frame=node('iframe');frame.src=p.video.src;frame.title='Google Drive project video preview';frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';body.append(frame);}else if(p.video){const video=node('video');video.src=p.video.src;video.controls=true;video.playsInline=true;body.append(video);}for(const src of p.images)body.append(image(src));$('preview-dialog').showModal();
 });

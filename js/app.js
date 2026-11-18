@@ -19,6 +19,7 @@ import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInb
 import { renderSettingsHub } from "./views/kitchenSettings.js?v=20261113-1";
 import { renderProfilePage, changePassword } from "./views/profilePage.js?v=20261113-1";
 import { applyTheme } from "./workspace/preferences.js?v=20261113-1";
+import { mirrorMediaUrl } from "./mediaMirror.js?v=20261117-1";
 
 let currentView = "home";
 let currentLibraryView = "everything";
@@ -39,7 +40,7 @@ function bindTabs() {
 
 function renderAgencyIdentity() {
   const host = document.getElementById("agency-identity"); host.replaceChildren(); const s = getState();
-  const logo = document.createElement("img"); logo.className = "ap-workspace-logo"; logo.alt = ""; if (s.agency.logo_url) logo.src = s.agency.logo_url; else logo.hidden = true;
+  const logo = document.createElement("img"); logo.className = "ap-workspace-logo"; logo.alt = ""; if (s.agency.logo_url) { logo.src = mirrorMediaUrl(s.agency.logo_url); logo.onerror=()=>{logo.onerror=null;logo.src="assets/images/workspace-logo.svg";}; } else logo.hidden = true;
   const memberships = s.memberships.filter((membership) => isStaffRole(membership.role));
   const picker = document.createElement("div"); picker.className = "ap-workspace-picker";
   const switcher = document.createElement("button"); switcher.type = "button"; switcher.className = "ap-workspace-switcher"; switcher.setAttribute("aria-label", "Workspace"); switcher.setAttribute("aria-haspopup", "listbox"); switcher.setAttribute("aria-expanded", "false");
@@ -709,7 +710,7 @@ function renderWorkspaceSidebarIcons() {
 }
 
 function bindShell() {
-  document.addEventListener("resources:loaded",()=>renderFolderTree());
+  document.addEventListener("resources:loaded",()=>{renderFolderTree();if(currentView==="home")renderHome(document.getElementById("module-content"),AppCore.getModuleContext()).catch(console.error);});
   document.addEventListener("data:changed",()=>loadResources().catch(console.error));
   const rail = document.querySelector(".ap-rail-nav--main");
   if (rail) {
@@ -794,8 +795,9 @@ async function boot() {
     const session = await restoreAuth("team"); if (!session) { location.replace('login.html'+(location.hash?'?next='+encodeURIComponent(location.hash):'')); return; }
     const staff = getState().memberships.filter((m) => isStaffRole(m.role)); if (!staff.length) { location.replace("client-view.html"+location.hash); return; }
     const remembered = localStorage.getItem("ap.lastAgencyId"); const initial = staff.find((m) => m.agency_id === remembered) || staff[0];
-    await activateAgency(initial.agency_id); await loadResources(); bindShell(); renderShell(); document.getElementById("app").inert=false; await mountGlobalSearch(AppCore.getModuleContext());
+    await activateAgency(initial.agency_id); bindShell(); renderShell(); document.getElementById("app").inert=false; await mountGlobalSearch(AppCore.getModuleContext());
     setState({ ready: true }); emit("app:ready", { agencyId: getState().agency.id, userId: getState().user.id, role: getState().role, surface: "team" });
+    loadResources().catch(error=>console.warn("Workspace item previews are unavailable until refreshed.",error));
     const hash = location.hash;
     const folderMatch = hash.match(/^#\/folder\/([0-9a-f-]+)$/i);
     const moduleMatch = hash.match(/^#\/f\/([0-9a-f-]+)\/(conversation|boards|docs|files|invoices|embeds)(?:\/([0-9a-f-]+))?$/i);

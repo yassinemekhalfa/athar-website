@@ -45,6 +45,7 @@ const localDb={
     signOut:()=>authRequest('signout',{},'SIGNED_OUT'),
     updateUser:args=>request('auth/update',args),
     resetPasswordForEmail:email=>request('auth/reset',{email}),
+    signupAvailability:()=>request('auth/signup-availability'),
     onAuthStateChange(fn){listeners.add(fn);return {data:{subscription:{unsubscribe:()=>listeners.delete(fn)}}};}
   },
   storage:{from:bucket=>({

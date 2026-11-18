@@ -1,3 +1,4 @@
+import { mirrorMediaUrl } from './mediaMirror.js?v=20261117-1';
 import {openResourceRoute} from './workspace/resourceRoute.js?v=20261113-1';
 import {renderProfilePage} from './views/profilePage.js?v=20261113-1';
 import {isClientRole,roleBadge} from './core/permissions.js?v=20261113-1';
@@ -176,7 +177,7 @@ function renderIdentity() {
         );
 
       image.src =
-        s.agency.logo_url;
+        mirrorMediaUrl(s.agency.logo_url);
 
       image.alt =
         s.agency.name ||
@@ -221,7 +222,7 @@ function renderIdentity() {
       "ap-workspace-logo";
 
     img.src =
-      s.agency.logo_url;
+      mirrorMediaUrl(s.agency.logo_url);
 
     img.alt =
       s.agency.name || "";

@@ -2,7 +2,7 @@ import {getLanguage,translate as t} from './landingI18n.js?v=20261113-1';
 import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js?v=20261113-1';
 import {db,isSupabaseMode} from './dataClient.js?v=20261113-1';
 import {googleDriveDownload} from './drive-video.js?v=20261113-1';
-import {mirrorMediaUrl} from './mediaMirror.js?v=20261113-1';
+import {mirrorMediaUrl} from './mediaMirror.js?v=20261117-1';
 let portfolioProjects=[];
 
 const grid=document.getElementById('portfolio-grid');

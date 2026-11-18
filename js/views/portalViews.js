@@ -124,9 +124,11 @@ function matchesVisibility(item, value, raw = item.raw || item) {
       : visibility === "Internal";
 }
 
-async function fetchActiveRows(table, filterColumn, filterValue, order = "updated_at") {
-  let result = await db.from(table).select("*").eq(filterColumn, filterValue).is("archived_at", null).is("trashed_at", null).order(order, { ascending: false });
-  if (result.error) result = await db.from(table).select("*").eq(filterColumn, filterValue);
+const LIBRARY_PAGE_SIZE=30;
+async function fetchActiveRows(table, filterColumn, filterValue, order = "updated_at", offset = 0) {
+  const range=[offset,offset+LIBRARY_PAGE_SIZE-1];
+  let result = await db.from(table).select("*").eq(filterColumn, filterValue).is("archived_at", null).is("trashed_at", null).order(order, { ascending: false }).range(...range);
+  if (result.error) result = await db.from(table).select("*").eq(filterColumn, filterValue).order(order, { ascending: false }).range(...range);
   if (result.error) throw result.error;
   return (result.data || []).filter(row => !row.archived_at && !row.trashed_at);
 }
@@ -476,9 +478,9 @@ export function openEmbedForm(context, existing = null, onDone = null) {
   AppCore.ui.openModal({ title: existing ? "Edit embed" : "New embed", content: form, actions: [] });
 }
 
-async function fetchLibraryItems(context, category) {
+async function fetchLibraryItems(context, category, page = 0) {
   const agencyId = context.agencyId;
-  const activeRows = (table, order = "updated_at") => fetchActiveRows(table, "agency_id", agencyId, order);
+  const activeRows = (table, order = "updated_at") => fetchActiveRows(table, "agency_id", agencyId, order, page*LIBRARY_PAGE_SIZE);
   const fetchers = {
     boards: async () => (await activeRows("boards")).map((r) => ({ id: r.id, type: "board", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })),
     conversations: async () => (await activeRows("conversations")).map((r) => ({ id: r.id, type: "conversation", folder_id: r.folder_id, title: r.title, visibility: visibilityText(r), created_at: r.created_at, raw: r })),
@@ -562,11 +564,12 @@ export async function renderLibrary(
       );
     }
 
-    const items =
+    let items =
       await fetchLibraryItems(
         context,
         category
       );
+    let page=0;
 
     container.replaceChildren();
 
@@ -677,6 +680,7 @@ export async function renderLibrary(
         !filtered.length
       ) {
         listHost.replaceChildren();
+        moreHost.hidden=true;
 
         const empty =
           el(
@@ -877,7 +881,17 @@ export async function renderLibrary(
             }
         }
       );
+      moreHost.hidden=false;
     }
+
+    const moreHost=el("div","ap-library-load-more");
+    const moreButton=btn("Load more","ap-btn ap-btn--secondary ap-btn--sm");
+    moreButton.addEventListener("click",async()=>{
+      moreButton.disabled=true;moreButton.textContent="Loading…";
+      try{const next=await fetchLibraryItems(context,category,page+1);if(!next.length){moreHost.hidden=true;return;}page++;items.push(...next);apply(search.value,controls);}
+      catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),"error");}
+      finally{moreButton.disabled=false;moreButton.textContent="Load more";}
+    });moreHost.append(moreButton);
 
     const {
       bar,
@@ -915,7 +929,8 @@ export async function renderLibrary(
 
     root.append(
       bar,
-      listHost
+      listHost,
+      moreHost
     );
 
     container.append(

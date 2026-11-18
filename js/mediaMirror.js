@@ -19,4 +19,18 @@ const MIRRORED_MEDIA={
   "https://yegtfnpdewcldnqtyyte.supabase.co/storage/v1/object/public/website-media/e69d45f7-b569-444e-9213-e72f551d005b/9b41c200-06b2-44e2-bd46-ab2a3abd2489-Ouipak.png": "assets/mirrored-media/media-18.png",
   "https://yegtfnpdewcldnqtyyte.supabase.co/storage/v1/object/public/website-media/e69d45f7-b569-444e-9213-e72f551d005b/cddb8236-55c8-4b6c-b6d4-832325acceb3-LOGO_1080x.webp": "assets/mirrored-media/media-19.webp"
 };
-export function mirrorMediaUrl(url){return MIRRORED_MEDIA[url]||url||'';}
+const MIRRORED_MEDIA_BY_PATH=new Map(Object.entries(MIRRORED_MEDIA).map(([source,target])=>[new URL(source).pathname,target]));
+export function mirrorMediaUrl(value){
+ if(!value)return'';
+ let url;try{url=new URL(value,globalThis.location?.href||'http://localhost/');}catch{return value;}
+ if(url.hostname.endsWith('.supabase.co')){
+  const websitePrefix='/storage/v1/object/public/website-media/';
+  if(url.pathname.startsWith(websitePrefix))return MIRRORED_MEDIA_BY_PATH.get(url.pathname)||value;
+  const brandingPrefix='/storage/v1/object/public/agency-branding/';
+  if(url.pathname.startsWith(brandingPrefix)){
+   const key=url.pathname.slice(brandingPrefix.length).split('/').map(segment=>encodeURIComponent(decodeURIComponent(segment))).join('/');
+   return `/api/storage/agency-branding/${key}`;
+  }
+ }
+ return MIRRORED_MEDIA[value]||value;
+}
