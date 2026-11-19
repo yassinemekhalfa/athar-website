@@ -1,1 +1,8 @@
-globalThis.ATHAR_CONFIG={"mode":"supabase","supabaseUrl":"https://qqdkxvjuhqqnwewhwgvc.supabase.co","supabasePublishableKey":"sb_publishable_tF8qMZtRFfm9WZMqBXa_TQ_jjdGbv8i","appUrl":"https://atharmarketing.agency"};
+// Public browser configuration. The Supabase publishable key is safe to expose;
+// never place the secret/service-role key in this file.
+globalThis.ATHAR_CONFIG={
+  mode:'local',
+  supabaseUrl:'',
+  supabasePublishableKey:'',
+  appUrl:location.origin
+};

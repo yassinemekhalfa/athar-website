@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://yassinemekhalfa.github.io/athar-website/sitemap.xml

@@ -1,7 +1,7 @@
 import {getLanguage,translate as t} from './landingI18n.js?v=20261118-2';
 import {portalOrigin,conceptMode,publishedProject} from './public-hosting.js?v=20261118-2';
-import {db,isSupabaseMode} from './dataClient.js?v=20261118-2';
-import {googleDrivePreview} from './drive-video.js?v=20261118-1';
+import {db,isSupabaseMode} from './dataClient.js?v=20261120-5';
+import {googleDriveDownload,googleDrivePreview} from './drive-video.js?v=20261120-5';
 import {mirrorMediaUrl} from './mediaMirror.js?v=20261120-1';
 let portfolioProjects=[];
 
@@ -28,10 +28,10 @@ const videoFrame=project=>{const saved=project.presentation?.video||{};return sa
 const mirrorProjectMedia=project=>({...project,cover:mirrorMediaUrl(project.cover),images:(project.images||[]).map(mirrorMediaUrl),video:project.video?{...project.video,src:project.video.type==='video/google-drive'?project.video.src:mirrorMediaUrl(project.video.src),poster:mirrorMediaUrl(project.video.poster)}:project.video});
 function frameAspect(frame){if(frame.ratio==='auto'&&Number(frame.aspect)>0)return Number(frame.aspect);return{vertical:9/16,portrait:4/5,square:1,standard:4/3,landscape:16/9}[frame.ratio]||16/9;}
 function applyVideoFrame(host,project){const aspect=frameAspect(videoFrame(project));host.style.aspectRatio=String(aspect);host.style.setProperty('--video-ratio',String(aspect));}
-function projectVideo(project,{autoplay=false}={}){
+function projectVideo(project,{autoplay=false,src=project.video.src}={}){
  const video=element('video','portfolio-video');video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');video.preload=autoplay?'auto':'metadata';video.poster=project.video.poster||project.cover;video.muted=autoplay;video.defaultMuted=autoplay;video.loop=autoplay;video.autoplay=autoplay;
  if(autoplay){video.setAttribute('muted','');video.setAttribute('autoplay','');video.setAttribute('loop','');video.setAttribute('aria-hidden','true');video.tabIndex=-1;}else video.controls=true;
- video.src=project.video.src;
+ video.src=src;
  video.addEventListener('loadedmetadata',()=>{const frame=videoFrame(project);if(frame.ratio==='auto'&&video.videoWidth&&video.videoHeight){const host=video.closest('.portfolio-art,.project-film-frame');if(host){const aspect=video.videoWidth/video.videoHeight;host.style.aspectRatio=String(aspect);host.style.setProperty('--video-ratio',String(aspect));}}});
  if(autoplay){const play=()=>video.play().catch(()=>{});video.addEventListener('canplay',play,{once:true});queueMicrotask(play);}
  return video;
@@ -50,9 +50,9 @@ function customVideoControls(video){
  const soundIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h3l4 3V7l-4 3H5Zm10.5-.5a4 4 0 0 1 0 5M18 7a7 7 0 0 1 0 10"/></svg>',muteIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h3l4 3V7l-4 3H5Zm10 0 4 4m0-4-4 4"/></svg>';
  const play=control('project-video-toggle','Pause video',pauseIcon),mute=control('project-video-mute','Turn sound on',muteIcon);
  const progressWrap=element('div','project-video-progress-wrap'),progress=element('input','project-video-progress'),time=element('output','project-video-time','0:00 / 0:00');progress.type='range';progress.min='0';progress.max='1000';progress.step='1';progress.value='0';progress.setAttribute('aria-label','Video progress');progressWrap.append(progress,time);
- const sync=()=>{const paused=video.paused,duration=video.duration||0,percent=duration?video.currentTime/duration*100:0;play.innerHTML=paused?playIcon:pauseIcon;play.setAttribute('aria-label',paused?'Play video':'Pause video');progress.value=duration?String(Math.round(percent*10)):'0';progress.style.setProperty('--video-progress',`${percent}%`);time.textContent=`${videoTime(video.currentTime)} / ${videoTime(duration)}`;mute.innerHTML=video.muted?muteIcon:soundIcon;mute.setAttribute('aria-label',video.muted?'Turn sound on':'Mute video');};
+ let scrubbing=false;const sync=()=>{const paused=video.paused,duration=video.duration||0,percent=duration?video.currentTime/duration*100:0;play.innerHTML=paused?playIcon:pauseIcon;play.setAttribute('aria-label',paused?'Play video':'Pause video');if(!scrubbing)progress.value=duration?String(Math.round(percent*10)):'0';progress.style.setProperty('--video-progress',`${scrubbing?Number(progress.value)/10:percent}%`);time.textContent=`${videoTime(video.currentTime)} / ${videoTime(duration)}`;mute.innerHTML=video.muted?muteIcon:soundIcon;mute.setAttribute('aria-label',video.muted?'Turn sound on':'Mute video');};
  const toggle=()=>video.paused?video.play().catch(()=>{}):video.pause();
- play.addEventListener('click',toggle);video.addEventListener('click',toggle);progress.addEventListener('input',()=>{if(video.duration)video.currentTime=Number(progress.value)/1000*video.duration;});mute.addEventListener('click',()=>{video.muted=!video.muted;sync();});
+ play.addEventListener('click',toggle);video.addEventListener('click',toggle);progress.addEventListener('pointerdown',()=>{scrubbing=true;});progress.addEventListener('input',()=>{scrubbing=true;if(video.duration)video.currentTime=Number(progress.value)/1000*video.duration;sync();});for(const event of ['pointerup','change','blur'])progress.addEventListener(event,()=>{scrubbing=false;sync();});mute.addEventListener('click',()=>{video.muted=!video.muted;sync();});
  for(const event of ['loadedmetadata','durationchange','timeupdate','play','pause','volumechange','ended'])video.addEventListener(event,sync);sync();controls.append(play,progressWrap,mute);return controls;
 }
 function media(src,alt,className,loading='lazy'){const image=element('img',className);image.src=src;image.alt=alt;image.loading=loading;if(loading==='eager')image.fetchPriority='high';image.width=1200;image.height=900;return image;}
@@ -96,7 +96,11 @@ function fillProject(project){
  if(project.video){
   const section=element('section','project-film');section.append(element('h3','',t('معاينة الفيديو')));
   const filmFrame=element('div','project-film-frame');applyVideoFrame(filmFrame,project);
-  if(project.video.type==='video/google-drive'){const frame=element('iframe');frame.src=googleDrivePreview(project.video.src)||project.video.src;frame.title=`${project.name} — ${t('معاينة الفيديو')}`;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';filmFrame.append(frame);}else{const video=projectVideo(project,{autoplay:true});video.preload='auto';video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);filmFrame.append(video,customVideoControls(video));}
+  if(project.video.type==='video/google-drive'){
+   const direct=googleDriveDownload(project.video.src),video=direct?projectVideo(project,{autoplay:true,src:direct}):null;
+   if(video){video.preload='metadata';video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);const controls=customVideoControls(video);video.addEventListener('error',()=>{const frame=element('iframe'),preview=googleDrivePreview(project.video.src);frame.src=preview?`${preview}?autoplay=1`:project.video.src;frame.title=`${project.name} — ${t('معاينة الفيديو')}`;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';filmFrame.replaceChildren(frame);},{once:true});filmFrame.append(video,controls);}
+   else{const frame=element('iframe'),preview=googleDrivePreview(project.video.src);frame.src=preview?`${preview}?autoplay=1`:project.video.src;frame.title=`${project.name} — ${t('معاينة الفيديو')}`;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';filmFrame.append(frame);}
+  }else{const video=projectVideo(project,{autoplay:true});video.preload='auto';video.setAttribute('aria-label',`${project.name} — ${t('معاينة الفيديو')}`);filmFrame.append(video,customVideoControls(video));}
   if(project.video.type!=='video/google-drive'){
    const download=element('a','small-link',t('تنزيل الفيديو'));download.href=project.video.src;download.download=project.video.src.split('/').at(-1);section.append(download);
   }
