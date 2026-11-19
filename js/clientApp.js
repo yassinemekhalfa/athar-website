@@ -19,7 +19,7 @@ import { emit } from "./core/events.js?v=20261113-1";
 
 import {
   activateAgency
-} from "./workspace/agencies.js?v=20261113-1";
+} from "./workspace/agencies.js?v=20261120-2";
 
 import {
   renderFolderTree
@@ -890,7 +890,7 @@ async function boot() {
           membership.agency_id === remembered
       ) || memberships[0];
 
-    await activateAgency(member.agency_id);
+    await activateAgency(member.agency_id, member);
     await loadResources();
 
     if (!isClientRole(getState().role)) {

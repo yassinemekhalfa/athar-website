@@ -6,7 +6,7 @@ import { workspaceIcon } from "./views/workspaceIcons.js?v=20261118-2";
 import { restoreAuth, signOut } from "./auth/auth.js?v=20261118-2";
 import { getState, setState } from "./core/state.js?v=20261118-2";
 import { emit } from "./core/events.js?v=20261118-2";
-import { activateAgency } from "./workspace/agencies.js?v=20261118-2";
+import { activateAgency } from "./workspace/agencies.js?v=20261120-2";
 import { renderFolderTree, openCreateFolder } from "./workspace/folderTree.js?v=20261118-3";
 import { renderBreadcrumb, selectFolder } from "./workspace/folders.js?v=20261118-2";
 import { openFolderSharing } from "./workspace/folderPermissions.js?v=20261118-2";
@@ -85,7 +85,7 @@ function renderAgencyIdentity() {
       try {
         emit("app:teardown", { reason: "agency-switch" });
         await unmountActiveModule();
-        await activateAgency(membership.agency_id);
+        await activateAgency(membership.agency_id, membership);
         renderShell();
         await showView("home");
       } catch (error) {
@@ -795,7 +795,7 @@ async function boot() {
     const session = await restoreAuth("team"); if (!session) { location.replace('login.html'+(location.hash?'?next='+encodeURIComponent(location.hash):'')); return; }
     const staff = getState().memberships.filter((m) => isStaffRole(m.role)); if (!staff.length) { location.replace("client-view.html"+location.hash); return; }
     const remembered = localStorage.getItem("ap.lastAgencyId"); const initial = staff.find((m) => m.agency_id === remembered) || staff[0];
-    await activateAgency(initial.agency_id); bindShell(); renderShell(); document.getElementById("app").inert=false; await mountGlobalSearch(AppCore.getModuleContext());
+    await activateAgency(initial.agency_id, initial); bindShell(); renderShell(); document.getElementById("app").inert=false; await mountGlobalSearch(AppCore.getModuleContext());
     setState({ ready: true }); emit("app:ready", { agencyId: getState().agency.id, userId: getState().user.id, role: getState().role, surface: "team" });
     loadResources().catch(error=>console.warn("Workspace item previews are unavailable until refreshed.",error));
     const hash = location.hash;
