@@ -1,7 +1,7 @@
 import { mirrorMediaUrl } from './mediaMirror.js?v=20261120-1';
 import {openResourceRoute} from './workspace/resourceRoute.js?v=20261113-1';
 import {renderProfilePage} from './views/profilePage.js?v=20261113-1';
-import {isClientRole,roleBadge} from './core/permissions.js?v=20261113-1';
+import {isClientRole,isStaffRole,roleBadge} from './core/permissions.js?v=20261113-1';
 import './core/adaptive.js?v=20261113-1';
 import { loadResources } from "./workspace/resources.js?v=20261113-1";
 
@@ -877,7 +877,7 @@ async function boot() {
       );
 
     if (!memberships.length) {
-      location.replace("workspace.html"+location.hash);
+      location.replace(getState().memberships.some(membership=>isStaffRole(membership.role)) ? "workspace.html"+location.hash : "login.html?switch_account=1");
       return;
     }
 
@@ -894,7 +894,7 @@ async function boot() {
     await loadResources();
 
     if (!isClientRole(getState().role)) {
-      location.replace("workspace.html"+location.hash);
+      location.replace(getState().memberships.some(membership=>isStaffRole(membership.role)) ? "workspace.html"+location.hash : "login.html?switch_account=1");
       return;
     }
 

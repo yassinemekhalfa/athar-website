@@ -1,5 +1,5 @@
 import {openResourceRoute} from './workspace/resourceRoute.js?v=20261118-2';
-import {isStaffRole,roleBadge,canManageRole,canCreate,isSectionVisible} from './core/permissions.js?v=20261118-2';
+import {isStaffRole,isClientRole,roleBadge,canManageRole,canCreate,isSectionVisible} from './core/permissions.js?v=20261118-2';
 import './core/adaptive.js?v=20261118-2';
 import { loadResources } from "./workspace/resources.js?v=20261118-2";
 import { workspaceIcon } from "./views/workspaceIcons.js?v=20261118-2";
@@ -793,7 +793,7 @@ function renderShell() { renderAgencyIdentity(); renderUserMenu(); renderFolderT
 async function boot() {
   try {
     const session = await restoreAuth("team"); if (!session) { location.replace('login.html'+(location.hash?'?next='+encodeURIComponent(location.hash):'')); return; }
-    const staff = getState().memberships.filter((m) => isStaffRole(m.role)); if (!staff.length) { location.replace("client-view.html"+location.hash); return; }
+    const staff = getState().memberships.filter((m) => isStaffRole(m.role)); if (!staff.length) { location.replace(getState().memberships.some((m)=>isClientRole(m.role)) ? "client-view.html"+location.hash : "login.html?switch_account=1"); return; }
     const remembered = localStorage.getItem("ap.lastAgencyId"); const initial = staff.find((m) => m.agency_id === remembered) || staff[0];
     await activateAgency(initial.agency_id, initial); bindShell(); renderShell(); document.getElementById("app").inert=false; await mountGlobalSearch(AppCore.getModuleContext());
     setState({ ready: true }); emit("app:ready", { agencyId: getState().agency.id, userId: getState().user.id, role: getState().role, surface: "team" });
