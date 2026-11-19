@@ -1,4 +1,4 @@
-import { mirrorMediaUrl } from './mediaMirror.js?v=20261117-1';
+import { mirrorMediaUrl } from './mediaMirror.js?v=20261120-1';
 import {openResourceRoute} from './workspace/resourceRoute.js?v=20261113-1';
 import {renderProfilePage} from './views/profilePage.js?v=20261113-1';
 import {isClientRole,roleBadge} from './core/permissions.js?v=20261113-1';
@@ -23,7 +23,7 @@ import {
 
 import {
   renderFolderTree
-} from "./workspace/folderTree.js?v=20261113-1";
+} from "./workspace/folderTree.js?v=20261118-3";
 
 import {
   renderBreadcrumb,

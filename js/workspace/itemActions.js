@@ -1,14 +1,15 @@
-import { db } from "../dataClient.js?v=20261113-1";
-import { getState } from "../core/state.js?v=20261113-1";
-import { AppCore } from "../core/appCore.js?v=20261113-1";
-import { emit } from "../core/events.js?v=20261113-1";
-import { archiveFolder, createFolder, moveFolder, selectFolder, trashFolder, updateFolder } from "./folders.js?v=20261113-1";
-import { openFolderSharing } from "./folderPermissions.js?v=20261113-1";
-import { openItemSharing } from "./itemSharing.js?v=20261113-1";
-import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261113-1";
-import { moveWorkspaceItem } from "./dragDrop.js?v=20261113-1";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261113-1";
-import { uploadBrandAsset } from "./preferences.js?v=20261113-1";
+import { db } from "../dataClient.js?v=20261118-2";
+import { getState } from "../core/state.js?v=20261118-2";
+import { AppCore } from "../core/appCore.js?v=20261118-2";
+import { emit } from "../core/events.js?v=20261118-2";
+import { archiveFolder, createFolder, moveFolder, selectFolder, trashFolder, updateFolder } from "./folders.js?v=20261118-2";
+import { openFolderSharing } from "./folderPermissions.js?v=20261118-2";
+import { openItemSharing } from "./itemSharing.js?v=20261118-2";
+import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261118-2";
+import { moveWorkspaceItem } from "./dragDrop.js?v=20261118-2";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261118-2";
+import { uploadBrandAsset } from "./preferences.js?v=20261118-2";
+import { mirrorMediaUrl } from "../mediaMirror.js?v=20261120-1";
 
 const TABLES = {
   board: "boards",
@@ -161,7 +162,7 @@ function openIconPicker(item, onDone) {
       preview.replaceChildren();
       if (imageUrl) {
         const image = el("img");
-        image.src = imageUrl;
+        image.src = mirrorMediaUrl(imageUrl);
         image.alt = "Folder icon preview";
         preview.append(image);
       } else preview.textContent = symbol || "📁";
@@ -294,7 +295,7 @@ export function openFolderCoverSettings(item, onDone) {
       return;
     }
     try {
-      const url = new URL(value, location.origin);
+      const url = new URL(mirrorMediaUrl(value), location.origin);
       if (url.protocol !== "https:" && url.origin !== location.origin) throw new Error("Invalid cover image URL.");
       current.src = url.href;
       current.hidden = false;

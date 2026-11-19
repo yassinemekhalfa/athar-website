@@ -1,5 +1,5 @@
 import { db } from '../dataClient.js?v=20261113-1';
-import { mirrorMediaUrl } from '../mediaMirror.js?v=20261117-1';
+import { mirrorMediaUrl } from '../mediaMirror.js?v=20261120-1';
 let branding=null;
 export async function loadLoginBranding(){
  const slug=new URLSearchParams(location.search).get('workspace');if(!slug)return;

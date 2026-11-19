@@ -1,16 +1,17 @@
-import {canCreate,canManageRole} from '../core/permissions.js?v=20261113-1';
-import { db } from "../dataClient.js?v=20261113-1";
-import { getState } from "../core/state.js?v=20261113-1";
-import { AppCore } from "../core/appCore.js?v=20261113-1";
-import { inviteMember } from "../auth/invitations.js?v=20261113-1";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261113-1";
-import { loadFolders, selectFolder, moveFolder } from "./folders.js?v=20261113-1";
-import { loadResources, openResource } from "./resources.js?v=20261113-1";
-import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261113-1";
-import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js?v=20261113-1";
-import { openFolderSharing } from "./folderPermissions.js?v=20261113-1";
-import { openWorkspaceItemActions } from "./itemActions.js?v=20261113-1";
-import { openManagedPassword } from "./accountPasswords.js?v=20261113-1";
+import {canCreate,canManageRole,hasCapability} from '../core/permissions.js?v=20261118-3';
+import {mirrorMediaUrl} from '../mediaMirror.js?v=20261120-1';
+import { db } from "../dataClient.js?v=20261118-2";
+import { getState } from "../core/state.js?v=20261118-2";
+import { AppCore } from "../core/appCore.js?v=20261118-2";
+import { inviteMember } from "../auth/invitations.js?v=20261118-2";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261118-2";
+import { loadFolders, selectFolder, moveFolder } from "./folders.js?v=20261118-2";
+import { loadResources, openResource } from "./resources.js?v=20261118-2";
+import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261118-2";
+import { attachWorkspaceDropTarget, startWorkspaceDrag } from "./dragDrop.js?v=20261118-2";
+import { openFolderSharing } from "./folderPermissions.js?v=20261118-2";
+import { openWorkspaceItemActions } from "./itemActions.js?v=20261118-2";
+import { openManagedPassword } from "./accountPasswords.js?v=20261118-2";
 
 export async function listClients(){const s=getState();const {data,error}=await db.from("clients").select("*").eq("agency_id",s.agency.id).is("archived_at",null).order("created_at",{ascending:false});if(error)throw error;return data||[];}
 export async function createClientCompany({name,email,notes,title,language='en-US',password}){
@@ -33,8 +34,8 @@ async function ensureClientWorkspace(client,{canUpload}={}){
 async function openClientWorkspace(client){try{const folder=await ensureClientWorkspace(client);await selectFolder(folder.id,{force:true});renderClientSpaces();}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}}
 
 const expandedClients=new Set();
-function clientMark(client){if(client.avatar_url){const img=el('img','k-client-space-avatar');img.src=client.avatar_url;img.alt='';return img;}return el('span','k-client-space-emoji',client.icon_emoji||'👤');}
-function folderMark(folder){if(folder.avatar_url){const img=el('img','k-client-space-folder-image');img.src=folder.avatar_url;img.alt='';return img;}if(folder.icon_emoji)return el('span','k-client-space-folder-emoji',folder.icon_emoji);return workspaceIcon('folder');}
+function clientMark(client){if(client.avatar_url){const img=el('img','k-client-space-avatar');img.src=mirrorMediaUrl(client.avatar_url);img.alt='';img.onerror=()=>{img.onerror=null;img.replaceWith(el('span','k-client-space-emoji',client.icon_emoji||'👤'));};return img;}return el('span','k-client-space-emoji',client.icon_emoji||'👤');}
+function folderMark(folder){if(folder.avatar_url){const img=el('img','k-client-space-folder-image');img.src=mirrorMediaUrl(folder.avatar_url);img.alt='';img.onerror=()=>{img.onerror=null;img.replaceWith(el('span','k-client-space-folder-emoji',folder.icon_emoji||'📁'));};return img;}if(folder.icon_emoji)return el('span','k-client-space-folder-emoji',folder.icon_emoji);return workspaceIcon('folder');}
 export async function renderClientSpaces(){
  const host=document.getElementById('client-space-tree');if(!host)return;host.replaceChildren();
  try{const clients=await listClients();if(!clients.length){host.append(el('p','ap-sidebar-empty','No clients yet.'));return;}
@@ -72,7 +73,7 @@ export async function renderClientSpaces(){
      item.addEventListener('click',()=>selectFolder(folder.id,{force:true}));
      if(canCreate(getState().role)){item.draggable=true;item.addEventListener('dragstart',event=>startWorkspaceDrag(event,{type:'folder',id:folder.id}));attachWorkspaceDropTarget(item,folder.id,{onDrop:()=>renderClientSpaces()});}
      childRow.append(item);
-     if(canCreate(getState().role)){const action=button('','k-client-space-menu');action.append(workspaceIcon('more'));action.setAttribute('aria-label',`Actions for ${folder.name}`);action.addEventListener('click',event=>{event.stopPropagation();openWorkspaceItemActions(action,{...folder,type:'folder',title:folder.name},AppCore.getModuleContext(),()=>renderClientSpaces());});childRow.append(action);}
+     if(canCreate(getState().role)||hasCapability(getState().role,'manageAll')){const action=button('','k-client-space-menu');action.append(workspaceIcon('more'));action.setAttribute('aria-label',`Actions for ${folder.name}`);action.addEventListener('click',event=>{event.stopPropagation();openWorkspaceItemActions(action,{...folder,type:'folder',title:folder.name},AppCore.getModuleContext(),()=>renderClientSpaces());});childRow.append(action);}
      list.append(childRow);
     }
     for(const resource of resources.filter(r=>r.folder_id===root.id)){

@@ -1,15 +1,16 @@
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261113-1';
-import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261113-1';
-import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261113-1';
-import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261113-1';
-import { uploadBrandAsset } from "../workspace/preferences.js?v=20261113-1";
-import { uploadFileToFolder, storedFileUrl, deleteUploadedFile, MAX_DRIVE_UPLOAD_BYTES } from "./files.js?v=20261113-1";
-import { db, isSupabaseMode } from "../dataClient.js?v=20261113-1";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261113-1";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261113-1";
-import { AppCore } from "../core/appCore.js?v=20261113-1";
-import { emit, on } from "../core/events.js?v=20261113-1";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261113-1";
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261118-2';
+import {openWorkspaceItemActions} from '../workspace/itemActions.js?v=20261118-2';
+import {openWorkspaceActionMenu} from '../workspace/actionMenu.js?v=20261118-2';
+import {createTaskColorControl,applyTaskColor,taskColorValue} from './taskAppearance.js?v=20261118-2';
+import { uploadBrandAsset } from "../workspace/preferences.js?v=20261118-2";
+import { mirrorMediaUrl } from "../mediaMirror.js?v=20261120-1";
+import { uploadFileToFolder, storedFileUrl, deleteUploadedFile, MAX_DRIVE_UPLOAD_BYTES } from "./files.js?v=20261118-2";
+import { db, isSupabaseMode } from "../dataClient.js?v=20261118-2";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261118-2";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261118-2";
+import { AppCore } from "../core/appCore.js?v=20261118-2";
+import { emit, on } from "../core/events.js?v=20261118-2";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261118-2";
 import {
   POSITION_STEP,
   sortByPosition,
@@ -27,7 +28,7 @@ import {
   deleteTaskComment,
   profileLabel,
   priorityLabel
-} from "./tasks.js?v=20261113-1";
+} from "./tasks.js?v=20261118-2";
 
 const state = {
   container: null,
@@ -456,7 +457,7 @@ function renderTaskCard(task) {
   const coverImage = task.details?.cover_image;
   if (coverImage) {
     try {
-      const url = new URL(coverImage, location.origin);
+      const url = new URL(mirrorMediaUrl(coverImage), location.origin);
       if (url.protocol === "https:" || url.origin === location.origin) {
         const cover = el("img", "ap-task-card__cover");
         cover.src = url.href;
@@ -857,7 +858,7 @@ function openTaskColorForm(task) {
       return;
     }
     try {
-      const url = new URL(value, location.origin);
+      const url = new URL(mirrorMediaUrl(value), location.origin);
       if (url.protocol !== "https:" && url.origin !== location.origin) throw new Error("Invalid cover image URL.");
       preview.src = url.href;
       preview.hidden = false;

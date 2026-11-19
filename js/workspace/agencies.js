@@ -1,7 +1,7 @@
 import { db } from "../dataClient.js?v=20261113-1";
 import { getState, setState } from "../core/state.js?v=20261113-1";
 import { emit } from "../core/events.js?v=20261113-1";
-import { applyBranding } from "./branding.js?v=20261113-1";
+import { applyBranding } from "./branding.js?v=20261119-1";
 import { loadFolders } from "./folders.js?v=20261113-1";
 
 export async function activateAgency(agencyId){const membership=getState().memberships.find(m=>m.agency_id===agencyId);if(!membership)throw new Error("Workspace unavailable");const {data:agency,error}=await db.from("agencies").select("*").eq("id",agencyId).single();if(error)throw error;setState({agency,membership,role:membership.role,clientId:membership.client_id||null,selectedFolderId:null,selectedModule:null,folders:[]});applyBranding(agency);emit("agency:selected",{agencyId,role:membership.role});localStorage.setItem("ap.lastAgencyId",agencyId);await loadFolders();return agency;}

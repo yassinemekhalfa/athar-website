@@ -1,12 +1,13 @@
-import {canCreate} from '../core/permissions.js?v=20261113-1';
-import { openResource } from "./resources.js?v=20261113-1";
-import { workspaceIcon } from "../views/workspaceIcons.js?v=20261113-1";
-import { createAccessControl } from "./accessControl.js?v=20261113-1";
-import { getState } from "../core/state.js?v=20261113-1";
-import { selectFolder, createFolder, updateFolder, archiveFolder, trashFolder, moveFolder, reorderFolderRelative } from "./folders.js?v=20261113-1";
-import { AppCore } from "../core/appCore.js?v=20261113-1";
-import { hasWorkspaceDrag, readWorkspaceDrag, startWorkspaceDrag, moveWorkspaceItem } from "./dragDrop.js?v=20261113-1";
-import { openWorkspaceItemActions } from "./itemActions.js?v=20261113-1";
+import {canCreate,hasCapability} from '../core/permissions.js?v=20261118-3';
+import { openResource } from "./resources.js?v=20261118-2";
+import { workspaceIcon } from "../views/workspaceIcons.js?v=20261118-2";
+import { createAccessControl } from "./accessControl.js?v=20261118-2";
+import { getState } from "../core/state.js?v=20261118-2";
+import { selectFolder, createFolder, updateFolder, archiveFolder, trashFolder, moveFolder, reorderFolderRelative } from "./folders.js?v=20261118-2";
+import { AppCore } from "../core/appCore.js?v=20261118-2";
+import { hasWorkspaceDrag, readWorkspaceDrag, startWorkspaceDrag, moveWorkspaceItem } from "./dragDrop.js?v=20261118-2";
+import { openWorkspaceItemActions } from "./itemActions.js?v=20261118-2";
+import { mirrorMediaUrl } from "../mediaMirror.js?v=20261120-1";
 
 const expanded = new Set();
 const initializedSelections = new Set();
@@ -42,9 +43,11 @@ export function renderNode(folder) {
   toggle.setAttribute("aria-label", `${isExpanded ? "Collapse" : "Expand"} ${folder.name}`);
   toggle.setAttribute("aria-expanded", String(isExpanded));
   toggle.addEventListener("click", () => { isExpanded ? expanded.delete(folder.id) : expanded.add(folder.id); renderFolderTree(); });
-  const folderIcon = document.createElement("span"); folderIcon.className = "ap-folder-mini"; if (folder.avatar_url) { folderIcon.classList.add("ap-folder-mini--image"); const image=document.createElement("img"); image.src=folder.avatar_url; image.alt=""; folderIcon.append(image); } else if (folder.icon_emoji) { folderIcon.classList.add("ap-folder-mini--emoji"); folderIcon.textContent = folder.icon_emoji; } folderIcon.style.setProperty("--folder-color", folder.color || "#F4B400");
+  const folderIcon = document.createElement("span"); folderIcon.className = "ap-folder-mini"; if (folder.avatar_url) { folderIcon.classList.add("ap-folder-mini--image"); const image=document.createElement("img"); image.src=mirrorMediaUrl(folder.avatar_url); image.alt=""; folderIcon.append(image); } else if (folder.icon_emoji) { folderIcon.classList.add("ap-folder-mini--emoji"); folderIcon.textContent = folder.icon_emoji; } folderIcon.style.setProperty("--folder-color", folder.color || "#F4B400");
   const label = button(folder.name, "ap-folder-tree__label"); label.addEventListener("click", () => { expanded.add(folder.id); selectFolder(folder.id).then(renderFolderTree); }); row.append(toggle, folderIcon, label);
-  if (canCreate(getState().role)) {
+  const role=getState().role,canManageFolder=hasCapability(role,'manageAll');
+  if (canCreate(role)||canManageFolder) {
+    if(canCreate(role)){
     row.draggable = true;
     row.addEventListener("dragstart", event => startWorkspaceDrag(event, { type: "folder", id: folder.id }));
     row.addEventListener("dragover", event => { if (!hasWorkspaceDrag(event.dataTransfer)) return; event.preventDefault(); const r = row.getBoundingClientRect(); const y = event.clientY - r.top; row.dataset.dropZone = y < r.height / 3 ? "before" : y > r.height * 2 / 3 ? "after" : "inside"; row.classList.add("is-workspace-drop-target"); });
@@ -63,6 +66,7 @@ export function renderNode(folder) {
         renderFolderTree();
       } catch (err) { AppCore.ui.toast(AppCore.ui.describeError(err), "error"); }
     });
+    }
     const menu = button("", "ap-folder-tree__menu"); menu.append(workspaceIcon("more")); menu.setAttribute("aria-label", `Actions for ${folder.name}`); menu.addEventListener("click", event => { event.stopPropagation(); openWorkspaceItemActions(menu, { ...folder, type: "folder", title: folder.name }, AppCore.getModuleContext(), renderFolderTree); }); row.append(menu);
   }
   li.append(row);

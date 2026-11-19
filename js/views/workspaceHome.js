@@ -1,12 +1,13 @@
-import { AppCore } from '../core/appCore.js?v=20261113-1';
-import { getState } from '../core/state.js?v=20261113-1';
-import { selectFolder, ensureUnfiledFolder } from '../workspace/folders.js?v=20261113-1';
-import { openCreateFolder } from '../workspace/folderTree.js?v=20261113-1';
-import { selectModule } from '../core/moduleRegistry.js?v=20261113-1';
-import { workspaceIcon } from './workspaceIcons.js?v=20261113-1';
-import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js?v=20261113-1';
-import { attachWorkspaceDropTarget, startWorkspaceDrag } from '../workspace/dragDrop.js?v=20261113-1';
-import { canCreate } from '../core/permissions.js?v=20261113-1';
+import { AppCore } from '../core/appCore.js?v=20261118-2';
+import { getState } from '../core/state.js?v=20261118-2';
+import { selectFolder, ensureUnfiledFolder } from '../workspace/folders.js?v=20261118-2';
+import { openCreateFolder } from '../workspace/folderTree.js?v=20261118-3';
+import { selectModule } from '../core/moduleRegistry.js?v=20261118-2';
+import { workspaceIcon } from './workspaceIcons.js?v=20261118-2';
+import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js?v=20261118-2';
+import { attachWorkspaceDropTarget, startWorkspaceDrag } from '../workspace/dragDrop.js?v=20261118-2';
+import { canCreate } from '../core/permissions.js?v=20261118-2';
+import { mirrorMediaUrl } from '../mediaMirror.js?v=20261120-1';
 
 function el(tag, cls = '', text = null) {
   const node = document.createElement(tag);
@@ -49,7 +50,7 @@ function buildFolderCard(folder, allFolders, context, onDone) {
   const tile = el('span', 'ap-folder-card__tile');
   if (folder.avatar_url) {
     const image = el('img', 'k-home-folder-client-photo');
-    image.src = folder.avatar_url;
+    image.src = mirrorMediaUrl(folder.avatar_url);
     image.alt = `${folder.name} photo`;
     tile.append(image);
   } else {
@@ -232,10 +233,10 @@ async function createResource(_title, moduleName) {
       await selectFolder(resource.folder_id || folder.id, { skipOverview: true, refreshModule: false });
       await selectModule(moduleName, resource.id);
     };
-    if (moduleName === 'boards') (await import('../modules/boards.js?v=20261113-1')).openBoardForm(null, { context, onDone: openCreatedResource });
-    else if (moduleName === 'conversation') (await import('../modules/conversation.js?v=20261113-1')).openCreateConversation({ context, onDone: openCreatedResource });
-    else if (moduleName === 'embeds') (await import('../modules/embeds.js?v=20261113-1')).openEmbedCreation(context, openCreatedResource);
-    else if (moduleName === 'docs') await (await import('../modules/docs.js?v=20261113-1')).createDocument();
+    if (moduleName === 'boards') (await import('../modules/boards.js?v=20261118-2')).openBoardForm(null, { context, onDone: openCreatedResource });
+    else if (moduleName === 'conversation') (await import('../modules/conversation.js?v=20261118-2')).openCreateConversation({ context, onDone: openCreatedResource });
+    else if (moduleName === 'embeds') (await import('../modules/embeds.js?v=20261118-2')).openEmbedCreation(context, openCreatedResource);
+    else if (moduleName === 'docs') await (await import('../modules/docs.js?v=20261118-2')).createDocument();
   } catch (error) { AppCore.ui.toast(AppCore.ui.describeError(error), 'error'); }
 }
 
@@ -286,10 +287,11 @@ export function folderCover(root, folder, actions) {
   banner.style.backgroundColor = coverColor;
   if (folder?.cover_image) {
     try {
-      const coverUrl = new URL(folder.cover_image, location.origin);
+      const coverUrl = new URL(mirrorMediaUrl(folder.cover_image), location.origin);
       if (coverUrl.protocol === 'https:' || coverUrl.origin === location.origin) {
         const image = el('img', 'v-folder-banner__image');
         image.src = coverUrl.href;
+        image.onerror = () => image.remove();
         image.alt = '';
         image.style.objectFit = folder.cover_fit === 'contain' ? 'contain' : 'cover';
         const x = Math.min(100, Math.max(0, Number(folder.cover_position_x ?? 50)));
@@ -313,7 +315,7 @@ export function folderCover(root, folder, actions) {
   const heading = el('div', 'v-folder-title');
 
   let badge;
-  if(folder?.avatar_url){badge=el('span','v-folder-badge v-client-folder-badge');const image=el('img');image.src=folder.avatar_url;image.alt='';badge.append(image);}
+  if(folder?.avatar_url){badge=el('span','v-folder-badge v-client-folder-badge');const image=el('img');image.src=mirrorMediaUrl(folder.avatar_url);image.alt='';image.onerror=()=>{image.onerror=null;image.remove();badge.textContent=folder.icon_emoji||'📁';};badge.append(image);}
   else if(folder?.client_id||folder?.icon_emoji){badge=el('span','v-folder-badge v-client-folder-badge',folder.icon_emoji||'👤');}
   else badge=workspaceIcon(folder ? 'shared' : 'home', 'v-folder-badge');
   heading.append(badge,el('h1', '', folder?.name || 'Home'));

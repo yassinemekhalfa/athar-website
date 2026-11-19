@@ -28,8 +28,13 @@ export function mirrorMediaUrl(value){
   if(url.pathname.startsWith(websitePrefix))return MIRRORED_MEDIA_BY_PATH.get(url.pathname)||value;
   const brandingPrefix='/storage/v1/object/public/agency-branding/';
   if(url.pathname.startsWith(brandingPrefix)){
+   // Workspace logos and covers uploaded in Supabase must load from Supabase.
+   // The Render proxy is only for the split-hosting/static-site mode.
+   if(globalThis.ATHAR_CONFIG?.mode==='supabase')return value;
    const key=url.pathname.slice(brandingPrefix.length).split('/').map(segment=>encodeURIComponent(decodeURIComponent(segment))).join('/');
-   return `/api/storage/agency-branding/${key}`;
+   const storagePath=`/api/storage/agency-branding/${key}`;
+   const appOrigin=globalThis.ATHAR_PUBLIC_SITE?.portalOrigin||'https://athar-workspace-ot4j.onrender.com';
+   return appOrigin?new URL(storagePath,appOrigin).href:storagePath;
   }
  }
  return MIRRORED_MEDIA[value]||value;

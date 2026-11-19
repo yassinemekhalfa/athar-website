@@ -1,25 +1,25 @@
-import {openResourceRoute} from './workspace/resourceRoute.js?v=20261113-1';
-import {isStaffRole,roleBadge,canManageRole,canCreate,isSectionVisible} from './core/permissions.js?v=20261113-1';
-import './core/adaptive.js?v=20261113-1';
-import { loadResources } from "./workspace/resources.js?v=20261113-1";
-import { workspaceIcon } from "./views/workspaceIcons.js?v=20261113-1";
-import { restoreAuth, signOut } from "./auth/auth.js?v=20261113-1";
-import { getState, setState } from "./core/state.js?v=20261113-1";
-import { emit } from "./core/events.js?v=20261113-1";
-import { activateAgency } from "./workspace/agencies.js?v=20261113-1";
-import { renderFolderTree, openCreateFolder } from "./workspace/folderTree.js?v=20261113-1";
-import { renderBreadcrumb, selectFolder } from "./workspace/folders.js?v=20261113-1";
-import { openFolderSharing } from "./workspace/folderPermissions.js?v=20261113-1";
-import { renderClientsView, renderClientSpaces } from "./workspace/clients.js?v=20261113-1";
-import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js?v=20261113-1";
-import { mountGlobalSearch } from "./modules/search.js?v=20261113-1";
-import { AppCore } from "./core/appCore.js?v=20261113-1";
-import { db } from "./dataClient.js?v=20261113-1";
-import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=20261113-1";
-import { renderSettingsHub } from "./views/kitchenSettings.js?v=20261113-1";
-import { renderProfilePage, changePassword } from "./views/profilePage.js?v=20261113-1";
-import { applyTheme } from "./workspace/preferences.js?v=20261113-1";
-import { mirrorMediaUrl } from "./mediaMirror.js?v=20261117-1";
+import {openResourceRoute} from './workspace/resourceRoute.js?v=20261118-2';
+import {isStaffRole,roleBadge,canManageRole,canCreate,isSectionVisible} from './core/permissions.js?v=20261118-2';
+import './core/adaptive.js?v=20261118-2';
+import { loadResources } from "./workspace/resources.js?v=20261118-2";
+import { workspaceIcon } from "./views/workspaceIcons.js?v=20261118-2";
+import { restoreAuth, signOut } from "./auth/auth.js?v=20261118-2";
+import { getState, setState } from "./core/state.js?v=20261118-2";
+import { emit } from "./core/events.js?v=20261118-2";
+import { activateAgency } from "./workspace/agencies.js?v=20261118-2";
+import { renderFolderTree, openCreateFolder } from "./workspace/folderTree.js?v=20261118-3";
+import { renderBreadcrumb, selectFolder } from "./workspace/folders.js?v=20261118-2";
+import { openFolderSharing } from "./workspace/folderPermissions.js?v=20261118-2";
+import { renderClientsView, renderClientSpaces } from "./workspace/clients.js?v=20261118-3";
+import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js?v=20261118-2";
+import { mountGlobalSearch } from "./modules/search.js?v=20261118-2";
+import { AppCore } from "./core/appCore.js?v=20261118-2";
+import { db } from "./dataClient.js?v=20261118-2";
+import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=20261119-1";
+import { renderSettingsHub } from "./views/kitchenSettings.js?v=20261120-1";
+import { renderProfilePage, changePassword } from "./views/profilePage.js?v=20261118-2";
+import { applyTheme } from "./workspace/preferences.js?v=20261118-2";
+import { mirrorMediaUrl } from "./mediaMirror.js?v=20261120-1";
 
 let currentView = "home";
 let currentLibraryView = "everything";
@@ -40,7 +40,7 @@ function bindTabs() {
 
 function renderAgencyIdentity() {
   const host = document.getElementById("agency-identity"); host.replaceChildren(); const s = getState();
-  const logo = document.createElement("img"); logo.className = "ap-workspace-logo"; logo.alt = ""; if (s.agency.logo_url) { logo.src = mirrorMediaUrl(s.agency.logo_url); logo.onerror=()=>{logo.onerror=null;logo.src="assets/images/workspace-logo.svg";}; } else logo.hidden = true;
+  const logo = document.createElement("img"); logo.className = "ap-workspace-logo"; logo.alt = ""; if (s.agency.logo_url) { logo.src = mirrorMediaUrl(s.agency.logo_url); logo.onerror=()=>{logo.onerror=null;logo.src="assets/images/athar-login-logo.png";}; } else logo.hidden = true;
   const memberships = s.memberships.filter((membership) => isStaffRole(membership.role));
   const picker = document.createElement("div"); picker.className = "ap-workspace-picker";
   const switcher = document.createElement("button"); switcher.type = "button"; switcher.className = "ap-workspace-switcher"; switcher.setAttribute("aria-label", "Workspace"); switcher.setAttribute("aria-haspopup", "listbox"); switcher.setAttribute("aria-expanded", "false");

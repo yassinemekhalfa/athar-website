@@ -1,23 +1,24 @@
-import {createTaskColorControl,applyTaskColor} from '../modules/taskAppearance.js?v=20261113-1';
-import { renderWorkspaceHome, folderCover } from "./workspaceHome.js?v=20261113-1";
-import { workspaceIcon } from "./workspaceIcons.js?v=20261113-1";
-import { db, isSupabaseMode } from "../dataClient.js?v=20261113-1";
-import { uploadFileToFolder } from "../modules/files.js?v=20261113-1";
-import { AppCore } from "../core/appCore.js?v=20261113-1";
-import { selectFolder, loadFolders, createFolder, ensureUnfiledFolder } from "../workspace/folders.js?v=20261113-1";
-import { openFolderSharing } from "../workspace/folderPermissions.js?v=20261113-1";
-import { openCreateFolder } from "../workspace/folderTree.js?v=20261113-1";
-import { openCreateClient } from "../workspace/clients.js?v=20261113-1";
-import { selectModule } from "../core/moduleRegistry.js?v=20261113-1";
-import { emit, on } from "../core/events.js?v=20261113-1";
-import {getState} from '../core/state.js?v=20261113-1';
-import {openItemSharing} from '../workspace/itemSharing.js?v=20261113-1';
-import {canManageRole} from '../core/permissions.js?v=20261113-1';
-import { openUploadMenu } from "../workspace/cloudIntegrations.js?v=20261113-1";
-import { createAccessControl } from "../workspace/accessControl.js?v=20261113-1";
-import { openWorkspaceItemActions } from "../workspace/itemActions.js?v=20261113-1";
-import { hasWorkspaceDrag, moveWorkspaceItem, readWorkspaceDrag, startWorkspaceDrag } from "../workspace/dragDrop.js?v=20261113-1";
-import { fetchAssignableProfiles, profileLabel } from "../modules/tasks.js?v=20261113-1";
+import {createTaskColorControl,applyTaskColor} from '../modules/taskAppearance.js?v=20261118-2';
+import {mirrorMediaUrl} from '../mediaMirror.js?v=20261120-1';
+import { renderWorkspaceHome, folderCover } from "./workspaceHome.js?v=20261119-1";
+import { workspaceIcon } from "./workspaceIcons.js?v=20261118-2";
+import { db, isSupabaseMode } from "../dataClient.js?v=20261118-2";
+import { uploadFileToFolder } from "../modules/files.js?v=20261118-2";
+import { AppCore } from "../core/appCore.js?v=20261118-2";
+import { selectFolder, loadFolders, createFolder, ensureUnfiledFolder } from "../workspace/folders.js?v=20261118-2";
+import { openFolderSharing } from "../workspace/folderPermissions.js?v=20261118-2";
+import { openCreateFolder } from "../workspace/folderTree.js?v=20261118-3";
+import { openCreateClient } from "../workspace/clients.js?v=20261118-3";
+import { selectModule } from "../core/moduleRegistry.js?v=20261118-2";
+import { emit, on } from "../core/events.js?v=20261118-2";
+import {getState} from '../core/state.js?v=20261118-2';
+import {openItemSharing} from '../workspace/itemSharing.js?v=20261118-2';
+import {canManageRole} from '../core/permissions.js?v=20261118-2';
+import { openUploadMenu } from "../workspace/cloudIntegrations.js?v=20261118-2";
+import { createAccessControl } from "../workspace/accessControl.js?v=20261118-2";
+import { openWorkspaceItemActions } from "../workspace/itemActions.js?v=20261118-2";
+import { hasWorkspaceDrag, moveWorkspaceItem, readWorkspaceDrag, startWorkspaceDrag } from "../workspace/dragDrop.js?v=20261118-2";
+import { fetchAssignableProfiles, profileLabel } from "../modules/tasks.js?v=20261118-2";
 
 const TYPE_META = {
   folder: { label: "Folder", module: "conversation", icon: "folder" },
@@ -58,7 +59,7 @@ function el(tag, className = "", text = null) {
 function folderMark(folder, className = "") {
   if (folder.avatar_url) {
     const image = el("img", `v-folder-symbol v-folder-symbol--image ${className}`.trim());
-    image.src = folder.avatar_url;
+    image.src = mirrorMediaUrl(folder.avatar_url);
     image.alt = "";
     return image;
   }
@@ -396,12 +397,12 @@ export function openFolderCreateMenu(context,folderId=null,anchorElement=null){
   const withFolder=async(handler)=>handler(folderId||(await ensureUnfiledFolder()).id);
   const createResource=(title,subtitle,iconName,moduleName,openForm)=>makeItem({title,subtitle,icon:iconName,action:async()=>{AppCore.ui.closeModal();await withFolder(async id=>{await selectFolder(id,{skipOverview:true,refreshModule:false});await selectModule(moduleName);await openForm();});}});
   wrap.append(makeItem({title:"Folder",subtitle:"Organize everything",icon:"folder",action:async()=>{AppCore.ui.closeModal();openCreateFolder(folderId);}}));
-  wrap.append(createResource("Board","Track and manage projects","board","boards",async()=>{(await import("../modules/boards.js?v=20261113-1")).openBoardForm();}));
-  wrap.append(createResource("Conversation","Discuss anything with clients","conversation","conversation",async()=>{(await import("../modules/conversation.js?v=20261113-1")).openCreateConversation();}));
+  wrap.append(createResource("Board","Track and manage projects","board","boards",async()=>{(await import("../modules/boards.js?v=20261118-2")).openBoardForm();}));
+  wrap.append(createResource("Conversation","Discuss anything with clients","conversation","conversation",async()=>{(await import("../modules/conversation.js?v=20261118-2")).openCreateConversation();}));
   wrap.append(makeItem({title:"Embed",subtitle:"Add third-party apps",icon:"embed",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openEmbedForm({...context,folderId:id}));}}));
   wrap.append(makeItem({title:"Link",subtitle:"Share external resources",icon:"link",action:async()=>{AppCore.ui.closeModal();await withFolder(id=>openLinkForm({...context,folderId:id}));}}));
-  wrap.append(createResource("Document","Curate content","document","docs",async()=>{await(await import("../modules/docs.js?v=20261113-1")).createDocument();}));
-  wrap.append(createResource("File","Upload and share files","file","files",async()=>{(await import("../modules/files.js?v=20261113-1")).openUploadModal();}));
+  wrap.append(createResource("Document","Curate content","document","docs",async()=>{await(await import("../modules/docs.js?v=20261118-2")).createDocument();}));
+  wrap.append(createResource("File","Upload and share files","file","files",async()=>{(await import("../modules/files.js?v=20261118-2")).openUploadModal();}));
   wrap.append(makeItem({title:"Proposal or Contract",subtitle:"Prepare offers for clients",icon:"proposal",action:async()=>{AppCore.ui.closeModal();document.dispatchEvent(new CustomEvent("athar:create-proposal",{detail:{folderId}}));}}));
   if(context.isAdmin)wrap.append(makeItem({title:"Client",subtitle:"Invite clients to your workspace",icon:"user",action:async()=>{AppCore.ui.closeModal();openCreateClient();}}));
   const more=document.createElement("details");more.className="ap-create-menu__more";more.open=true;const summary=document.createElement("summary");summary.append(el("span","","More"),workspaceIcon("chevronDown","ap-create-menu__chevron"));const moreContent=el("div","ap-create-menu__more-content");moreContent.append(makeItem({title:"Milestone",subtitle:"Break projects into phases",icon:"milestone",action:async()=>{AppCore.ui.closeModal();await withFolder(async id=>{await selectFolder(id,{skipOverview:true});await selectModule("boards");AppCore.ui.toast("Open a board to manage project milestones.","info");});}}));more.append(summary,moreContent);wrap.append(more);

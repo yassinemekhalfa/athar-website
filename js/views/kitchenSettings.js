@@ -1,11 +1,12 @@
-import {renderCustomization} from './workspaceCustomization.js?v=20261113-1';
-import {renderMembersView} from '../workspace/members.js?v=20261113-1';
-import {savePreferences} from '../workspace/preferences.js?v=20261113-1';
-import {db} from '../dataClient.js?v=20261113-1';
-import {AppCore} from '../core/appCore.js?v=20261113-1';
-import {getState,setState} from '../core/state.js?v=20261113-1';
-import {ROLES,roleBadge,canManageRole,roleDescription} from '../core/permissions.js?v=20261113-1';
-const NAV=[['General','home'],['Teammates','members'],['Roles & Permissions','permissions'],['Teams','teams'],['Custom Fields','tasks'],['Quotes','quotes'],['Checkout','proposals'],['Invoices','invoices'],['Notifications','notifications'],['Services','services'],['Apps & Integrations','zapier'],['Forms','forms'],['Saved Replies','replies'],['API & Export','api'],['Storage','billing']];
+import {renderCustomization} from './workspaceCustomization.js?v=20261119-1';
+import {renderMembersView} from '../workspace/members.js?v=20261118-2';
+import {savePreferences} from '../workspace/preferences.js?v=20261118-2';
+import {db} from '../dataClient.js?v=20261118-2';
+import {AppCore} from '../core/appCore.js?v=20261118-2';
+import {getState,setState} from '../core/state.js?v=20261118-2';
+import {ROLES,roleBadge,canManageRole,roleDescription} from '../core/permissions.js?v=20261118-2';
+import {renderGoogleDriveSettings} from '../workspace/cloudIntegrations.js?v=20261120-1';
+const NAV=[['General','home'],['Teammates','members'],['Roles & Permissions','permissions'],['Teams','teams'],['Custom Fields','tasks'],['Quotes','quotes'],['Checkout','proposals'],['Invoices','invoices'],['Notifications','notifications'],['Services','services'],['Google Drive','google-drive'],['Forms','forms'],['Saved Replies','replies'],['API & Export','api'],['Storage','billing']];
 const el=(t,c='',text)=>{const n=document.createElement(t);n.className=c;if(text!==undefined)n.textContent=text;return n;};
 function button(text,fn,cls='k-btn k-btn--soft'){const b=el('button',cls,text);b.type='button';b.addEventListener('click',async()=>{try{await fn();}catch(e){AppCore.ui.toast(AppCore.ui.describeError(e),'error');}});return b;}
 function navigate(section){document.dispatchEvent(new CustomEvent('kitchen:settings-nav',{detail:{section}}));}
@@ -23,7 +24,7 @@ async function collection(main,context,key){const [title,singular,description]=c
 }
 function previewForm(item,context){const form=el('form','ap-stack');const controls=(item.body||'Name\nEmail\nMessage').split('\n').filter(Boolean).map(label=>field(label));for(const f of controls)form.append(f.wrap);const save=el('button','k-btn k-btn--primary','Save local submission');save.type='submit';form.append(save);form.addEventListener('submit',async e=>{e.preventDefault();save.disabled=true;try{const {error}=await db.from('form_submissions').insert({agency_id:context.agencyId,form_id:item.id,created_by:context.user.id,answers:Object.fromEntries(controls.map(f=>[f.wrap.firstChild.textContent,f.control.value]))});if(error)throw error;AppCore.ui.closeModal();AppCore.ui.toast('Submission saved locally.','success');}catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{save.disabled=false;}});AppCore.ui.openModal({title:item.name,content:form,actions:[]});}
 export async function renderSettingsHub(container,context,section='home'){
- container.replaceChildren();container.className='ap-module-content k-settings-page';const shell=el('section','k-settings-shell'),side=el('aside','k-settings-sidebar'),nav=el('nav','k-settings-nav'),content=el('div','k-settings-content');side.append(el('h2','k-settings-sidebar__title','Settings'));for(const [title,key] of NAV){const b=button(title,()=>navigate(key),'k-settings-nav__item');b.classList.toggle('k-settings-nav__item--active',section===key);b.setAttribute('aria-current',section===key?'page':'false');nav.append(b);}side.append(nav);shell.append(side,content);container.append(shell);const main=el('div','k-settings-inner');content.append(main);
+ container.replaceChildren();container.className='ap-module-content k-settings-page';const shell=el('section','k-settings-shell'),side=el('aside','k-settings-sidebar'),nav=el('nav','k-settings-nav'),content=el('div','k-settings-content');side.append(el('h2','k-settings-sidebar__title','Settings'));for(const [title,key] of NAV){if(key==='google-drive'&&!context.isOwner)continue;const b=button(title,()=>navigate(key),'k-settings-nav__item');b.classList.toggle('k-settings-nav__item--active',section===key);b.setAttribute('aria-current',section===key?'page':'false');nav.append(b);}side.append(nav);shell.append(side,content);container.append(shell);const main=el('div','k-settings-inner');content.append(main);
  try{
   if(['home','theme','login','invoices','branding'].includes(section)){content.replaceChildren();await renderCustomization(content,section==='branding'?'theme':section,()=>renderSettingsHub(container,AppCore.getModuleContext(),section));if(!context.isOwner){content.prepend(el('p','ap-local-notice','Only the Owner can change workspace settings.'));content.querySelectorAll('input,select,textarea,button').forEach(x=>{x.disabled=true;});}return;}
   if(section==='members'){if(!canManageRole(context.role))return main.append(el('h1','','Teammates'),el('p','','Only an Owner or Admin can manage members.'));return await renderMembersView(content);}
@@ -31,7 +32,8 @@ export async function renderSettingsHub(container,context,section='home'){
   if(section==='notifications')return await notifications(main,context);
   if(collections[section])return await collection(main,context,section);
   if(section==='quotes'){main.append(el('h1','','Quotes'),el('p','','Create quotes as proposals, including a description and amount.'),button('Open proposals',()=>{location.hash='#/proposals';}));return;}
-  if(section==='proposals'||section==='zapier'||section==='pabbly'){main.append(el('h1','',section==='proposals'?'Checkout':'Apps & Integrations'),el('p','ap-local-notice','This workspace runs locally. External payment and automation providers are not connected. Local invoices and embedded links are available.'),button('Open invoices',()=>{location.hash='#/invoices';}),button('Open embedded links',()=>{location.hash='#/library-embeds';}));return;}
+  if(section==='proposals'){main.append(el('h1','','Checkout'),el('p','ap-local-notice','External payment providers are not connected. Local invoices and embedded links are available.'),button('Open invoices',()=>{location.hash='#/invoices';}),button('Open embedded links',()=>{location.hash='#/library-embeds';}));return;}
+  if(['google-drive','zapier','pabbly'].includes(section)){await renderGoogleDriveSettings(main,context);return;}
   if(section==='api'){main.append(el('h1','','API & Export'),el('p','','The local API uses your signed-in session and checks your role for each request.'));if(context.isOwner){const a=el('a','k-btn k-btn--primary','Export workspace data');a.href='/api/export';a.download='workspace-export.json';main.append(a);}main.append(el('p','ap-local-notice','Back up the .local folder, including uploads, while the server is stopped.'));return;}
   if(section==='billing'){const {data,error}=await db.from('files').select('*').eq('agency_id',context.agencyId);if(error)throw error;main.append(el('h1','','Local storage'),el('p','','No subscription or artificial seat limit applies to this local workspace.'),el('p','ap-local-notice',`${data.length} files · ${AppCore.utils.formatBytes(data.reduce((n,f)=>n+Number(f.size_bytes||0),0))}`));return;}
   permissions(main);
