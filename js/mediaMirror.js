@@ -28,12 +28,12 @@ export function mirrorMediaUrl(value){
   if(url.pathname.startsWith(websitePrefix))return MIRRORED_MEDIA_BY_PATH.get(url.pathname)||value;
   const brandingPrefix='/storage/v1/object/public/agency-branding/';
   if(url.pathname.startsWith(brandingPrefix)){
-   // Workspace logos and covers uploaded in Supabase must load from Supabase.
-   // The Render proxy is only for the split-hosting/static-site mode.
+   // Supabase-hosted workspaces read existing branding directly. New production
+   // uploads use Google Drive; this relative path is only for local development.
    if(globalThis.ATHAR_CONFIG?.mode==='supabase')return value;
    const key=url.pathname.slice(brandingPrefix.length).split('/').map(segment=>encodeURIComponent(decodeURIComponent(segment))).join('/');
    const storagePath=`/api/storage/agency-branding/${key}`;
-   const appOrigin=globalThis.ATHAR_PUBLIC_SITE?.portalOrigin||'https://athar-workspace-ot4j.onrender.com';
+   const appOrigin=globalThis.ATHAR_PUBLIC_SITE?.portalOrigin;
    return appOrigin?new URL(storagePath,appOrigin).href:storagePath;
   }
  }

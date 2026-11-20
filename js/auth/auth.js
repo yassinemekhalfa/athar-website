@@ -1,8 +1,8 @@
-import { db,isSupabaseMode } from "../dataClient.js?v=20261113-1";
-import { getState, setState, resetState } from "../core/state.js?v=20261113-1";
-import { emit } from "../core/events.js?v=20261113-1";
-import { unsubscribeAll } from "../core/realtime.js?v=20261113-1";
-import { unmountActiveModule } from "../core/moduleRegistry.js?v=20261113-1";
+import { db,isSupabaseMode } from "../dataClient.js?v=20261120-5";
+import { getState, setState, resetState } from "../core/state.js?v=20261120-5";
+import { emit } from "../core/events.js?v=20261120-5";
+import { unsubscribeAll } from "../core/realtime.js?v=20261120-5";
+import { unmountActiveModule } from "../core/moduleRegistry.js?v=20261120-5";
 
 let authSubscription = null;
 export async function restoreAuth(surface = null) {
@@ -31,7 +31,16 @@ export async function loadIdentity(){
   if(isSupabaseMode){
     const {data,error}=await db.rpc("get_my_workspace_identity");
     if(error)throw error;
-    setState({profile:data?.profile||null,memberships:data?.memberships||[]});
+    let profile=data?.profile||null,memberships=data?.memberships||[];
+    // The RPC can return an empty identity during a stale deployment or while its
+    // membership view is catching up. Query only this signed-in user's rows as a
+    // safe fallback so an owner is not bounced back to the sign-in screen.
+    if(!memberships.length){
+      const {data:rows,error:membersError}=await db.from("agency_members").select("*, agencies(*)").eq("profile_id",user.id);
+      if(membersError)throw membersError;
+      memberships=rows||[];profile=profile||{id:user.id,email:user.email||""};
+    }
+    setState({profile,memberships});
     return;
   }
   const [{data:profile,error:pErr},{data:memberships,error:mErr}]=await Promise.all([

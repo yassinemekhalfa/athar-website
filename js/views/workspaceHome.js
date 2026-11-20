@@ -1,8 +1,8 @@
-import { AppCore } from '../core/appCore.js?v=20261118-2';
-import { getState } from '../core/state.js?v=20261118-2';
+import { AppCore } from '../core/appCore.js?v=20261120-5';
+import { getState } from '../core/state.js?v=20261120-5';
 import { selectFolder, ensureUnfiledFolder } from '../workspace/folders.js?v=20261118-2';
 import { openCreateFolder } from '../workspace/folderTree.js?v=20261118-3';
-import { selectModule } from '../core/moduleRegistry.js?v=20261118-2';
+import { selectModule } from '../core/moduleRegistry.js?v=20261120-5';
 import { workspaceIcon } from './workspaceIcons.js?v=20261118-2';
 import { openFolderCoverSettings, openWorkspaceItemActions } from '../workspace/itemActions.js?v=20261118-2';
 import { attachWorkspaceDropTarget, startWorkspaceDrag } from '../workspace/dragDrop.js?v=20261118-2';

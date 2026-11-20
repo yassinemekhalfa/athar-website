@@ -3,22 +3,22 @@ import {isStaffRole,isClientRole,roleBadge,canManageRole,canCreate,isSectionVisi
 import './core/adaptive.js?v=20261118-2';
 import { loadResources } from "./workspace/resources.js?v=20261118-2";
 import { workspaceIcon } from "./views/workspaceIcons.js?v=20261118-2";
-import { restoreAuth, signOut } from "./auth/auth.js?v=20261118-2";
-import { getState, setState } from "./core/state.js?v=20261118-2";
-import { emit } from "./core/events.js?v=20261118-2";
+import { restoreAuth, signOut } from "./auth/auth.js?v=20261120-5";
+import { getState, setState } from "./core/state.js?v=20261120-5";
+import { emit } from "./core/events.js?v=20261120-5";
 import { activateAgency } from "./workspace/agencies.js?v=20261120-2";
 import { renderFolderTree, openCreateFolder } from "./workspace/folderTree.js?v=20261118-3";
 import { renderBreadcrumb, selectFolder } from "./workspace/folders.js?v=20261118-2";
 import { openFolderSharing } from "./workspace/folderPermissions.js?v=20261118-2";
 import { renderClientsView, renderClientSpaces } from "./workspace/clients.js?v=20261118-3";
-import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js?v=20261118-2";
+import { selectModule, unmountActiveModule, hasActiveModule } from "./core/moduleRegistry.js?v=20261120-5";
 import { mountGlobalSearch } from "./modules/search.js?v=20261118-2";
-import { AppCore } from "./core/appCore.js?v=20261118-2";
-import { db } from "./dataClient.js?v=20261118-2";
-import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=20261119-1";
+import { AppCore } from "./core/appCore.js?v=20261120-5";
+import { db } from "./dataClient.js?v=20261120-5";
+import { renderHome, renderTasksHub, renderInvoicesHub, renderLibrary, renderInbox, openTemplates, renderFolderOverview, renderProfileView, openFolderCreateMenu } from "./views/portalViews.js?v=20261120-5";
 import { renderSettingsHub } from "./views/kitchenSettings.js?v=20261120-1";
 import { renderProfilePage, changePassword } from "./views/profilePage.js?v=20261118-2";
-import { applyTheme } from "./workspace/preferences.js?v=20261118-2";
+import { applyTheme } from "./workspace/preferences.js?v=20261120-5";
 import { mirrorMediaUrl } from "./mediaMirror.js?v=20261120-1";
 
 let currentView = "home";
@@ -793,7 +793,7 @@ function renderShell() { renderAgencyIdentity(); renderUserMenu(); renderFolderT
 async function boot() {
   try {
     const session = await restoreAuth("team"); if (!session) { location.replace('login.html'+(location.hash?'?next='+encodeURIComponent(location.hash):'')); return; }
-    const staff = getState().memberships.filter((m) => isStaffRole(m.role)); if (!staff.length) { location.replace(getState().memberships.some((m)=>isClientRole(m.role)) ? "client-view.html"+location.hash : "login.html?switch_account=1"); return; }
+    const staff = getState().memberships.filter((m) => isStaffRole(m.role)); if (!staff.length) { location.replace(getState().memberships.some((m)=>isClientRole(m.role)) ? "client-view.html"+location.hash : "login.html?workspace_access=missing"); return; }
     const remembered = localStorage.getItem("ap.lastAgencyId"); const initial = staff.find((m) => m.agency_id === remembered) || staff[0];
     await activateAgency(initial.agency_id, initial); bindShell(); renderShell(); document.getElementById("app").inert=false; await mountGlobalSearch(AppCore.getModuleContext());
     setState({ ready: true }); emit("app:ready", { agencyId: getState().agency.id, userId: getState().user.id, role: getState().role, surface: "team" });

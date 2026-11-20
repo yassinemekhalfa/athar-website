@@ -1,15 +1,16 @@
-import { db } from "../dataClient.js?v=20261118-2";
-import { getState } from "../core/state.js?v=20261118-2";
-import { AppCore } from "../core/appCore.js?v=20261118-2";
-import { emit } from "../core/events.js?v=20261118-2";
+import { db } from "../dataClient.js?v=20261120-5";
+import { getState } from "../core/state.js?v=20261120-5";
+import { AppCore } from "../core/appCore.js?v=20261120-5";
+import { emit } from "../core/events.js?v=20261120-5";
 import { archiveFolder, createFolder, moveFolder, selectFolder, trashFolder, updateFolder } from "./folders.js?v=20261118-2";
 import { openFolderSharing } from "./folderPermissions.js?v=20261118-2";
 import { openItemSharing } from "./itemSharing.js?v=20261118-2";
 import { openWorkspaceActionMenu } from "./actionMenu.js?v=20261118-2";
 import { moveWorkspaceItem } from "./dragDrop.js?v=20261118-2";
 import { workspaceIcon } from "../views/workspaceIcons.js?v=20261118-2";
-import { uploadBrandAsset } from "./preferences.js?v=20261118-2";
+import { uploadBrandAsset } from "./preferences.js?v=20261120-5";
 import { mirrorMediaUrl } from "../mediaMirror.js?v=20261120-1";
+import { storedFileUrl } from "../modules/files.js?v=20261120-5";
 
 const TABLES = {
   board: "boards",
@@ -400,11 +401,10 @@ async function copyItemLink(item) {
 async function downloadItem(item) {
   if (item.type !== "file") throw new Error("This item cannot be downloaded from here.");
   const source = item.raw || await fetchResource(item);
-  const { data, error } = await db.storage.from(source.bucket_name || "project-files").createSignedUrl(source.storage_path, 60);
-  if (error) throw error;
-  if (!data?.signedUrl) throw new Error("Could not create a download link.");
+  const url = await storedFileUrl(source, 60);
+  if (!url) throw new Error("Could not create a download link.");
   const link = document.createElement("a");
-  link.href = data.signedUrl;
+  link.href = url;
   link.download = source.original_name || item.title;
   link.rel = "noopener";
   link.click();

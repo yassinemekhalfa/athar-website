@@ -13,9 +13,9 @@ import {
 import {
   getState,
   setState
-} from "./core/state.js?v=20261113-1";
+} from "./core/state.js?v=20261120-5";
 
-import { emit } from "./core/events.js?v=20261113-1";
+import { emit } from "./core/events.js?v=20261120-5";
 
 import {
   activateAgency
@@ -33,7 +33,7 @@ import {
 import {
   selectModule,
   unmountActiveModule
-} from "./core/moduleRegistry.js?v=20261113-1";
+} from "./core/moduleRegistry.js?v=20261120-5";
 
 import {
   mountGlobalSearch
@@ -41,7 +41,7 @@ import {
 
 import {
   AppCore
-} from "./core/appCore.js?v=20261113-1";
+} from "./core/appCore.js?v=20261120-5";
 
 import {
   renderHome,

@@ -1,4 +1,4 @@
-import {AppCore} from '../core/appCore.js?v=20261113-1';
+import {AppCore} from '../core/appCore.js?v=20261120-5';
 import {openItemSharing} from './itemSharing.js?v=20261113-1';
 
 export async function openFolderSharing(folderId){

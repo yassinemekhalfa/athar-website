@@ -1,7 +1,7 @@
-import { getState } from '../core/state.js?v=20261118-2';
-import { AppCore } from '../core/appCore.js?v=20261118-2';
+import { getState } from '../core/state.js?v=20261120-5';
+import { AppCore } from '../core/appCore.js?v=20261120-5';
 import { saveBranding } from '../workspace/branding.js?v=20261119-1';
-import { preferences, savePreferences, applyTheme, THEME_DEFAULTS, uploadBrandAsset } from '../workspace/preferences.js?v=20261118-2';
+import { preferences, savePreferences, applyTheme, THEME_DEFAULTS, uploadBrandAsset } from '../workspace/preferences.js?v=20261120-5';
 import { workspaceIcon } from './workspaceIcons.js?v=20261118-2';
 import { mirrorMediaUrl } from '../mediaMirror.js?v=20261120-1';
 

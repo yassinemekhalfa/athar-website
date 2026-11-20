@@ -1,5 +1,5 @@
-import { db } from "../dataClient.js?v=20261113-1";
-import { getState, setState } from "../core/state.js?v=20261113-1";
+import { db } from "../dataClient.js?v=20261120-5";
+import { getState, setState } from "../core/state.js?v=20261120-5";
 import { loadIdentity } from "./auth.js?v=20261113-1";
 
 export function slugify(value){return String(value||"").toLowerCase().normalize("NFKD").replace(/[^a-z0-9\s-]/g,"").trim().replace(/\s+/g,"-").replace(/-+/g,"-").slice(0,50).replace(/^-|-$/g,"")||`agency-${Date.now()}`;}

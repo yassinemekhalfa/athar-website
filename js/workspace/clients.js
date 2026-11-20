@@ -1,8 +1,8 @@
 import {canCreate,canManageRole,hasCapability} from '../core/permissions.js?v=20261118-3';
 import {mirrorMediaUrl} from '../mediaMirror.js?v=20261120-1';
-import { db } from "../dataClient.js?v=20261118-2";
-import { getState } from "../core/state.js?v=20261118-2";
-import { AppCore } from "../core/appCore.js?v=20261118-2";
+import { db } from "../dataClient.js?v=20261120-5";
+import { getState } from "../core/state.js?v=20261120-5";
+import { AppCore } from "../core/appCore.js?v=20261120-5";
 import { inviteMember } from "../auth/invitations.js?v=20261118-2";
 import { workspaceIcon } from "../views/workspaceIcons.js?v=20261118-2";
 import { loadFolders, selectFolder, moveFolder } from "./folders.js?v=20261118-2";

@@ -1,5 +1,5 @@
-import { db, isSupabaseMode } from "../dataClient.js?v=20261113-1";
-import { getState } from "../core/state.js?v=20261113-1";
+import { db, isSupabaseMode } from "../dataClient.js?v=20261120-5";
+import { getState } from "../core/state.js?v=20261120-5";
 import { uploadBlobWithProgress } from "../modules/files.js?v=20261113-1";
 
 const ATTACHMENT_BUCKET="conversation-attachments";

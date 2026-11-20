@@ -1,9 +1,9 @@
 import {renderCustomization} from './workspaceCustomization.js?v=20261119-1';
 import {renderMembersView} from '../workspace/members.js?v=20261118-2';
-import {savePreferences} from '../workspace/preferences.js?v=20261118-2';
-import {db} from '../dataClient.js?v=20261118-2';
-import {AppCore} from '../core/appCore.js?v=20261118-2';
-import {getState,setState} from '../core/state.js?v=20261118-2';
+import {savePreferences} from '../workspace/preferences.js?v=20261120-5';
+import {db} from '../dataClient.js?v=20261120-5';
+import {AppCore} from '../core/appCore.js?v=20261120-5';
+import {getState,setState} from '../core/state.js?v=20261120-5';
 import {ROLES,roleBadge,canManageRole,roleDescription} from '../core/permissions.js?v=20261118-2';
 import {renderGoogleDriveSettings} from '../workspace/cloudIntegrations.js?v=20261120-1';
 const NAV=[['General','home'],['Teammates','members'],['Roles & Permissions','permissions'],['Teams','teams'],['Custom Fields','tasks'],['Quotes','quotes'],['Checkout','proposals'],['Invoices','invoices'],['Notifications','notifications'],['Services','services'],['Google Drive','google-drive'],['Forms','forms'],['Saved Replies','replies'],['API & Export','api'],['Storage','billing']];

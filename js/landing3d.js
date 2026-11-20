@@ -16,7 +16,7 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.classL
 matchMedia('(max-width: 900px)').addEventListener('change',()=>closeMenu());
 document.getElementById('copyright-year').textContent=String(new Date().getFullYear());
 // Keep existing workspace bookmarks working when entering through the site root.
-if(/^#\/(?:resource|folder|f|home|tasks|my-tasks|inbox|invoices|clients|proposals|library-[a-z]+|settings|profile)(?:\/|$)/.test(location.hash))location.replace((window.ATHAR_PUBLIC_SITE?.portalOrigin?new URL('/index.html',window.ATHAR_PUBLIC_SITE.portalOrigin).href:'index.html')+location.hash);
+if(/^#\/(?:resource|folder|f|home|tasks|my-tasks|inbox|invoices|clients|proposals|library-[a-z]+|settings|profile)(?:\/|$)/.test(location.hash))location.replace((window.ATHAR_PUBLIC_SITE?.portalOrigin?new URL('/workspace.html',window.ATHAR_PUBLIC_SITE.portalOrigin).href:'workspace.html')+location.hash);
 const onScrollNav = () => nav.classList.toggle('solid', scrollY > 40);
 addEventListener('scroll', onScrollNav, {passive:true}); onScrollNav();
 

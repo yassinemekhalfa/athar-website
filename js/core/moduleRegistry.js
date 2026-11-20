@@ -1,6 +1,6 @@
-import { getState, setState } from "./state.js?v=20261118-2";
-import { emit } from "./events.js?v=20261118-2";
-import { AppCore } from "./appCore.js?v=20261118-2";
+import { getState, setState } from "./state.js?v=20261120-5";
+import { emit } from "./events.js?v=20261120-5";
+import { AppCore } from "./appCore.js?v=20261120-5";
 
 const MODULE_LOADERS = {
   embeds:()=>import("../modules/embeds.js?v=20261118-2"),

@@ -1,6 +1,6 @@
-import {AppCore} from '../core/appCore.js?v=20261118-3';
+import {AppCore} from '../core/appCore.js?v=20261120-5';
 import {workspaceIcon} from '../views/workspaceIcons.js?v=20261118-3';
-import {db,isSupabaseMode} from '../dataClient.js?v=20261118-2';
+import {db,isSupabaseMode} from '../dataClient.js?v=20261120-5';
 
 const PROVIDERS={google:{label:'Google Drive',icon:'drive'},dropbox:{label:'Dropbox',icon:'dropbox'},onedrive:{label:'OneDrive',icon:'cloud'}};
 const call=async(provider,action,payload)=>{const response=await fetch(`/api/integrations/${provider}/${action}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();if(result.error)throw Object.assign(new Error(result.error.message),{code:result.error.code});return result.data;};

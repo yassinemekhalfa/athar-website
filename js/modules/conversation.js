@@ -1,8 +1,8 @@
 import {roleBadge} from '../core/permissions.js?v=20261113-1';
-import {db} from '../dataClient.js?v=20261113-1';
-import { AppCore } from "../core/appCore.js?v=20261113-1";
-import { on, emit } from "../core/events.js?v=20261113-1";
-import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261113-1";
+import {db} from '../dataClient.js?v=20261120-5';
+import { AppCore } from "../core/appCore.js?v=20261120-5";
+import { on, emit } from "../core/events.js?v=20261120-5";
+import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261120-5";
 import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261113-1";
 import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261113-1";
 import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261113-1";

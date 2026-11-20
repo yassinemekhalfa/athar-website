@@ -1,7 +1,7 @@
 import {roleBadge} from '../core/permissions.js?v=20261113-1';
-import { AppCore } from "../core/appCore.js?v=20261113-1";
-import { getState, setState } from "../core/state.js?v=20261113-1";
-import { db } from "../dataClient.js?v=20261113-1";
+import { AppCore } from "../core/appCore.js?v=20261120-5";
+import { getState, setState } from "../core/state.js?v=20261120-5";
+import { db } from "../dataClient.js?v=20261120-5";
 import { signOut } from "../auth/auth.js?v=20261113-1";
 import { workspaceIcon } from "./workspaceIcons.js?v=20261113-1";
 

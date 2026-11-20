@@ -2,21 +2,21 @@ import {createTaskColorControl,applyTaskColor} from '../modules/taskAppearance.j
 import {mirrorMediaUrl} from '../mediaMirror.js?v=20261120-1';
 import { renderWorkspaceHome, folderCover } from "./workspaceHome.js?v=20261119-1";
 import { workspaceIcon } from "./workspaceIcons.js?v=20261118-2";
-import { db, isSupabaseMode } from "../dataClient.js?v=20261118-2";
-import { uploadFileToFolder } from "../modules/files.js?v=20261118-2";
-import { AppCore } from "../core/appCore.js?v=20261118-2";
+import { db, isSupabaseMode } from "../dataClient.js?v=20261120-5";
+import { deleteUploadedFile, uploadFileToFolder } from "../modules/files.js?v=20261120-5";
+import { AppCore } from "../core/appCore.js?v=20261120-5";
 import { selectFolder, loadFolders, createFolder, ensureUnfiledFolder } from "../workspace/folders.js?v=20261118-2";
 import { openFolderSharing } from "../workspace/folderPermissions.js?v=20261118-2";
 import { openCreateFolder } from "../workspace/folderTree.js?v=20261118-3";
 import { openCreateClient } from "../workspace/clients.js?v=20261118-3";
-import { selectModule } from "../core/moduleRegistry.js?v=20261118-2";
-import { emit, on } from "../core/events.js?v=20261118-2";
-import {getState} from '../core/state.js?v=20261118-2';
+import { selectModule } from "../core/moduleRegistry.js?v=20261120-5";
+import { emit, on } from "../core/events.js?v=20261120-5";
+import {getState} from '../core/state.js?v=20261120-5';
 import {openItemSharing} from '../workspace/itemSharing.js?v=20261118-2';
 import {canManageRole} from '../core/permissions.js?v=20261118-2';
 import { openUploadMenu } from "../workspace/cloudIntegrations.js?v=20261118-2";
 import { createAccessControl } from "../workspace/accessControl.js?v=20261118-2";
-import { openWorkspaceItemActions } from "../workspace/itemActions.js?v=20261118-2";
+import { openWorkspaceItemActions } from "../workspace/itemActions.js?v=20261120-5";
 import { hasWorkspaceDrag, moveWorkspaceItem, readWorkspaceDrag, startWorkspaceDrag } from "../workspace/dragDrop.js?v=20261118-2";
 import { fetchAssignableProfiles, profileLabel } from "../modules/tasks.js?v=20261118-2";
 
@@ -1064,7 +1064,7 @@ async function renderTrash(container, context) {
     db.from("conversations").select("id,folder_id,title,trashed_at,privacy,client_visible").eq("agency_id",context.agencyId).not("trashed_at","is",null),
     db.from("docs").select("id,folder_id,title,trashed_at,privacy,client_visible").eq("agency_id",context.agencyId).not("trashed_at","is",null),
     db.from("embeds").select("id,folder_id,title,url,trashed_at,privacy,client_visible").eq("agency_id",context.agencyId).not("trashed_at","is",null),
-    db.from("files").select("id,folder_id,original_name,storage_path,bucket_name,trashed_at,privacy,client_visible").eq("agency_id",context.agencyId).not("trashed_at","is",null)
+    db.from("files").select("id,folder_id,original_name,storage_path,bucket_name,trashed_at,privacy,client_visible,storage_provider,external_file_id,external_url").eq("agency_id",context.agencyId).not("trashed_at","is",null)
   ];
   const rows=(await Promise.allSettled(qs)).map(result=>result.status==="fulfilled"&&!result.value.error?result.value:{data:[]});
   const items=[...(rows[0].data||[]).map(r=>({id:r.id,type:"folder",folder_id:r.id,title:r.name,created_at:r.trashed_at,raw:r})),...(rows[1].data||[]).map(r=>({id:r.id,type:"board",folder_id:r.folder_id,title:r.title,created_at:r.trashed_at,raw:r})),...(rows[2].data||[]).map(r=>({id:r.id,type:"conversation",folder_id:r.folder_id,title:r.title,created_at:r.trashed_at,raw:r})),...(rows[3].data||[]).map(r=>({id:r.id,type:"doc",folder_id:r.folder_id,title:r.title,created_at:r.trashed_at,raw:r})),...(rows[4].data||[]).map(r=>({id:r.id,type:"embed",folder_id:r.folder_id,title:r.title,url:r.url,created_at:r.trashed_at,raw:r})),...(rows[5].data||[]).map(r=>({id:r.id,type:"file",folder_id:r.folder_id,title:r.original_name,created_at:r.trashed_at,raw:r}))].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
@@ -1088,7 +1088,7 @@ async function renderTrash(container, context) {
   apply(search.value,controls);
 }
 async function restoreTrash(item,done){const table=({folder:"folders",board:"boards",conversation:"conversations",doc:"docs",embed:"embeds",file:"files"})[item.type];const {error}=await db.from(table).update({trashed_at:null}).eq("id",item.id);if(error)return AppCore.ui.toast(AppCore.ui.describeError(error),"error");if(item.type==="folder")await loadFolders();await done?.();}
-async function emptyTrash(items,done){if(!await AppCore.ui.confirm({title:"Empty Trash?",message:"This permanently deletes every item currently in Trash. This cannot be undone.",confirmLabel:"Empty Trash",danger:true}))return;for(const item of items){const table=({folder:"folders",board:"boards",conversation:"conversations",doc:"docs",embed:"embeds",file:"files"})[item.type];if(item.type==="file"){if(!item.raw.storage_path)throw new Error(`The stored path for ${item.title} is missing; it was not permanently deleted.`);const {error:storageError}=await db.storage.from(item.raw.bucket_name||"project-files").remove([item.raw.storage_path]);if(storageError)throw storageError;}const {error}=await db.from(table).delete().eq("id",item.id);if(error)throw error;}await loadFolders();AppCore.ui.toast("Trash emptied.","success");await done?.();}
+async function emptyTrash(items,done){if(!await AppCore.ui.confirm({title:"Empty Trash?",message:"This permanently deletes every item currently in Trash. This cannot be undone.",confirmLabel:"Empty Trash",danger:true}))return;for(const item of items){const table=({folder:"folders",board:"boards",conversation:"conversations",doc:"docs",embed:"embeds",file:"files"})[item.type];if(item.type==="file"){if(!item.raw.storage_path)throw new Error(`The stored path for ${item.title} is missing; it was not permanently deleted.`);if(item.raw.storage_provider==="google_drive"){await deleteUploadedFile(item.raw,{agencyId:getState().agency?.id});continue;}const {error:storageError}=await db.storage.from(item.raw.bucket_name||"project-files").remove([item.raw.storage_path]);if(storageError)throw storageError;}const {error}=await db.from(table).delete().eq("id",item.id);if(error)throw error;}await loadFolders();AppCore.ui.toast("Trash emptied.","success");await done?.();}
 
 async function loadTasks(context, mineOnly = false) {
   let query=db.from("tasks").select("*").eq("agency_id",context.agencyId).is("archived_at",null).is("trashed_at",null).order("due_date",{ascending:true,nullsFirst:false}).order("updated_at",{ascending:false});

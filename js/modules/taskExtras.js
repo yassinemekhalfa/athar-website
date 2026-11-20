@@ -1,5 +1,5 @@
-import {AppCore} from '../core/appCore.js?v=20261113-1';
-import {db} from '../dataClient.js?v=20261113-1';
+import {AppCore} from '../core/appCore.js?v=20261120-5';
+import {db} from '../dataClient.js?v=20261120-5';
 import {updateTask} from './tasks.js?v=20261113-1';
 import {uploadFileToFolder,storedFileUrl} from './files.js?v=20261113-1';
 export function taskExtras(task,context){
