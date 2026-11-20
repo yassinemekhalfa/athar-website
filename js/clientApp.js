@@ -33,7 +33,7 @@ import {
 import {
   selectModule,
   unmountActiveModule
-} from "./core/moduleRegistry.js?v=20261120-5";
+} from "./core/moduleRegistry.js?v=20261120-6";
 
 import {
   mountGlobalSearch

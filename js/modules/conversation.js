@@ -4,7 +4,7 @@ import { AppCore } from "../core/appCore.js?v=20261120-5";
 import { on, emit } from "../core/events.js?v=20261120-5";
 import { subscribeChannel, unsubscribeByPrefix } from "../core/realtime.js?v=20261120-5";
 import { listConversations, createConversation, updateConversation } from "../conversations/conversations.js?v=20261113-1";
-import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261113-1";
+import { listMessages, sendMessage, deleteMessage, attachFileToMessage } from "../conversations/messages.js?v=20261120-6";
 import { signedAttachmentUrl, openImageReview, openVideoReview } from "../conversations/mediaReview.js?v=20261113-1";
 import { workspaceIcon } from "../views/workspaceIcons.js?v=20261113-1";
 import { createAccessControl } from "../workspace/accessControl.js?v=20261113-1";
@@ -284,7 +284,7 @@ function renderComposer(current) {
   form.addEventListener('submit',async event=>{
     event.preventDefault();if(state.sending)return;const body=textarea.value.trim(),file=draft.value.file;if(!body&&!file)return;state.sending=true;send.disabled=true;textarea.disabled=true;uploadStatus.hidden=!file;
     try{const context=state.context;const created=await sendMessage({conversationId:current.id,body,clientVisible:context.isClient?true:draft.value.shared,replyToMessageId:state.replyTo});
-      if(file){try{uploadStatus.querySelector('span').textContent=`Uploading ${file.name} — 0%`;await attachFileToMessage({message:created,file,onProgress:progress=>{uploadProgress.value=Math.round(progress*100);uploadStatus.querySelector('span').textContent=`Uploading ${file.name} — ${uploadProgress.value}%`;}});}catch(error){await deleteMessage(created.id);throw error;}}
+      if(file){try{uploadStatus.querySelector('span').textContent=`Uploading ${file.name} — 0%`;await attachFileToMessage({message:created,file,onProgress:progress=>{uploadProgress.value=Math.round(progress*100);uploadStatus.querySelector('span').textContent=`Uploading ${file.name} — ${uploadProgress.value}%`;}});}catch(error){try{await deleteMessage(created.id);}catch(cleanupError){console.error('Could not remove the message after its attachment upload failed:',cleanupError);}throw error;}}
       draft.value.body='';draft.value.file=null;sessionStorage.removeItem(draft.key);state.replyTo=null;
       if(state.context===context){await loadMessages();render();}emit('data:changed',{entity:'message',entityId:created.id,folderId:context.folderId,action:'created'});
     }catch(error){AppCore.ui.toast(AppCore.ui.describeError(error),'error');}finally{uploadStatus.hidden=true;state.sending=false;send.disabled=false;textarea.disabled=false;}

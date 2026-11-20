@@ -422,10 +422,13 @@ export function uploadBlobWithProgress(url, file, onProgress) {
     request.setRequestHeader("Content-Type", file.type || "application/octet-stream");
     request.setRequestHeader("Content-Range", `bytes 0-${file.size - 1}/${file.size}`);
     request.upload.onprogress = event => { if (event.lengthComputable) onProgress?.(event.loaded / event.total); };
-    request.onerror = () => reject(new Error("Can't reach Google Drive. Check your connection and try again."));
+    request.onerror = () => reject(Object.assign(new Error("The browser could not reach Google Drive to upload this attachment. Check your connection and try again."), { userMessage: true, code: "DRIVE_UPLOAD_NETWORK" }));
     request.onabort = () => reject(new Error("Upload cancelled."));
     request.onload = () => {
-      if (request.status < 200 || request.status >= 300) return reject(Object.assign(new Error(`Google Drive upload failed (${request.status}).`), { userMessage: true }));
+      if (request.status < 200 || request.status >= 300) {
+        let detail="";try{detail=JSON.parse(request.responseText||"{}").error?.message||"";}catch{}
+        return reject(Object.assign(new Error(detail?`Google Drive upload failed: ${detail}`:`Google Drive upload failed (${request.status}).`), { userMessage: true, code: "DRIVE_UPLOAD_HTTP" }));
+      }
       try { resolve(JSON.parse(request.responseText || "{}")); } catch { reject(new Error("Google Drive returned an invalid upload response.")); }
     };
     request.send(file);

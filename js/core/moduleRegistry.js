@@ -4,7 +4,7 @@ import { AppCore } from "./appCore.js?v=20261120-5";
 
 const MODULE_LOADERS = {
   embeds:()=>import("../modules/embeds.js?v=20261118-2"),
-  conversation:()=>import("../modules/conversation.js?v=20261118-2"),
+  conversation:()=>import("../modules/conversation.js?v=20261120-6"),
   boards:()=>import("../modules/boards.js?v=20261118-2"),
   docs:()=>import("../modules/docs.js?v=20261118-2"),
   files:()=>import("../modules/files.js?v=20261118-2"),
